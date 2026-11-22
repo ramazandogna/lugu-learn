@@ -16,7 +16,7 @@ function deps(overrides: Partial<GenerateDeps> = {}) {
     lessons,
     model: happyLessonModel(),
     waitUntil: (p) => void pending.push(p),
-    allowedOrigin: 'https://lugu.example',
+    corsHeaders: () => ({ 'access-control-allow-origin': 'https://lugu.example' }),
     log: () => {},
     limits: () => ({ maxSteps: 1, budgetMs: Number.POSITIVE_INFINITY, clock: () => 0 }),
     isInternal: (req) => req.headers.get('x-lugu-internal') === 'secret',
@@ -56,6 +56,17 @@ describe('edge handlers', () => {
     await Promise.all(pending)
     expect(jobs.rows.get(id)!.stage).toBe('content_core')
     expect((await handleAiGenerate(post({ lessonId: 'not-a-uuid' }, { authorization: 'Bearer admin-jwt' }), d)).status).toBe(400)
+  })
+
+  it('lets only one of two concurrent resumes claim a stalled job', async () => {
+    const { d, jobs } = deps()
+    const { id } = await jobs.create({ kind: 'lesson_package', createdBy: 'admin-1', input: { lessonId: LESSON, includeClassWeakItems: true } })
+    const row = jobs.rows.get(id)!
+    row.status = 'running'
+    row.stage = 'stalled:qa'
+    const resume = () => handleAiGenerate(post({ action: 'resume', jobId: id }, { authorization: 'Bearer admin-jwt' }), d)
+    const statuses = (await Promise.all([resume(), resume()])).map((r) => r.status).sort()
+    expect(statuses).toEqual([202, 409])
   })
 
   it('reports 503 when the model is not configured', async () => {

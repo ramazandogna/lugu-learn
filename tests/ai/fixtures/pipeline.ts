@@ -179,6 +179,14 @@ export class MemoryJobs implements JobStore {
     return this.rows.get(id) ?? null
   }
 
+  async claim(id: string, expectedUpdatedAt: string, stage: string) {
+    const row = this.rows.get(id)
+    if (!row || row.updatedAt !== expectedUpdatedAt || (row.status !== 'queued' && row.status !== 'running')) return false
+    row.stage = stage
+    row.updatedAt = new Date(Date.parse(row.updatedAt) + 1).toISOString()
+    return true
+  }
+
   async update(id: string, p: AiJobPatch) {
     const row = this.rows.get(id)
     if (!row) throw new Error(`no job ${id}`)

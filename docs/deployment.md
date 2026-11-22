@@ -20,7 +20,8 @@ Claude API, which is called only from edge functions for content generation and 
    supabase secrets set \
      LUGU_ALLOWED_ORIGINS=https://your-app.vercel.app \
      ANTHROPIC_API_KEY=sk-ant-... \
-     LUGU_AI_MODEL=claude-opus-5-5
+     LUGU_AI_MODEL=claude-opus-5-5 \
+     LUGU_INTERNAL_SECRET=$(openssl rand -hex 32)
    ```
 
    Never run `seed.sql` against production: it is development demo content.

@@ -58,6 +58,16 @@ export function supabaseJobStore(client: SupabaseClient): JobStore {
       const r = res.data
       return r ? { id: r.id, kind: r.kind, status: r.status, stage: r.stage, input: r.input, output: r.output, updatedAt: r.updated_at } : null
     },
+    async claim(id: string, expectedUpdatedAt: string, stage: string) {
+      const res = (await db(client)
+        .from('ai_jobs')
+        .update({ stage, error: null })
+        .eq('id', id)
+        .eq('updated_at', expectedUpdatedAt)
+        .in('status', ['queued', 'running'])
+        .select('id')) as Res<{ id: string }[]>
+      return must(res, 'claim ai_job').length === 1
+    },
     async update(id: string, p: AiJobPatch) {
       const row: Record<string, unknown> = {}
       if (p.status !== undefined) row.status = p.status

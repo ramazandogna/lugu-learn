@@ -4,6 +4,7 @@
  * runtime globals except the guarded `EdgeRuntime`.
  */
 import { createClient } from '@supabase/supabase-js'
+import { corsHeaders } from '../../cors.ts'
 import type { EdgeDeps, GenerateDeps, InsightsEdgeDeps } from '../handler.ts'
 import { safeEqual, supabaseAuth } from '../handler.ts'
 import { supabaseInsightsStore, supabaseJobStore, supabaseLessonStore } from '../supabase-store.ts'
@@ -43,25 +44,27 @@ function base(env: Env, fn: string) {
         })
       : null,
     waitUntil,
-    allowedOrigin: env('LUGU_ALLOWED_ORIGIN') ?? '*',
+    corsHeaders,
     log: (msg, extra) => console.log(JSON.stringify({ fn, msg, ...extra })),
   }
-  return { ...deps, url, serviceKey, service }
+  return { ...deps, url, anonKey, service }
 }
 
 export function generateDeps(env: Env): GenerateDeps {
   const b = base(env, 'ai-generate')
+  const internalSecret = required(env, 'LUGU_INTERNAL_SECRET')
   const steps = Number(env('LUGU_AI_STEPS_PER_INVOCATION') ?? '1')
   const budgetMs = Number(env('LUGU_AI_STEP_BUDGET_MS') ?? '60000')
   return {
     ...b,
     lessons: supabaseLessonStore(b.service),
     limits: () => ({ maxSteps: Number.isFinite(steps) && steps >= 1 ? steps : 1, budgetMs, clock: () => Date.now() }),
-    isInternal: (req) => safeEqual(req.headers.get('x-lugu-internal') ?? '', b.serviceKey),
+    isInternal: (req) => safeEqual(req.headers.get('x-lugu-internal') ?? '', internalSecret),
     chain: async (jobId) => {
       const res = await fetch(`${b.url}/functions/v1/ai-generate`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${b.serviceKey}`, 'x-lugu-internal': b.serviceKey },
+        // The gateway needs a JWT: send the public anon key; authority comes from the dedicated secret.
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${b.anonKey}`, apikey: b.anonKey, 'x-lugu-internal': internalSecret },
         body: JSON.stringify({ action: 'continue', jobId }),
       })
       if (res.status !== 202) throw new Error(`continuation returned ${res.status}`)

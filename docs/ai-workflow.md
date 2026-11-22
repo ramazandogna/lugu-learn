@@ -96,9 +96,9 @@ Supabase Edge Functions have a wall-clock limit (150 s on the free plan, 400 s o
 
 - Each invocation runs `LUGU_AI_STEPS_PER_INVOCATION` steps (default 1), with `LUGU_AI_STEP_BUDGET_MS` as a soft budget between steps.
 - After each step it writes `ai_jobs.output.checkpoint`.
-- It then calls itself with `{action:'continue', jobId}`, authenticated by the service-role key in `x-lugu-internal`.
+- It then calls itself with `{action:'continue', jobId}`, authenticated by `LUGU_INTERNAL_SECRET` in the `x-lugu-internal` header (constant-time compare). The `Authorization` header carries only the public anon key, which the gateway accepts; the service key is never sent.
 
-If a step is killed or the chain breaks, the job stays `running` with stage `stalled:<step>`, or simply stops updating. After 10 minutes the admin can send `{action:'resume', jobId}`, which continues from the checkpoint.
+If a step is killed or the chain breaks, the job stays `running` with stage `stalled:<step>`, or simply stops updating. After 10 minutes the admin can send `{action:'resume', jobId}`, which continues from the checkpoint. Both `continue` and `resume` first **claim** the job with a compare-and-set update (`updated_at` must still equal the value just read, and the status must be queued or running). Only one invocation can claim a given checkpoint; any other gets `409 job_already_claimed`.
 
 The admin UI polls `select status, stage, error, output, updated_at from lugu.ai_jobs where id = :jobId` every 3–5 s. RLS allows admins to read `ai_jobs`.
 
@@ -125,7 +125,8 @@ Insight jobs make a single call and run in one invocation.
 | `LUGU_AI_STRUCTURED_OUTPUT` | `off` = no `output_config.format` (prompt + zod only), fallback if a schema is rejected |
 | `LUGU_AI_FALLBACKS` | `off` disables server-side refusal fallback |
 | `LUGU_AI_STEPS_PER_INVOCATION`, `LUGU_AI_STEP_BUDGET_MS` | step chaining (defaults 1, 60000) |
-| `LUGU_ALLOWED_ORIGIN` | CORS origin of the app (default `*`) |
+| `LUGU_INTERNAL_SECRET` | required for `ai-generate`; random value (e.g. `openssl rand -hex 32`) authorising step continuations |
+| `LUGU_ALLOWED_ORIGINS` | comma-separated CORS origins, shared `_shared/cors.ts` (default `*`) |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | provided by Supabase |
 
 ## 11. Failure modes
@@ -172,9 +173,9 @@ Actions:
 
 ```bash
 pnpm vitest run --project ai          # core tests with a scripted model (no network, no key)
-supabase secrets set ANTHROPIC_API_KEY=... LUGU_AI_MODEL=claude-opus-5-5 LUGU_ALLOWED_ORIGIN=https://<app>
+supabase secrets set ANTHROPIC_API_KEY=... LUGU_AI_MODEL=claude-opus-5-5 LUGU_ALLOWED_ORIGINS=https://<app> LUGU_INTERNAL_SECRET=$(openssl rand -hex 32)
 supabase functions deploy ai-generate
 supabase functions deploy ai-insights
 ```
 
-The import map is `supabase/functions/deno.json`. `@/` maps to `../../src/` so the functions share the domain schemas with the app. Check that your CLI version bundles files outside `supabase/functions`; if it does not, copy `src/domain` into `_shared/domain` at deploy time.
+The import map is `supabase/functions/deno.json`. It pins `@anthropic-ai/sdk@1.12.0` and maps `@/` to `../../src/` (a relative path inside the repo) so the functions share the domain schemas with the app. **Run the deploy from the repo root.** The bundler resolves `@/` relative to `deno.json` and must be able to read `src/domain/*.ts`. The domain files import only `zod` and each other, with explicit `.ts` extensions.

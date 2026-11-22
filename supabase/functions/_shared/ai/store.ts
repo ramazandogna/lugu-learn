@@ -42,6 +42,12 @@ export interface AiJobRow {
 export interface JobStore {
   create(job: NewAiJob): Promise<{ id: string }>
   get(id: string): Promise<AiJobRow | null>
+  /**
+   * Compare-and-set claim: succeeds only if the job is still queued/running and
+   * `updated_at` equals `expectedUpdatedAt` (bumps it). Prevents two invocations
+   * from running the same step.
+   */
+  claim(id: string, expectedUpdatedAt: string, stage: string): Promise<boolean>
   update(id: string, patch: AiJobPatch): Promise<void>
 }
 
