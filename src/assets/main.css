@@ -1,0 +1,280 @@
+/* Lugu — one stylesheet for both areas.
+ *
+ * Order matters: Tailwind, then exactly one rei-kit preset (web.css — see
+ * docs/design/design-system.md §"Preset"), then the fonts, then Lugu's own
+ * values for the kit's roles. Lugu renames nothing: it redefines the roles the
+ * kit declares, so every rei-kit component follows the brand. */
+@import 'tailwindcss';
+@import 'rei-kit/web.css';
+
+@import '@fontsource-variable/nunito';
+@import '@fontsource/fredoka/500.css';
+@import '@fontsource/fredoka/600.css';
+
+/* ---------------------------------------------------------------------------
+   Brand roles, day. Every on-* is stated and measured (styling.test.ts runs
+   rei-kit's checkStyling, which fails below 4.5:1).
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-canvas: #fdf7ee;
+  --color-surface: #ffffff;
+  --color-muted: #f5ebdd;
+  --color-ink: #251d3a;
+  --color-ink-soft: #5f5672;
+  --color-hair: #eadfce;
+
+  /* "Gece mavisi": the night the star in the logo sits in. */
+  --color-primary: #43399e;
+  --color-on-primary: #ffffff;
+  /* "Gün batımı": warm secondary emphasis. Dark ink on it, never white. */
+  --color-accent: #f08159;
+  --color-on-accent: #251d3a;
+  --color-positive: #23804f;
+  --color-on-positive: #ffffff;
+  --color-negative: #c4423a;
+  --color-on-negative: #ffffff;
+  --color-warning: #e3a21a;
+  --color-on-warning: #251d3a;
+
+  /* Lugu additions. `wash` is the soft ground of the active character theme;
+     `star` paints stars and XP (decoration with its own ground, never text). */
+  --color-wash: #efebfb;
+  --color-star: #f6b92b;
+
+  --font-sans: 'Nunito Variable', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Fredoka', 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+
+  --radius-cell: 4px;
+  --radius-control: 14px;
+  --radius-card: 20px;
+  --radius-shell: 32px;
+
+  --animate-bob: lugu-bob 3.6s ease-in-out infinite;
+  --animate-twinkle: lugu-twinkle 2.6s ease-in-out infinite;
+  --animate-drift: lugu-drift 18s ease-in-out infinite alternate;
+  --animate-burst: lugu-burst 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+  @keyframes lugu-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-3px);
+    }
+  }
+
+  @keyframes lugu-twinkle {
+    0%,
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.6) rotate(20deg);
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes lugu-drift {
+    from {
+      transform: translateX(-8px);
+    }
+    to {
+      transform: translateX(8px);
+    }
+  }
+
+  @keyframes lugu-burst {
+    from {
+      transform: scale(0.4) rotate(-20deg);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+}
+
+/* Night. Restated in a plain `.dark` rule, because `@theme` lands in `:root`
+   and the kit's own `.dark` would otherwise win after dark. */
+.dark {
+  --color-canvas: #15112a;
+  --color-surface: #1f1a38;
+  --color-muted: #2a2448;
+  --color-ink: #f3eefc;
+  --color-ink-soft: #b4abc8;
+  --color-hair: #342d52;
+
+  --color-primary: #a9a1ff;
+  --color-on-primary: #15112a;
+  --color-accent: #ff9c7a;
+  --color-on-accent: #15112a;
+  --color-positive: #5fd394;
+  --color-on-positive: #15112a;
+  --color-negative: #ff8a80;
+  --color-on-negative: #15112a;
+  --color-warning: #f5c04f;
+  --color-on-warning: #15112a;
+
+  --color-wash: #241e44;
+  --color-star: #f6c443;
+
+  --shadow-color: #000000;
+}
+
+/* ---------------------------------------------------------------------------
+   Depth and feel. Warm shadows and a "chunky" control edge for the student
+   world: a button stands on a 3px lip and sinks onto it when pressed.
+   --------------------------------------------------------------------------- */
+:root {
+  --shadow-color: #4a3412;
+  --shadow-control: 0 3px 0 0 color-mix(in oklab, var(--color-ink) 16%, transparent);
+  --shadow-control-pressed: 0 1px 0 0 color-mix(in oklab, var(--color-ink) 16%, transparent);
+  --press-scale: 0.98;
+
+  /* Lugu motion beyond the kit's four durations. */
+  --duration-celebrate: 900ms;
+  --duration-idle: 3600ms;
+
+  /* Character theme hooks; [data-character] reads them (see characters.ts). */
+  --char-motif: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-celebrate: 0ms;
+  }
+
+  .animate-bob,
+  .animate-twinkle,
+  .animate-drift,
+  .animate-burst {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Character themes. `characterThemeStyle(key)` writes the --char-* values on
+   an element together with `data-character`; this maps them onto the kit's
+   roles for that subtree. Only colour changes — never layout.
+   --------------------------------------------------------------------------- */
+[data-character] {
+  --color-primary: var(--char-primary);
+  --color-on-primary: var(--char-on-primary);
+  --color-accent: var(--char-accent);
+  --color-on-accent: var(--char-on-accent);
+  --color-wash: var(--char-wash);
+}
+
+.dark [data-character],
+.dark[data-character] {
+  --color-primary: var(--char-primary-night);
+  --color-on-primary: var(--char-on-primary-night);
+  --color-accent: var(--char-accent-night);
+  --color-on-accent: var(--char-on-accent-night);
+  --color-wash: var(--char-wash-night);
+}
+
+/* ---------------------------------------------------------------------------
+   Admin: the same brand, toned down. Neutral ground, tighter radii, a flat
+   control edge, body font for headings, no character colour.
+   --------------------------------------------------------------------------- */
+[data-area='admin'] {
+  --color-canvas: #f6f6f9;
+  --color-muted: #ecebf3;
+  --color-ink: #1d1b2e;
+  --color-ink-soft: #555b6e;
+  --color-hair: #e2e1ea;
+  --color-wash: #eeecf8;
+
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-shell: 20px;
+
+  --font-display: var(--font-sans);
+  --shadow-color: #1d1b2e;
+  --shadow-control: 0 1px 2px color-mix(in oklab, var(--shadow-color) 6%, transparent);
+  --shadow-control-pressed: none;
+  --press-scale: 0.98;
+}
+
+.dark [data-area='admin'],
+.dark[data-area='admin'] {
+  --color-canvas: #121220;
+  --color-surface: #1b1b2c;
+  --color-muted: #25253a;
+  --color-ink: #ececf4;
+  --color-ink-soft: #a9abbd;
+  --color-hair: #2e2e45;
+  --color-wash: #1f1d36;
+  --shadow-color: #000000;
+}
+
+/* ---------------------------------------------------------------------------
+   Base and the type scale. Headings are Fredoka; everything else Nunito.
+   The named steps below are the hierarchy in docs/design/design-system.md.
+   --------------------------------------------------------------------------- */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-feature-settings: 'kern';
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+}
+
+/* Level 2–4: page, program/lesson title. */
+@utility type-hero {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+@utility type-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  line-height: 1.2;
+}
+
+/* Level 5: a section of a lesson. */
+@utility type-section {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+/* Level 6: the task's own prompt. Body font, heavier, larger than body. */
+@utility type-task {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+/* A short label above a title: "Bölüm 3", "Ders 12". Never coloured text on
+   a wash — ink-soft on the surface. */
+@utility type-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

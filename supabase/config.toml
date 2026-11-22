@@ -1,0 +1,81 @@
+# Local development configuration for the Supabase CLI (`supabase start`).
+# Hosted projects are configured in the dashboard; keep the auth settings there identical.
+
+project_id = "lugu"
+
+[api]
+enabled = true
+port = 54321
+# Every Lugu table and RPC lives in `lugu`; it must be exposed for supabase-js `db: { schema: 'lugu' }`.
+schemas = ["public", "graphql_public", "lugu"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.pooler]
+enabled = false
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173", "http://127.0.0.1:5173"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# No public sign-up: accounts are created by the admin-students edge function (auth.admin.createUser).
+enable_signup = false
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = false
+# Student emails are synthetic (`@students.lugu.invalid`) and can never receive mail.
+enable_confirmations = false
+double_confirm_changes = false
+secure_password_change = false
+max_frequency = "1m0s"
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+deno_version = 2
+
+[functions.admin-students]
+verify_jwt = true
+import_map = "./functions/deno.json"
+
+[functions.process-deletion]
+verify_jwt = true
+import_map = "./functions/deno.json"
+
+[analytics]
+enabled = false
