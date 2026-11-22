@@ -318,3 +318,27 @@ describe('academic', () => {
     ).toMatch(/school_exam_results_counts/)
   })
 })
+
+describe('data deletion', () => {
+  test('deleting the auth user cascades every student row; the request and audit rows survive', async () => {
+    const victim = await h.createStudent()
+    await h.rpc(admin, 'admin_assign_program', { student_id: victim.id, version_id: program.versionId })
+    const s = await h.rpc<SessionPayload>(victim.id, 'start_or_resume_session', { lesson_id: program.lessonIds[0] })
+    await playThrough(h, victim.id, s.session.id)
+    await h.rpc(victim.id, 'complete_lesson', { session_id: s.session.id })
+    const req = await scalar<string>(
+      `insert into lugu.data_deletion_requests (student_id, student_code, status, approved_by, approved_at)
+       values ($1, $2, 'approved', $3, now()) returning id as v`,
+      [victim.id, victim.code, admin],
+    )
+    await h.db.query(`delete from auth.users where id = $1`, [victim.id])
+    const left = await scalar<number>(
+      `select (select count(*) from lugu.profiles where user_id = $1) + (select count(*) from lugu.question_attempts where student_id = $1)
+            + (select count(*) from lugu.progress_rewards where student_id = $1) + (select count(*) from lugu.program_assignments where student_id = $1)
+            + (select count(*) from lugu.lesson_completion_records where student_id = $1) as v`,
+      [victim.id],
+    )
+    expect(Number(left)).toBe(0)
+    expect(await scalar<number>(`select count(*)::int as v from lugu.data_deletion_requests where id = $1`, [req])).toBe(1)
+  })
+})
