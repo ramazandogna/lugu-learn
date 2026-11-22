@@ -16,3 +16,4 @@ supabase/.branches/
 *.sql.gz
 *.dump
 lugu-architecture-prompt.md
+supabase/functions/.env
