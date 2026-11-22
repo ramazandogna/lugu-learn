@@ -66,8 +66,16 @@ async function loadAccount(session: Session | null): Promise<Account | null> {
 }
 
 async function apply(session: Session | null) {
+  const account = await loadAccount(session)
+  // A paused/disabled account with a still-valid token would bounce between login and home.
+  if (session && account && account.status !== 'active') {
+    await supabase.auth.signOut()
+    state.session = null
+    state.account = null
+    return
+  }
   state.session = session
-  state.account = await loadAccount(session)
+  state.account = account
 }
 
 let readyPromise: Promise<void> | null = null
@@ -100,6 +108,7 @@ export async function signIn(identifier: string, password: string, remember: boo
   if (!email) return 'invalid_identifier'
   setRememberMe(remember)
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error?.code === 'user_banned') return 'account_inactive'
   if (error) return error.status === 400 || error.code === 'invalid_credentials' ? 'invalid_credentials' : 'network'
   const account = await loadAccount(data.session)
   if (!account) {
