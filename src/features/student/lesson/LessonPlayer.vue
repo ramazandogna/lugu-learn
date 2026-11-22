@@ -119,6 +119,8 @@ onBeforeUnmount(() => window.removeEventListener('online', wake))
         <CompletionCelebration
           :title="replay ? 'Tekrarı tamamladın!' : 'Ders tamamlandı!'"
           :message="replay ? 'Bildiklerini tazeledin. Harika bir tekrar oldu!' : 'Bugünkü maceranı bitirdin. Küçük adımlar, büyük hayaller!'"
+          :stars="session.completion.value.stars"
+          :stars-label="`3 yıldızdan ${session.completion.value.stars} yıldız`"
           :xp="session.completion.value.xp_awarded || undefined"
           :xp-label="`${session.completion.value.xp_awarded} XP kazandın`"
         >

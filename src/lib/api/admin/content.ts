@@ -33,29 +33,7 @@ export async function setPackageStatus(packageId: string, status: PackageStatus)
  */
 export async function saveContent(pkg: PackageRow, content: Json): Promise<PackageRow> {
   if (pkg.status === 'draft') return must(await db.from('lesson_content_packages').update({ content }).eq('id', pkg.id).select().single())
-  const latest = must(
-    await db.from('lesson_content_packages').select('revision').eq('lesson_id', pkg.lesson_id).order('revision', { ascending: false }).limit(1),
-  )
-  const revision = (latest[0]?.revision ?? 0) + 1
-  const created = must(
-    await db
-      .from('lesson_content_packages')
-      .insert({ lesson_id: pkg.lesson_id, revision, status: 'draft', origin: 'manual', content })
-      .select()
-      .single(),
-  )
-  const material = await adminMaterial(pkg.id)
-  if (material)
-    ok(
-      await db.from('lesson_admin_material').insert({
-        package_id: created.id,
-        teacher_guide: material.teacher_guide,
-        speaking_plan: material.speaking_plan,
-        visual_plan: material.visual_plan,
-        qa_report: material.qa_report,
-      }),
-    )
-  return created
+  return must(await db.rpc('admin_new_revision', { package_id: pkg.id, content }))
 }
 
 export async function saveAdminMaterial(packageId: string, patch: { teacher_guide?: Json; speaking_plan?: Json }): Promise<void> {

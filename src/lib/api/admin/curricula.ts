@@ -84,15 +84,12 @@ export async function deleteLesson(id: string): Promise<void> {
   ok(await db.from('curriculum_lessons').delete().eq('id', id))
 }
 
-/**
- * Writes a new order. The unique (version, sequence) constraint is checked per
- * statement, so every lesson first moves to a free slot above the current
- * range and then to its final place.
- */
-export async function reorderLessons(orderedIds: readonly string[], currentMax: number): Promise<void> {
-  const base = currentMax + orderedIds.length + 1
-  for (const [i, id] of orderedIds.entries()) ok(await db.from('curriculum_lessons').update({ sequence: base + i }).eq('id', id))
-  for (const [i, id] of orderedIds.entries()) ok(await db.from('curriculum_lessons').update({ sequence: i + 1 }).eq('id', id))
+/** Writes a new order in one transaction (`admin_reorder_lessons`); `orderedIds` = every lesson of the version. */
+export async function reorderLessons(orderedIds: readonly string[], _currentMax?: number): Promise<void> {
+  const first = orderedIds[0]
+  if (!first) return
+  const lesson = must(await db.from('curriculum_lessons').select('version_id').eq('id', first).single())
+  ok(await db.rpc('admin_reorder_lessons', { version_id: lesson.version_id, lesson_ids: [...orderedIds] }))
 }
 
 export async function upsertObjective(versionId: string, o: { id?: string; code: string; text: string; sort: number }) {

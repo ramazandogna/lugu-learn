@@ -3,7 +3,8 @@ import { computed } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
 import { BaseButton, BaseCard, EmptyState } from 'rei-kit'
 import { AcademicInsight, ObservedFacts } from '@/domain/insights'
-import { latestJob, startInsight } from '@/lib/api/admin'
+import { latestJob, latestReviewedInsight, saveReviewedInsight, startInsight } from '@/lib/api/admin'
+import type { Json } from '@/lib/database.types'
 import JobProgress from '../components/JobProgress.vue'
 import LoadState from '../components/LoadState.vue'
 import EvidenceStatements from '../students/tabs/EvidenceStatements.vue'
@@ -12,6 +13,7 @@ import { useAction, useJobPoll, useLoad } from '../lib/use-load'
 
 const { studentId, hasExams } = defineProps<{ studentId: string; hasExams: boolean }>()
 const state = useLoad(() => latestJob({ kind: 'academic_insight', studentId }))
+const reviewed = useLoad(() => latestReviewedInsight(studentId))
 const poll = useJobPoll(() => void state.reload())
 const { busy, run } = useAction()
 
@@ -27,6 +29,15 @@ const facts = computed(() => {
   const r = ObservedFacts.safeParse(output.value?.observed)
   return r.success ? r.data.facts : []
 })
+
+/** The teacher has read this draft: it is kept as the reviewed insight for the student. */
+const alreadyReviewed = computed(() => !!lastSucceeded.value && reviewed.data.value?.ai_job_id === lastSucceeded.value.id)
+async function markReviewed() {
+  const r = output.value?.result
+  if (!insight.value || !lastSucceeded.value || r === undefined) return
+  const jobId = lastSucceeded.value.id
+  if (await run(() => saveReviewedInsight(studentId, r as Json, jobId), 'Gözlem gözden geçirildi olarak kaydedildi')) void reviewed.reload()
+}
 
 async function generate() {
   await run(async () => {
@@ -62,6 +73,8 @@ async function generate() {
         <p class="text-ink-soft text-xs">Oluşturma: {{ formatDateTime(lastSucceeded?.updated_at) }}</p>
         <p>{{ insight.summary }}</p>
         <EvidenceStatements :statements="insight.observations" :facts="facts" />
+        <p v-if="alreadyReviewed" class="text-ink-soft text-sm">Gözden geçirildi: {{ formatDateTime(reviewed.data.value?.reviewed_at) }}</p>
+        <BaseButton v-else class="self-start" size="sm" :loading="busy" @click="markReviewed">Gözden geçirdim, kaydet</BaseButton>
       </div>
     </LoadState>
   </BaseCard>

@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
 
   const { data: request } = await service.from('data_deletion_requests').select('*').eq('id', request_id).maybeSingle()
   if (!request) return json(req, 404, { error: 'request_not_found' })
-  if (request.status !== 'requested' && request.status !== 'approved') return json(req, 409, { error: 'request_not_open' })
+  // `failed` may be retried (e.g. a transient Auth error).
+  if (request.status === 'rejected' || request.status === 'completed') return json(req, 409, { error: 'request_not_open' })
 
   const [{ data: profile }, { data: sp }] = await Promise.all([
     service.from('profiles').select('role').eq('user_id', request.student_id).maybeSingle(),

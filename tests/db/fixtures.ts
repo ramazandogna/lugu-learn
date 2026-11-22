@@ -151,6 +151,7 @@ export async function playThrough(
   await call('record_answer', { section: 'story', question_id: 'st-1', response: 0 })
   await call('record_answer', { section: 'story', question_id: 'st-2', response: 'nope' })
   await call('complete_section', { section: 'story' })
+  await call('record_answer', { section: 'explanation', question_id: 'ex-1-check', response: 1 })
   await call('complete_section', { section: 'explanation' })
   await call('record_answer', { section: 'homework', question_id: 'hw-1-c', response: 'have' })
   await call('record_answer', { section: 'homework', question_id: 'hw-1-o', response: ['I', 'have', 'breakfast'] })

@@ -268,6 +268,8 @@ describe('profile and password', () => {
   test('mark_password_changed clears only the caller’s flag', async () => {
     const x = await h.createStudent()
     const y = await h.createStudent()
+    expect(await errorOf(h.rpc(x.id, 'mark_password_changed'))).toBe('LUGU_PASSWORD_NOT_CHANGED')
+    await h.db.query(`update auth.users set encrypted_password = 'new-hash' where id = $1`, [x.id])
     await h.rpc(x.id, 'mark_password_changed')
     expect(await scalar<boolean>(`select must_change_password as v from lugu.profiles where user_id = $1`, [x.id])).toBe(false)
     expect(await scalar<boolean>(`select must_change_password as v from lugu.profiles where user_id = $1`, [y.id])).toBe(true)

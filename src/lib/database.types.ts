@@ -125,9 +125,73 @@ export type LessonCompletion = {
   achievements: string[]
   next_lesson_id: string | null
   assignment_status: AssignmentStatus
+  /** 1–3 from the assessment percent (≥ 90 → 3, ≥ 70 → 2, else 1). */
+  stars: 1 | 2 | 3
+}
+
+/** A weak vocabulary item from an earlier lesson of the same assignment (`student_review_items`). */
+export type ReviewItem = {
+  package_id: string
+  item_id: string
+  en: string
+  tr: string
+  example: { en: string; tr: string } | null
+  incorrect_count: number
+  last_attempt_at: string | null
 }
 
 type LuguTables = {
+  academic_insights: {
+    Row: {
+      ai_job_id: string | null
+      content: Json
+      created_at: string
+      id: string
+      reviewed_at: string | null
+      reviewed_by: string | null
+      status: 'draft' | 'reviewed'
+      student_id: string
+      updated_at: string
+    }
+    Insert: {
+      ai_job_id?: string | null
+      content: Json
+      created_at?: string
+      id?: string
+      reviewed_at?: string | null
+      reviewed_by?: string | null
+      status?: 'draft' | 'reviewed'
+      student_id: string
+      updated_at?: string
+    }
+    Update: {
+      ai_job_id?: string | null
+      content?: Json
+      created_at?: string
+      id?: string
+      reviewed_at?: string | null
+      reviewed_by?: string | null
+      status?: 'draft' | 'reviewed'
+      student_id?: string
+      updated_at?: string
+    }
+    Relationships: [
+      {
+        foreignKeyName: 'academic_insights_ai_job_id_fkey'
+        columns: ['ai_job_id']
+        isOneToOne: false
+        referencedRelation: 'ai_jobs'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'academic_insights_student_id_fkey'
+        columns: ['student_id']
+        isOneToOne: false
+        referencedRelation: 'student_profiles'
+        referencedColumns: ['user_id']
+      },
+    ]
+  }
   achievements: {
     Row: {
       active: boolean
@@ -214,6 +278,7 @@ type LuguTables = {
       output: Json | null
       output_tokens: number | null
       package_id: string | null
+      speaking_session_id: string | null
       stage: string | null
       status: 'queued' | 'running' | 'succeeded' | 'failed'
       student_id: string | null
@@ -232,6 +297,7 @@ type LuguTables = {
       output?: Json | null
       output_tokens?: number | null
       package_id?: string | null
+      speaking_session_id?: string | null
       stage?: string | null
       status?: 'queued' | 'running' | 'succeeded' | 'failed'
       student_id?: string | null
@@ -250,6 +316,7 @@ type LuguTables = {
       output?: Json | null
       output_tokens?: number | null
       package_id?: string | null
+      speaking_session_id?: string | null
       stage?: string | null
       status?: 'queued' | 'running' | 'succeeded' | 'failed'
       student_id?: string | null
@@ -271,6 +338,13 @@ type LuguTables = {
         referencedColumns: ['id']
       },
       {
+        foreignKeyName: 'ai_jobs_speaking_session_id_fkey'
+        columns: ['speaking_session_id']
+        isOneToOne: false
+        referencedRelation: 'speaking_sessions'
+        referencedColumns: ['id']
+      },
+      {
         foreignKeyName: 'ai_jobs_student_id_fkey'
         columns: ['student_id']
         isOneToOne: false
@@ -282,6 +356,7 @@ type LuguTables = {
   assessment_results: {
     Row: {
       answers: Json
+      client_id: string | null
       id: string
       package_id: string
       percent: number
@@ -297,6 +372,7 @@ type LuguTables = {
     }
     Insert: {
       answers: Json
+      client_id?: string | null
       id?: string
       package_id: string
       percent: number
@@ -312,6 +388,7 @@ type LuguTables = {
     }
     Update: {
       answers?: Json
+      client_id?: string | null
       id?: string
       package_id?: string
       percent?: number
@@ -930,6 +1007,32 @@ type LuguTables = {
       },
     ]
   }
+  password_change_markers: {
+    Row: {
+      marker: string | null
+      set_at: string
+      user_id: string
+    }
+    Insert: {
+      marker?: string | null
+      set_at?: string
+      user_id: string
+    }
+    Update: {
+      marker?: string | null
+      set_at?: string
+      user_id?: string
+    }
+    Relationships: [
+      {
+        foreignKeyName: 'password_change_markers_user_id_fkey'
+        columns: ['user_id']
+        isOneToOne: true
+        referencedRelation: 'profiles'
+        referencedColumns: ['user_id']
+      },
+    ]
+  }
   profiles: {
     Row: {
       created_at: string
@@ -1148,6 +1251,7 @@ type LuguTables = {
   question_attempts: {
     Row: {
       attempt_no: number
+      client_id: string | null
       correct: boolean
       created_at: string
       hint_used: boolean
@@ -1162,6 +1266,7 @@ type LuguTables = {
     }
     Insert: {
       attempt_no: number
+      client_id?: string | null
       correct: boolean
       created_at?: string
       hint_used?: boolean
@@ -1176,6 +1281,7 @@ type LuguTables = {
     }
     Update: {
       attempt_no?: number
+      client_id?: string | null
       correct?: boolean
       created_at?: string
       hint_used?: boolean
@@ -1883,6 +1989,15 @@ type LuguFunctions = {
     Args: { version_id: string }
     Returns: Row<'curriculum_versions'>
   }
+  admin_new_revision: {
+    Args: { package_id: string; content: Json }
+    Returns: Row<'lesson_content_packages'>
+  }
+  admin_reorder_lessons: {
+    /** Every lesson id of the (draft) version, in the new order. */
+    Args: { version_id: string; lesson_ids: string[] }
+    Returns: undefined
+  }
   admin_set_package_status: {
     Args: { package_id: string; status: PackageStatus }
     Returns: Row<'lesson_content_packages'>
@@ -1915,6 +2030,11 @@ type LuguFunctions = {
     Args: never
     Returns: undefined
   }
+  /** Service role only (admin-students edge function, after a password reset). */
+  refresh_password_marker: {
+    Args: { p_user_id: string }
+    Returns: undefined
+  }
   /** Service role only (admin-students edge function). */
   next_student_code: {
     Args: never
@@ -1928,7 +2048,14 @@ type LuguFunctions = {
       response: Json
       response_ms?: number | null
       hint_used?: boolean
+      /** Idempotency key: a repeat with the same id returns the first result. */
+      client_id?: string | null
     }
+    Returns: AnswerResult
+  }
+  record_review_answer: {
+    /** Graded EN→TR against the item's `tr`; does not change mastery. */
+    Args: { session_id: string; package_id: string; item_id: string; chosen: string; response_ms?: number | null; client_id?: string | null }
     Returns: AnswerResult
   }
   record_session_event: {
@@ -1936,7 +2063,7 @@ type LuguFunctions = {
     Returns: undefined
   }
   record_vocab_answer: {
-    Args: { session_id: string; item_id: string; direction: VocabDirection; chosen: string; response_ms?: number | null }
+    Args: { session_id: string; item_id: string; direction: VocabDirection; chosen: string; response_ms?: number | null; client_id?: string | null }
     Returns: VocabAnswerResult
   }
   save_section_state: {
@@ -1959,6 +2086,18 @@ type LuguFunctions = {
     Args: { p_version_id: string }
     Returns: boolean
   }
+  student_open_break: {
+    Args: { session_id: string }
+    Returns: Row<'break_sessions'> | null
+  }
+  student_review_items: {
+    Args: { lesson_id: string }
+    Returns: ReviewItem[]
+  }
+  student_lesson_titles: {
+    Args: never
+    Returns: { id: string; title: string; sequence: number }[]
+  }
   student_home: {
     Args: never
     Returns: StudentHome
@@ -1973,7 +2112,7 @@ type LuguFunctions = {
   }
   submit_assessment: {
     /** `answers`: `{ [questionId]: response }`; a missing question counts as wrong. */
-    Args: { session_id: string; answers: Json }
+    Args: { session_id: string; answers: Json; client_id?: string | null }
     Returns: AssessmentScore
   }
   update_my_profile: {

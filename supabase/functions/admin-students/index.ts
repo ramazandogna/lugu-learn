@@ -96,6 +96,8 @@ Deno.serve(async (req) => {
     const { error } = await service.auth.admin.updateUserById(body.student_id, { password })
     if (error) return json(req, 500, { error: 'auth_update_failed' })
     await service.from('profiles').update({ must_change_password: true }).eq('user_id', body.student_id)
+    // The flag may already be set; record the new temporary password so mark_password_changed can tell it was changed.
+    await service.rpc('refresh_password_marker', { p_user_id: body.student_id })
     await audit(service, adminId, 'student_password_reset', 'profiles', body.student_id)
     return json(req, 200, { student_id: body.student_id, password })
   }

@@ -1,10 +1,11 @@
-import type { Tables, TablesInsert } from '../../database.types'
+import type { Json, Tables, TablesInsert } from '../../database.types'
 import { db } from '../../supabase'
 import { must, ok } from './errors'
 
 export type Subject = Tables<'school_subjects'>
 export type Exam = Tables<'school_exams'>
 export type ExamResult = Tables<'school_exam_results'>
+export type AcademicInsightRow = Tables<'academic_insights'>
 
 export async function listSubjects(): Promise<Subject[]> {
   return must(await db.from('school_subjects').select('*').order('sort').order('name'))
@@ -67,4 +68,31 @@ export async function recentExams(limit = 10): Promise<{ exams: Exam[]; results:
       )
     : []
   return { exams, results }
+}
+
+/** The latest reviewed (teacher-approved) academic insight of a student, if any. */
+export async function latestReviewedInsight(studentId: string): Promise<AcademicInsightRow | null> {
+  const rows = must(
+    await db
+      .from('academic_insights')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('status', 'reviewed')
+      .order('reviewed_at', { ascending: false })
+      .limit(1),
+  )
+  return rows[0] ?? null
+}
+
+/** Stores an AI academic insight as reviewed; `reviewed_by` defaults to the signed-in admin. */
+export async function saveReviewedInsight(studentId: string, content: Json, aiJobId: string | null): Promise<void> {
+  ok(
+    await db.from('academic_insights').insert({
+      student_id: studentId,
+      content,
+      status: 'reviewed',
+      ai_job_id: aiJobId,
+      reviewed_at: new Date().toISOString(),
+    }),
+  )
 }

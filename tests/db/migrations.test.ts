@@ -9,7 +9,7 @@ describe('migrations', () => {
       `select c.relname, c.relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
        where n.nspname = 'lugu' and c.relkind = 'r' order by 1`,
     )
-    expect(res.rows.length).toBe(34)
+    expect(res.rows.length).toBe(36)
     expect(res.rows.filter((r) => !r.relrowsecurity).map((r) => r.relname)).toEqual([])
   })
 

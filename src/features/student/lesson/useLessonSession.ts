@@ -144,17 +144,26 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
     return {
       pkg: l.pkg,
       sessionId: l.session.id,
+      lessonId: l.session.lesson_id,
       kind: l.session.kind,
       preMastered: l.preMastered,
       rng: Math.random,
       character: l.pkg.meta.character,
       saving,
       saveState,
-      recordAnswer: (a) => queue.enqueue(() => api.recordAnswer({ sessionId: l.session.id, ...a })).catch((e) => (report(e), undefined)),
-      recordVocab: (a) => queue.enqueue(() => api.recordVocabAnswer({ sessionId: l.session.id, ...a })).catch((e) => (report(e), undefined)),
+      // One client id per answer, created outside the retried task so every retry reuses it.
+      recordAnswer: (a) => {
+        const clientId = crypto.randomUUID()
+        return queue.enqueue(() => api.recordAnswer({ sessionId: l.session.id, ...a, clientId })).catch((e) => (report(e), undefined))
+      },
+      recordVocab: (a) => {
+        const clientId = crypto.randomUUID()
+        return queue.enqueue(() => api.recordVocabAnswer({ sessionId: l.session.id, ...a, clientId })).catch((e) => (report(e), undefined))
+      },
       submitAssessment: async (answers) => {
         await queue.drain()
-        return queue.enqueue(() => api.submitAssessment(l.session.id, answers))
+        const clientId = crypto.randomUUID()
+        return queue.enqueue(() => api.submitAssessment(l.session.id, answers, clientId))
       },
       report,
     }

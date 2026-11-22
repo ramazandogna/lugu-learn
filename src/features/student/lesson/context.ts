@@ -11,6 +11,7 @@ import type { StudentPackage } from './package'
 export interface LessonContext {
   pkg: StudentPackage
   sessionId: string
+  lessonId: string
   kind: SessionKind
   /** Vocabulary ids already mastered before this session (empty for a replay). */
   preMastered: readonly string[]

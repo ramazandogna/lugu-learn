@@ -79,8 +79,10 @@ describe('student isolation', () => {
 
   test('students see the curriculum structure only of versions assigned to them', async () => {
     const outsider = await h.createStudent()
-    expect(await count(a.id, 'select * from lugu.curriculum_lessons')).toBe(2)
-    expect(await count(outsider.id, 'select * from lugu.curriculum_lessons')).toBe(0)
+    // curriculum_lessons carries admin source_notes: students read titles through an RPC only.
+    expect(await count(a.id, 'select * from lugu.curriculum_lessons')).toBe(0)
+    expect(await h.rpc<unknown[]>(a.id, 'student_lesson_titles')).toHaveLength(2)
+    expect(await h.rpc<unknown[]>(outsider.id, 'student_lesson_titles')).toHaveLength(0)
     expect(await count(outsider.id, 'select * from lugu.curricula')).toBe(0)
   })
 

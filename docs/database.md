@@ -16,6 +16,8 @@ what the migrations actually implement.
 | `0006_rpc_student.sql` | grading, package helpers, student RPCs |
 | `0007_rpc_admin.sql` | admin RPCs, `next_student_code()` |
 | `0008_storage.sql` | buckets + `storage.objects` policies (skipped without a `storage` schema) |
+| `0009_gaps.sql` | `academic_insights`, `ai_jobs.speaking_session_id`, review items, open break, explanation rule, stars, atomic reorder / new revision |
+| `0010_qa.sql` | idempotent answers (`client_id`), verified password change, `source_notes` hidden from students, `complete_lesson` lock order, no listing policy on `lesson-assets` |
 
 ## Security model
 
@@ -30,7 +32,7 @@ what the migrations actually implement.
     `learning_sessions`, `session_section_progress`, `session_events`, `break_sessions`,
     `question_attempts`, `vocabulary_mastery`, `assessment_results`, `lesson_completion_records`,
     `progress_rewards`, `student_achievement_records`; curriculum structure (curricula, versions,
-    objectives, lessons) only for versions assigned to them; `schools` and `achievements` are
+    objectives) only for versions assigned to them — not `curriculum_lessons`, which holds admin `source_notes`; lesson titles come from `student_lesson_titles()` and the map/home RPCs; `schools` and `achievements` are
     readable by any signed-in user.
   - Students have **no** write policy anywhere; all learning writes go through RPCs.
   - Students can never read `lesson_content_packages`, `lesson_admin_material`, `curriculum_sources`,
@@ -63,12 +65,22 @@ work while paused):
 | `complete_lesson(session_id)` | idempotent per session; see rules below |
 | `search_schools(q)` / `add_school(name, city, district, country='Türkiye')` | dedupe by `normalized_key`; merged schools resolve to the survivor |
 | `update_my_profile(first_name, last_name, display_name, grade, school_id, avatar_key)` | null = unchanged; sets `profile_completed_at` once first name, grade, school and avatar are set |
-| `mark_password_changed()` | clears the caller's `must_change_password` |
+| `mark_password_changed()` | clears the caller's `must_change_password`, only if the Auth password hash differs from the one recorded when the flag was set (else `LUGU_PASSWORD_NOT_CHANGED`) |
+| `student_review_items(lesson_id)` | up to 6 weak words (`incorrect_count > 0`) from earlier lessons of the same version: `{package_id, item_id, en, tr, example, incorrect_count, last_attempt_at}` |
+| `record_review_answer(session_id, package_id, item_id, chosen, response_ms, client_id)` | EN→TR answer on a review word; attempt in section `review` under the item's own package; mastery unchanged |
+| `student_open_break(session_id)` | the open break row or null |
+| `student_lesson_titles()` | `{id, title, sequence}` of lessons in the caller's assigned versions |
+
+`record_answer`, `record_vocab_answer`, `record_review_answer` and `submit_assessment` take an optional
+`client_id uuid` (unique per student). A repeat with the same id returns the first result and writes
+nothing; the client creates one id per answer and reuses it on retry.
 
 Admin (each writes `admin_audit_logs`): `admin_assign_program(student_id, version_id, start_lesson_id)`,
 `admin_set_progress(assignment_id, action, lesson_id, note)`, `admin_set_package_status(package_id, status)`,
-`admin_publish_version(version_id)`, `admin_new_version(curriculum_id)`, `admin_merge_schools(from_id, into_id)`.
-Service role only: `next_student_code()`.
+`admin_publish_version(version_id)`, `admin_new_version(curriculum_id)`, `admin_merge_schools(from_id, into_id)`,
+`admin_reorder_lessons(version_id, lesson_ids)` (draft version; exactly its lessons, one transaction),
+`admin_new_revision(package_id, content)` (next draft revision + copied admin material).
+Service role only: `next_student_code()`, `refresh_password_marker(p_user_id)`.
 
 ### Learning rules
 
@@ -76,14 +88,14 @@ Service role only: `next_student_code()`.
   homework, assessment. A section whose `completion.require*` flag is false is optional.
 - Criteria: vocab_quiz — every item mastered (primary: `vocabulary_mastery.mastered_at`; replay:
   two correct since a miss within the replay's own attempts); story — every question attempted;
-  homework — every group's three questions correct at least once in the session; assessment —
-  submitted.
+  explanation — every step's `check` question attempted at least once; homework — every group's three
+  questions correct at least once in the session; assessment — submitted.
 - Mastery (primary only): correct → `correct_count + 1`; miss → `incorrect_count + 1`,
   `correct_count = 0`; `mastered_at` set at 2 and never cleared.
 - `complete_lesson` re-checks every required section, then `minAssessmentPercent` (> 0 requires a
   submitted assessment at or above it). Primary: one `lesson_completion_records` row per session;
   XP (`rewards.lesson_xp`, default 100) and `lessons_completed` achievements only on the student's
-  first completion of that lesson; the assignment advances to the next non-archived lesson or
+  first completion of that lesson; `stars` (≥ 90 % → 3, ≥ 70 % → 2, else 1) is returned and stored in the record's `summary`; the assignment advances to the next non-archived lesson or
   becomes `completed`. Replay: only the session is closed.
 - Admin progress: forward/backward/set_lesson abandon the active primary session of the lesson the
   student leaves; restart_lesson abandons the current one; archive abandons all. Nothing is deleted;
@@ -116,6 +128,7 @@ RPCs raise `P0001` with one of these messages (stable, for UI mapping):
 | `LUGU_INVALID_ARGUMENT` | bad enum value, empty name, malformed `answers`/`data` |
 | `LUGU_INVALID_SECTION` | unknown section, or section that takes no answers |
 | `LUGU_INVALID_PROFILE` | profile field fails validation |
+| `LUGU_PASSWORD_NOT_CHANGED` | `mark_password_changed` before the Auth password was actually changed |
 | `LUGU_STATE_TOO_LARGE` | resume snapshot over 256 KB |
 | `LUGU_SESSION_NOT_FOUND` / `LUGU_SESSION_NOT_ACTIVE` | not the caller's session / already completed or abandoned |
 | `LUGU_ASSIGNMENT_NOT_FOUND` / `LUGU_ASSIGNMENT_NOT_ACTIVE` / `LUGU_ASSIGNMENT_ARCHIVED` | assignment state |
@@ -148,7 +161,7 @@ RPCs raise `P0001` with one of these messages (stable, for UI mapping):
   shown once); `reset-password` → `{password}`; `set-status` (`paused`/`disabled` ban in Auth,
   `active` unbans). Admin check reads `lugu.profiles` via the service role.
 - `process-deletion` (POST `{request_id, confirm_student_code}`): approves if needed, deletes the
-  Auth user (all student rows cascade), marks the request `completed`/`failed`, audits.
+  Auth user (all student rows cascade), marks the request `completed`/`failed`, audits. `failed` requests can be retried.
 - Shared: `_shared/auth.ts` (`requireAdmin`, `serviceClient`, `audit`), `_shared/cors.ts`
   (`LUGU_ALLOWED_ORIGINS`, default `*`).
 

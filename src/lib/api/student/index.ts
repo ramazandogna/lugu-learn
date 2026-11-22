@@ -65,7 +65,8 @@ export const saveSectionState = (sessionId: string, section: SectionKey, state: 
 
 export const completeSection = (sessionId: string, section: SectionKey) => unwrap(db.rpc('complete_section', { session_id: sessionId, section }))
 
-export const recordAnswer = (args: { sessionId: string; section: SectionKey; questionId: string; response: Json; responseMs: number; hintUsed: boolean }) =>
+/** `clientId`: generated once per answer by the caller and reused on retry, so a retry never double-counts. */
+export const recordAnswer = (args: { sessionId: string; section: SectionKey; questionId: string; response: Json; responseMs: number; hintUsed: boolean; clientId?: string }) =>
   unwrap(
     db.rpc('record_answer', {
       session_id: args.sessionId,
@@ -74,10 +75,11 @@ export const recordAnswer = (args: { sessionId: string; section: SectionKey; que
       response: args.response,
       response_ms: Math.round(args.responseMs),
       hint_used: args.hintUsed,
+      client_id: args.clientId ?? null,
     }),
   )
 
-export const recordVocabAnswer = (args: { sessionId: string; itemId: string; direction: VocabDirection; chosen: string; responseMs: number }) =>
+export const recordVocabAnswer = (args: { sessionId: string; itemId: string; direction: VocabDirection; chosen: string; responseMs: number; clientId?: string }) =>
   unwrap(
     db.rpc('record_vocab_answer', {
       session_id: args.sessionId,
@@ -85,11 +87,12 @@ export const recordVocabAnswer = (args: { sessionId: string; itemId: string; dir
       direction: args.direction,
       chosen: args.chosen,
       response_ms: Math.round(args.responseMs),
+      client_id: args.clientId ?? null,
     }),
   )
 
-export const submitAssessment = (sessionId: string, answers: Record<string, number | string | string[]>) =>
-  unwrap(db.rpc('submit_assessment', { session_id: sessionId, answers }))
+export const submitAssessment = (sessionId: string, answers: Record<string, number | string | string[]>, clientId?: string) =>
+  unwrap(db.rpc('submit_assessment', { session_id: sessionId, answers, client_id: clientId ?? null }))
 
 export const recordSessionEvent = (sessionId: string, kind: SessionEventKind, data: Json = {}) =>
   run(db.rpc('record_session_event', { session_id: sessionId, kind, data }))
@@ -157,22 +160,42 @@ export async function getAchievements() {
 }
 
 export async function getHistory() {
-  const [sessions, completions, breaks] = await Promise.all([
+  // Lesson titles come from an RPC: students cannot read curriculum_lessons (it holds admin notes).
+  const [rows, titles, completions, breaks] = await Promise.all([
     unwrap(
       db
         .from('learning_sessions')
-        .select('id, kind, status, started_at, completed_at, active_seconds, break_seconds, lesson_id, curriculum_lessons(title, sequence)')
+        .select('id, kind, status, started_at, completed_at, active_seconds, break_seconds, lesson_id')
         .order('started_at', { ascending: false })
         .limit(100),
     ),
+    unwrap(db.rpc('student_lesson_titles')),
     unwrap(db.from('lesson_completion_records').select('id, lesson_id, session_id, completed_at').order('completed_at', { ascending: false })),
     unwrap(db.from('break_sessions').select('id, session_id, planned_minutes, started_at, ended_at, early_return').order('started_at', { ascending: false }).limit(200)),
   ])
+  const byId = new Map(titles.map((t) => [t.id, { title: t.title, sequence: t.sequence }]))
+  const sessions = rows.map((s) => ({ ...s, curriculum_lessons: byId.get(s.lesson_id) ?? null }))
   return { sessions, completions, breaks }
 }
 
 /** Breaks of a session left open (the page was closed mid-break). */
 export async function getOpenBreaks(sessionId: string): Promise<string[]> {
-  const rows = await unwrap(db.from('break_sessions').select('id').eq('session_id', sessionId).is('ended_at', null))
-  return rows.map((r) => r.id)
+  const { data, error } = await db.rpc('student_open_break', { session_id: sessionId })
+  if (error) throw toApiError(error)
+  return data ? [data.id] : []
 }
+
+/** Up to 6 weak vocabulary items from earlier lessons, for the review warm-up. */
+export const reviewItems = (lessonId: string) => unwrap(db.rpc('student_review_items', { lesson_id: lessonId }))
+
+export const recordReviewAnswer = (sessionId: string, a: { packageId: string; itemId: string; chosen: string; responseMs: number; clientId?: string }) =>
+  unwrap(
+    db.rpc('record_review_answer', {
+      session_id: sessionId,
+      package_id: a.packageId,
+      item_id: a.itemId,
+      chosen: a.chosen,
+      response_ms: Math.round(a.responseMs),
+      client_id: a.clientId ?? null,
+    }),
+  )
