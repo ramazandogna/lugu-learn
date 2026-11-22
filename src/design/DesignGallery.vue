@@ -43,11 +43,11 @@ const scope = computed(() => {
     <header class="border-hair sticky top-0 z-40 border-b bg-[color-mix(in_oklab,var(--color-canvas)_92%,transparent)] backdrop-blur">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
         <h1 class="type-section me-auto">Lugu tasarım sistemi</h1>
-        <SegmentedControl v-model="theme" :options="options" aria-label="Tema" />
+        <div class="no-scrollbar max-w-full overflow-x-auto"><SegmentedControl v-model="theme" :options="options" aria-label="Tema" /></div>
         <SegmentedControl v-model="mode" :options="modes" aria-label="Görünüm" />
       </div>
     </header>
-    <main class="mx-auto max-w-6xl px-4 pb-24">
+    <main class="mx-auto max-w-6xl min-w-0 overflow-x-clip px-4 pb-24">
       <GalleryBrand />
       <GalleryCharacters />
       <GalleryLearning />
