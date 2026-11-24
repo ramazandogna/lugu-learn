@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string
   readonly VITE_SUPABASE_ANON_KEY: string
+  /** 'true' turns the AI buttons on; anything else keeps them "Yakında". */
+  readonly VITE_AI_ENABLED?: string
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv

@@ -50,7 +50,7 @@ async function submit() {
         <BaseDatePicker v-model="date" label="Tarih" previous-label="Önceki ay" next-label="Sonraki ay" :week-starts-on="1" />
         <TimePicker v-model="time" label="Saat" hours-label="Saat" minutes-label="Dakika" :step="15" />
       </div>
-      <p class="text-ink-soft text-sm">
+      <p class="text-ink-soft type-small">
         {{
           student?.program?.currentLesson
             ? `Oturum, öğrencinin şu anki dersine bağlanır: ${student.program.currentLesson.sequence}. ${student.program.currentLesson.title}`

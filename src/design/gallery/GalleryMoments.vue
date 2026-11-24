@@ -27,7 +27,7 @@ import GallerySection from './GallerySection.vue'
     <BreakScene title="Kısa bir mola" message="Biraz su iç, gözlerini dinlendir. Hazır olduğunda devam edersin.">
       <template #countdown>
         <p class="type-eyebrow text-ink-soft">Kalan süre</p>
-        <p class="font-display text-ink text-5xl font-semibold tabular-nums">09:42</p>
+        <p class="font-display text-ink type-display font-semibold tabular-nums">09:42</p>
       </template>
       <template #actions>
         <BaseButton size="lg">Erken dön</BaseButton>
@@ -43,7 +43,7 @@ import GallerySection from './GallerySection.vue'
         </EmptyScene>
       </div>
       <div class="surface rounded-card">
-        <EmptyScene tone="error" character="piko" title="Bir şeyler ters gitti" description="Bağlantını kontrol edip tekrar dene.">
+        <EmptyScene tone="danger" character="piko" title="Bir şeyler ters gitti" description="Bağlantını kontrol edip tekrar dene.">
           <BaseButton variant="secondary">Tekrar dene</BaseButton>
         </EmptyScene>
       </div>

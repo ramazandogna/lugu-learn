@@ -18,7 +18,7 @@ const lists = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 text-sm">
+  <div class="flex flex-col gap-4 type-small">
     <div>
       <h3 class="font-semibold">Hedef</h3>
       <p>{{ guide.objective }}</p>
@@ -26,7 +26,7 @@ const lists = computed(() =>
     <div :class="compact ? 'flex flex-col gap-4' : 'grid gap-4 md:grid-cols-2'">
       <div v-for="l in lists" :key="l.title">
         <h3 class="font-semibold">{{ l.title }}</h3>
-        <ul class="list-disc ps-5">
+        <ul class="list-disc ps-6">
           <li v-for="(x, i) in l.items" :key="i">{{ x }}</li>
         </ul>
       </div>
@@ -40,14 +40,14 @@ const lists = computed(() =>
     <div>
       <h3 class="font-semibold">Canlandırma: {{ guide.rolePlay.situation }}</h3>
       <p class="text-ink-soft">Roller: {{ guide.rolePlay.roles.join(', ') }}</p>
-      <ol class="list-decimal ps-5">
+      <ol class="list-decimal ps-6">
         <li v-for="(s, i) in guide.rolePlay.steps" :key="i">{{ s }}</li>
       </ol>
     </div>
     <div>
       <h3 class="font-semibold">Dinleme</h3>
       <p class="whitespace-pre-line">{{ guide.listening.script }}</p>
-      <ul class="text-ink-soft mt-1 list-disc ps-5">
+      <ul class="text-ink-soft mt-1 list-disc ps-6">
         <li v-for="(q, i) in guide.listening.questions" :key="i">{{ q }}</li>
       </ul>
     </div>

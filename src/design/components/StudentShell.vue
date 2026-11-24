@@ -6,6 +6,7 @@ import { NavLinks, SkipLink } from 'rei-kit/web'
 import type { CharacterKey } from '@/domain/content'
 
 import { characterThemeStyle } from '../characters'
+import { unitThemeAttrs } from '../unitThemes'
 import LuguLogo from './LuguLogo.vue'
 import { useDocumentArea } from './useDocumentArea'
 
@@ -25,6 +26,7 @@ const {
   homeTo = '/',
   toastCloseLabel,
   character,
+  unit,
   fill = 'viewport',
   scopeDocument = true,
 } = defineProps<{
@@ -42,6 +44,8 @@ const {
   toastCloseLabel: string
   /** A character theme for the whole app (the learner's favourite), if any. */
   character?: CharacterKey
+  /** Unit theme id (`data-unit`); the unit's colours win over the character's. */
+  unit?: string
   /** `parent` to fill a framed preview instead of the window. */
   fill?: 'viewport' | 'parent'
   /** Mirror `data-area` onto <html> so teleported overlays match. */
@@ -56,12 +60,13 @@ useDocumentArea('student', () => scopeDocument)
     data-area="student"
     class="canvas text-ink relative flex flex-col overflow-hidden"
     :class="fill === 'viewport' ? 'h-dvh' : 'h-full'"
+    v-bind="unitThemeAttrs(unit)"
     :data-character="character"
     :style="character ? characterThemeStyle(character) : undefined"
   >
     <SkipLink for="lugu-main" :label="skipLabel" />
-    <header class="border-hair z-30 shrink-0 border-b bg-[color-mix(in_oklab,var(--color-canvas)_88%,transparent)] backdrop-blur-md">
-      <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 md:px-6">
+    <header class="border-hair z-(--z-header) shrink-0 border-b bg-(--glass) backdrop-blur-md">
+      <div class="mx-auto flex h-(--header-h) max-w-6xl items-center gap-4 px-4 md:px-6">
         <RouterLink :to="homeTo" class="focus-ring rounded-control -m-1 p-1" :aria-label="homeLabel">
           <LuguLogo size="sm" />
         </RouterLink>
@@ -71,7 +76,7 @@ useDocumentArea('student', () => scopeDocument)
         </div>
       </div>
     </header>
-    <main id="lugu-main" class="min-h-0 flex-1 overflow-y-auto pb-32 md:pb-10">
+    <main id="lugu-main" class="min-h-0 flex-1 overflow-y-auto pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+var(--space-6))] md:pb-12">
       <slot />
     </main>
     <div class="md:hidden">

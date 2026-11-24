@@ -44,11 +44,11 @@ onMounted(load)
       <CharacterBubble character="momo" expression="happy">
         Birkaç bilgi ve bir avatar seçersen maceraya hazırsın. Bu bilgileri sadece sen ve öğretmenin görür.
       </CharacterBubble>
-      <EmptyScene v-if="loadError" tone="error" title="Profilin açılamadı" :description="loadError">
+      <EmptyScene v-if="loadError" tone="danger" title="Profilin açılamadı" :description="loadError">
         <BaseButton @click="load">Tekrar dene</BaseButton>
       </EmptyScene>
       <LoadingScene v-else-if="!values" label="Profilin hazırlanıyor" compact />
-      <div v-else class="surface rounded-card p-5">
+      <div v-else class="surface rounded-card p-4 sm:p-6">
         <ProfileForm :initial="values" :school="school" submit-label="Maceraya başla" @saved="saved" />
       </div>
     </main>

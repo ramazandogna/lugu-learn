@@ -71,7 +71,7 @@ onBeforeRouteLeave(() => !dirty.value || window.confirm('Kaydedilmemiş değişi
 <template>
   <div class="flex flex-col gap-4">
     <div class="surface rounded-card sticky top-16 z-10 flex flex-wrap items-center gap-3 p-3">
-      <p class="text-ink-soft flex-1 text-sm">
+      <p class="text-ink-soft flex-1 type-small">
         <template v-if="immutable">Bu revizyon {{ pkg?.status === 'published' ? 'yayında' : 'iş akışında' }}; kaydettiğinizde yeni bir taslak revizyon oluşur.</template>
         <template v-else>Taslak düzenleniyor. Kaydetmeden önce paket doğrulanır.</template>
         <strong v-if="dirty" class="text-ink"> Kaydedilmemiş değişiklikler var.</strong>
@@ -82,7 +82,7 @@ onBeforeRouteLeave(() => !dirty.value || window.confirm('Kaydedilmemiş değişi
 
     <BaseAlert v-if="issues.length" tone="danger" assertive>
       <template #title>Paket kaydedilemedi: {{ issues.length }} sorun</template>
-      <ul class="list-disc ps-5">
+      <ul class="list-disc ps-6">
         <li v-for="(x, i) in issues.slice(0, 30)" :key="i">{{ x }}</li>
       </ul>
       <p v-if="issues.length > 30">…ve {{ issues.length - 30 }} sorun daha.</p>

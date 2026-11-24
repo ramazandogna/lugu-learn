@@ -35,7 +35,7 @@ const {
   >
     <h2 class="type-title text-ink">{{ title }}</h2>
     <p v-if="message" class="text-ink-soft mt-2 max-w-[40ch]">{{ message }}</p>
-    <div class="surface-raised rounded-card mt-6 min-w-[12rem] px-8 py-5">
+    <div class="surface-raised rounded-card mt-6 min-w-[12rem] px-8 py-4">
       <slot name="countdown" />
     </div>
     <div v-if="$slots.actions" class="mt-6 flex w-full max-w-sm flex-col gap-2 sm:flex-row sm:justify-center">

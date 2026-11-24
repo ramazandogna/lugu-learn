@@ -90,7 +90,7 @@ async function add() {
       <BaseInput v-model="district" label="İlçe (isteğe bağlı)" autocomplete="address-level2" />
       <div class="flex flex-wrap gap-2">
         <BaseButton :loading="addBusy" @click="add">Okulu ekle</BaseButton>
-        <BaseButton variant="ghost" @click="adding = false">Vazgeç</BaseButton>
+        <BaseButton variant="quiet" @click="adding = false">Vazgeç</BaseButton>
       </div>
     </fieldset>
   </div>

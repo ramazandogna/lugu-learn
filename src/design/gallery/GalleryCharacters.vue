@@ -17,7 +17,7 @@ const POSES = ['sit', 'sleep', 'peek', 'walk'] as const
 <template>
   <GallerySection title="Karakterler × ifadeler" note="Aynı 120×120 kutu, aynı çizgi kalınlığı, aynı gölge dili.">
     <div class="overflow-x-auto">
-      <table class="text-ink-soft text-xs">
+      <table class="text-ink-soft type-small">
         <thead>
           <tr>
             <th class="p-2" />
@@ -27,7 +27,7 @@ const POSES = ['sit', 'sleep', 'peek', 'walk'] as const
         </thead>
         <tbody>
           <tr v-for="key in CHARACTER_KEYS" :key="key">
-            <th class="text-ink p-2 text-start text-sm">{{ CHARACTERS[key].name }}</th>
+            <th class="text-ink p-2 text-start type-small">{{ CHARACTERS[key].name }}</th>
             <td v-for="e in EXPRESSIONS" :key="e" class="p-1">
               <LuguMascot :character="key" :expression="e" :size="96" :label="`${CHARACTERS[key].name}: ${e}`" />
             </td>
@@ -59,7 +59,7 @@ const POSES = ['sit', 'sleep', 'peek', 'walk'] as const
       >
         <p class="type-eyebrow text-ink-soft">{{ CHARACTERS[key].motif }}</p>
         <p class="type-title text-ink">{{ CHARACTERS[key].name }}</p>
-        <p class="text-ink mt-1 max-w-[24ch] text-sm">{{ CHARACTERS[key].catchphrases[0] }}</p>
+        <p class="text-ink mt-1 max-w-[24ch] type-small">{{ CHARACTERS[key].catchphrases[0] }}</p>
       </WorldBackground>
     </div>
   </GallerySection>

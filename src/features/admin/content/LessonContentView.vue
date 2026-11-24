@@ -65,7 +65,7 @@ async function onGenerated(packageId: string | null) {
       <template v-if="state.data.value">
         <RouterLink
           :to="{ name: 'admin-curriculum', params: { curriculumId: state.data.value.curriculum.id } }"
-          class="focus-ring rounded-control text-ink-soft w-fit text-sm hover:underline"
+          class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline"
         >
           ‹ {{ state.data.value.curriculum.name }} · sürüm {{ state.data.value.version.version }}
         </RouterLink>

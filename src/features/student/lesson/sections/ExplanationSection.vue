@@ -53,16 +53,16 @@ function goTo(i: number) {
 <template>
   <div class="flex flex-col gap-4">
     <ProgressBar :value="st.index + 1" :max="steps.length" :label="`Adım ${st.index + 1} / ${steps.length}`" />
-    <article class="surface rounded-card flex flex-col gap-3 p-4 sm:p-5">
+    <article class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-eyebrow text-ink-soft">Adım {{ st.index + 1 }} / {{ steps.length }}</p>
       <h3 class="type-section text-ink">{{ step.title }}</h3>
       <p class="text-ink">
         <template v-for="(seg, i) in boldSegments(step.body)" :key="i"><strong v-if="seg.bold">{{ seg.text }}</strong><template v-else>{{ seg.text }}</template></template>
       </p>
       <ul v-if="step.examples.length" class="flex flex-col gap-2">
-        <li v-for="(ex, i) in step.examples" :key="i" class="rounded-control bg-wash p-3">
+        <li v-for="(ex, i) in step.examples" :key="i" class="rounded-tile bg-wash p-3">
           <span class="text-ink block font-bold" lang="en">{{ ex.en }}</span>
-          <span class="text-ink-soft text-sm">{{ ex.tr }}</span>
+          <span class="text-ink-soft type-small">{{ ex.tr }}</span>
         </li>
       </ul>
     </article>
@@ -78,6 +78,6 @@ function goTo(i: number) {
       <BaseButton v-if="st.index < steps.length - 1" :disabled="!checkDone" @click="goTo(st.index + 1)">Sonraki adım</BaseButton>
       <BaseButton v-else :disabled="!finished || !checkDone" @click="emit('complete')">Anladım, devam et</BaseButton>
     </div>
-    <p v-if="!checkDone" class="text-ink-soft text-sm">Devam etmeden önce kontrol sorusunu cevapla.</p>
+    <p v-if="!checkDone" class="text-ink-soft type-small">Devam etmeden önce kontrol sorusunu cevapla.</p>
   </div>
 </template>

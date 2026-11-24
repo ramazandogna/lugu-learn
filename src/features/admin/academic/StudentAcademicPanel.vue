@@ -50,27 +50,27 @@ const TREND: Record<string, { label: string; tone: 'success' | 'danger' | 'neutr
       <BaseCard as="section" aria-labelledby="ac-exams">
         <template #head>
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="ac-exams" class="text-base font-semibold">Okul sınavları</h2>
+            <h2 id="ac-exams" class="type-body font-semibold">Okul sınavları</h2>
             <BaseButton size="sm" :disabled="!state.data.value.subjects.length" @click="openExam(null)">
               <Plus class="size-4" aria-hidden="true" /> Sınav ekle
             </BaseButton>
           </div>
-          <p class="text-ink-soft text-sm">Net = doğru − yanlış × {{ formatNumber(state.data.value.penalty) }} (veritabanı hesaplar; ceza Ayarlar'dan değişir).</p>
+          <p class="text-ink-soft type-small">Net = doğru − yanlış × {{ formatNumber(state.data.value.penalty) }} (veritabanı hesaplar; ceza Ayarlar'dan değişir).</p>
         </template>
         <EmptyState v-if="!state.data.value.subjects.length" title="Önce ders tanımlayın" description="Akademik Takip sayfasındaki Dersler bölümünden okul derslerini ekleyin." />
         <ExamList v-else :exams="state.data.value.exams" :results="state.data.value.results" :subject-name="subjectName" @edit="openExam" @changed="state.reload" />
       </BaseCard>
 
       <BaseCard v-if="trends.length" as="section" aria-labelledby="ac-trends">
-        <template #head><h2 id="ac-trends" class="text-base font-semibold">Derslere göre eğilim</h2></template>
+        <template #head><h2 id="ac-trends" class="type-body font-semibold">Derslere göre eğilim</h2></template>
         <ul class="divide-hair divide-y">
-          <li v-for="t in trends" :key="t.id" class="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+          <li v-for="t in trends" :key="t.id" class="flex flex-wrap items-center justify-between gap-2 py-2 type-small">
             <span>{{ t.trend.text }}</span>
             <BaseBadge :tone="TREND[t.trend.label]?.tone">{{ TREND[t.trend.label]?.label }}</BaseBadge>
           </li>
         </ul>
         <div v-if="comparison.length > 1" class="mt-4">
-          <h3 class="mb-2 text-sm font-semibold">Son sınav netleri, derslere göre</h3>
+          <h3 class="mb-2 type-small font-semibold">Son sınav netleri, derslere göre</h3>
           <BarChart :series="comparison" label="Son sınav netleri" :value-label="(v: number) => `${formatNumber(v)} net`" />
         </div>
       </BaseCard>

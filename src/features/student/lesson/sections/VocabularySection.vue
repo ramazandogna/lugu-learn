@@ -55,7 +55,7 @@ function goTo(i: number) {
 
     <button
       type="button"
-      class="surface rounded-card focus-ring flex min-h-56 w-full flex-col items-center justify-center gap-3 p-6 text-center"
+      class="surface surface-interactive rounded-card flex min-h-56 w-full flex-col items-center justify-center gap-3 p-6 text-center"
       :aria-pressed="flipped"
       :aria-label="flipped ? `${item.en}: ${item.tr}. Örnek: ${item.example.en}` : `${item.en}. Anlamını görmek için kartı çevir.`"
       @click="flip"
@@ -65,10 +65,10 @@ function goTo(i: number) {
       <template v-if="flipped">
         <span class="type-task text-ink">{{ item.tr }}</span>
         <span class="text-ink" lang="en">“{{ item.example.en }}”</span>
-        <span class="text-ink-soft text-sm">{{ item.example.tr }}</span>
-        <span v-if="item.context" class="text-ink-soft text-sm">{{ item.context }}</span>
+        <span class="text-ink-soft type-small">{{ item.example.tr }}</span>
+        <span v-if="item.context" class="text-ink-soft type-small">{{ item.context }}</span>
       </template>
-      <span v-else class="text-ink-soft flex items-center gap-1 text-sm"><RotateCw :size="16" aria-hidden="true" /> Çevirmek için dokun</span>
+      <span v-else class="text-ink-soft flex items-center gap-1 type-small"><RotateCw :size="16" aria-hidden="true" /> Çevirmek için dokun</span>
     </button>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -76,6 +76,6 @@ function goTo(i: number) {
       <BaseButton v-if="index < items.length - 1" @click="goTo(index + 1)">Sonraki kelime</BaseButton>
       <BaseButton v-else :disabled="!allSeen" @click="emit('complete')">Kelimeleri bitirdim</BaseButton>
     </div>
-    <p v-if="index === items.length - 1 && !allSeen" class="text-ink-soft text-sm">Bitirmeden önce her kartı bir kez çevirmelisin.</p>
+    <p v-if="index === items.length - 1 && !allSeen" class="text-ink-soft type-small">Bitirmeden önce her kartı bir kez çevirmelisin.</p>
   </div>
 </template>

@@ -44,7 +44,7 @@ async function reject(id: string) {
 
 <template>
   <div class="flex flex-col gap-4">
-    <p class="text-ink-soft max-w-(--measure-reading) text-sm">
+    <p class="text-ink-soft max-w-(--measure-reading) type-small">
       Silme talebi öğrenci profilinden oluşturulur. Onaylandığında öğrencinin hesabı ve tüm öğrenme, akademik ve koçluk kayıtları kalıcı olarak silinir.
     </p>
     <LoadState :loading="state.loading.value" :error="state.error.value" :empty="!state.data.value?.length" empty-title="Silme talebi yok" @retry="state.reload">
@@ -52,11 +52,11 @@ async function reject(id: string) {
         <li v-for="r in state.data.value ?? []" :key="r.id" class="flex flex-wrap items-center gap-3 py-3">
           <div class="min-w-60 flex-1">
             <p class="font-semibold">{{ r.student_code ?? 'Kod yok' }}</p>
-            <p class="text-ink-soft text-sm">
+            <p class="text-ink-soft type-small">
               {{ formatDateTime(r.created_at) }}<template v-if="r.reason"> · {{ r.reason }}</template>
               <template v-if="r.processed_at"> · işlendi {{ formatDateTime(r.processed_at) }}</template>
             </p>
-            <p v-if="r.error" class="text-sm">Hata: {{ r.error }}</p>
+            <p v-if="r.error" class="type-small">Hata: {{ r.error }}</p>
           </div>
           <BaseBadge :tone="STATUS[r.status].tone">{{ STATUS[r.status].label }}</BaseBadge>
           <template v-if="r.status === 'requested' || r.status === 'approved' || r.status === 'failed'">

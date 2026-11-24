@@ -58,10 +58,10 @@ const columns: DataColumn<Row>[] = [
       <template #emptyAction><BaseButton @click="creating = true">Yeni müfredat</BaseButton></template>
       <DataTable :columns="columns" :rows="rows" caption="Müfredatlar" caption-hidden row-key="id">
         <template #name="{ row }">
-          <RouterLink :to="{ name: 'admin-curriculum', params: { curriculumId: row.id } }" class="focus-ring rounded-control font-semibold hover:underline">
+          <RouterLink :to="{ name: 'admin-curriculum', params: { curriculumId: row.id } }" class="focus-ring rounded-cell font-semibold hover:underline">
             {{ row.name }}
           </RouterLink>
-          <p v-if="row.description" class="text-ink-soft line-clamp-1 text-xs">{{ row.description }}</p>
+          <p v-if="row.description" class="text-ink-soft line-clamp-1 type-small">{{ row.description }}</p>
         </template>
         <template #grade="{ row }">{{ row.grade || '—' }}</template>
         <template #status="{ row }">

@@ -26,7 +26,7 @@ const emit = defineEmits<{ retry: [] }>()
     <template #title>Veriler yüklenemedi</template>
     {{ error }}
     <template #action>
-      <BaseButton size="sm" variant="secondary" @click="emit('retry')">Tekrar dene</BaseButton>
+      <BaseButton variant="secondary" @click="emit('retry')">Tekrar dene</BaseButton>
     </template>
   </BaseAlert>
   <EmptyState v-else-if="empty" :title="emptyTitle" :description="emptyDescription">

@@ -37,7 +37,7 @@ const current = computed(() => steps[index.value])
     <div class="md:hidden">
       <div class="flex items-baseline justify-between gap-3">
         <p class="type-section text-ink truncate">{{ current?.label }}</p>
-        <p class="text-ink-soft shrink-0 text-sm font-bold tabular-nums">{{ counter(index + 1, steps.length) }}</p>
+        <p class="text-ink-soft shrink-0 type-small font-bold tabular-nums">{{ counter(index + 1, steps.length) }}</p>
       </div>
       <ProgressBar class="mt-2" :value="index + 1" :max="steps.length" size="md" :label="counter(index + 1, steps.length)" />
     </div>

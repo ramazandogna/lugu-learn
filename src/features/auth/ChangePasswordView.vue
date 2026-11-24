@@ -39,7 +39,7 @@ async function submit() {
 
 <template>
   <WorldBackground character="leo" intensity="soft" class="bg-canvas min-h-dvh">
-    <main id="main" tabindex="-1" class="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4 py-10">
+    <main id="main" tabindex="-1" class="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4 py-12">
       <div class="flex flex-col items-center gap-2 text-center">
         <LuguLogo />
         <h1 class="type-title text-ink">Kendi şifreni oluştur</h1>
@@ -47,7 +47,7 @@ async function submit() {
       <CharacterBubble character="leo" expression="happy">
         {{ forced ? 'İlk girişin! Öğretmeninin verdiği şifre yerine sadece senin bildiğin yeni bir şifre seçelim.' : 'Yeni şifreni seç. Kimseyle paylaşma, tamam mı?' }}
       </CharacterBubble>
-      <form class="surface rounded-card flex flex-col gap-4 p-5" novalidate @submit.prevent="submit">
+      <form class="surface surface-raised rounded-card flex flex-col gap-4 p-4 sm:p-6" novalidate @submit.prevent="submit">
         <BaseAlert v-if="error" tone="danger">{{ error }}</BaseAlert>
         <PasswordInput
           v-model="password"
@@ -66,7 +66,7 @@ async function submit() {
           :error="mismatch ? 'İki şifre aynı değil. Bir daha bakar mısın?' : undefined"
         />
         <BaseButton type="submit" size="lg" block :loading="busy">Şifremi kaydet</BaseButton>
-        <BaseButton v-if="!forced" variant="ghost" block @click="router.back()">Vazgeç</BaseButton>
+        <BaseButton v-if="!forced" variant="quiet" block @click="router.back()">Vazgeç</BaseButton>
       </form>
     </main>
   </WorldBackground>

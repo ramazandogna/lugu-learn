@@ -69,10 +69,10 @@ async function confirm() {
     <template #trigger>
       <BaseButton as="button" variant="secondary" size="sm">Hesap</BaseButton>
     </template>
-    <button type="button" role="menuitem" @click="ask({ kind: 'reset' })">Şifreyi sıfırla</button>
-    <button v-if="status !== 'active'" type="button" role="menuitem" @click="ask({ kind: 'status', to: 'active' })">Etkinleştir</button>
-    <button v-if="status === 'active'" type="button" role="menuitem" @click="ask({ kind: 'status', to: 'paused' })">Duraklat</button>
-    <button v-if="status !== 'disabled'" type="button" role="menuitem" @click="ask({ kind: 'status', to: 'disabled' })">Devre dışı bırak</button>
+    <BaseButton variant="row" role="menuitem" @click="ask({ kind: 'reset' })">Şifreyi sıfırla</BaseButton>
+    <BaseButton v-if="status !== 'active'" variant="row" role="menuitem" @click="ask({ kind: 'status', to: 'active' })">Etkinleştir</BaseButton>
+    <BaseButton v-if="status === 'active'" variant="row" role="menuitem" @click="ask({ kind: 'status', to: 'paused' })">Duraklat</BaseButton>
+    <BaseButton v-if="status !== 'disabled'" variant="row" role="menuitem" @click="ask({ kind: 'status', to: 'disabled' })">Devre dışı bırak</BaseButton>
   </BaseMenu>
   <ConfirmDialog
     v-if="copy"

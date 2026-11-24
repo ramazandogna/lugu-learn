@@ -59,7 +59,7 @@ const data = useLoad(
         </div>
       </LoadState>
     </BaseCard>
-    <p class="text-ink-soft max-w-(--measure-reading) text-sm">
+    <p class="text-ink-soft max-w-(--measure-reading) type-small">
       Buradaki sayılar gözlemdir, yargı değil: süre tek başına bir zayıflık göstermez ve küçük örneklemlerde örüntü adı verilmez.
     </p>
     <EmptyState v-if="!target" :title="scope === 'student' ? 'Bir öğrenci seçin' : 'Bir ders seçin'" />

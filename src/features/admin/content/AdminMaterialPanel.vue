@@ -48,27 +48,27 @@ async function save(value: TeacherGuide | SpeakingPlan) {
     <template #head>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 class="text-base font-semibold">{{ part === 'guide' ? 'Öğretmen rehberi' : 'Konuşma planı' }}</h2>
-          <p class="text-ink-soft text-sm">Yalnızca yönetici görür; öğrencilere gönderilmez.</p>
+          <h2 class="type-body font-semibold">{{ part === 'guide' ? 'Öğretmen rehberi' : 'Konuşma planı' }}</h2>
+          <p class="text-ink-soft type-small">Yalnızca yönetici görür; öğrencilere gönderilmez.</p>
         </div>
         <BaseButton v-if="!editing" size="sm" variant="secondary" @click="editing = true">{{ (part === 'guide' ? guide : plan) ? 'Düzenle' : 'Oluştur' }}</BaseButton>
       </div>
     </template>
     <BaseAlert v-if="issues.length" class="mb-3" tone="danger">
-      <ul class="list-disc ps-5">
+      <ul class="list-disc ps-6">
         <li v-for="(x, i) in issues" :key="i">{{ x }}</li>
       </ul>
     </BaseAlert>
     <template v-if="part === 'guide'">
       <TeacherGuideForm v-if="editing" v-model:busy="busy" :guide="guide" @save="save" @cancel="editing = false" />
       <TeacherGuideView v-else-if="guide" :guide="guide" />
-      <p v-else-if="raw" class="text-ink-soft text-sm">Kayıtlı rehber beklenen biçimde değil; düzenleyerek yeniden kaydedin.</p>
+      <p v-else-if="raw" class="text-ink-soft type-small">Kayıtlı rehber beklenen biçimde değil; düzenleyerek yeniden kaydedin.</p>
       <EmptyState v-else title="Rehber yok" description="AI üretimi rehberi otomatik hazırlar; elle de oluşturabilirsiniz." />
     </template>
     <template v-else>
       <SpeakingPlanForm v-if="editing" v-model:busy="busy" :plan="plan" @save="save" @cancel="editing = false" />
       <SpeakingPlanBlocks v-else-if="plan" :plan="plan" />
-      <p v-else-if="raw" class="text-ink-soft text-sm">Kayıtlı plan beklenen biçimde değil; düzenleyerek yeniden kaydedin.</p>
+      <p v-else-if="raw" class="text-ink-soft type-small">Kayıtlı plan beklenen biçimde değil; düzenleyerek yeniden kaydedin.</p>
       <EmptyState v-else title="Konuşma planı yok" />
     </template>
   </BaseCard>

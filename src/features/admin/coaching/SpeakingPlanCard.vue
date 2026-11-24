@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
-import { BaseButton, BaseCard, EmptyState } from 'rei-kit'
+import { BaseCard, EmptyState } from 'rei-kit'
 import { SpeakingPlanDraft } from '@/domain/insights'
 import { startInsight, type AiJob, type SpeakingSession } from '@/lib/api/admin'
+import { features } from '@/lib/features'
+import AiButton from '../components/AiButton.vue'
 import JobProgress from '../components/JobProgress.vue'
 import EvidenceStatements from '../students/tabs/EvidenceStatements.vue'
 import { useAction, useJobPoll } from '../lib/use-load'
@@ -27,6 +29,7 @@ const shown = computed(() => poll.job.value ?? job)
 const running = computed(() => shown.value?.status === 'queued' || shown.value?.status === 'running')
 
 async function generate() {
+  if (!features.ai) return
   await run(async () => {
     const { jobId } = await startInsight({ action: 'speaking_plan', studentId: session.student_id, speakingSessionId: session.id })
     poll.track(jobId)
@@ -38,18 +41,18 @@ async function generate() {
   <BaseCard as="section" aria-labelledby="sp-plan">
     <template #head>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="sp-plan" class="text-base font-semibold">60 dakikalık plan</h2>
-        <BaseButton size="sm" variant="secondary" :loading="busy" :disabled="running" @click="generate">
+        <h2 id="sp-plan" class="type-body font-semibold">60 dakikalık plan</h2>
+        <AiButton variant="secondary" :loading="busy" :disabled="running" @click="generate">
           <Sparkles class="size-4" aria-hidden="true" /> {{ draft ? 'AI ile yeniden oluştur' : 'AI ile plan oluştur' }}
-        </BaseButton>
+        </AiButton>
       </div>
     </template>
     <JobProgress v-if="shown && shown.status !== 'succeeded'" class="mb-4" :job="shown" :poll-error="poll.error.value" />
     <EmptyState v-if="!draft" title="Henüz plan yok" description="AI, öğrencinin son verilerine ve şu anki derse göre bir taslak hazırlar; siz gözden geçirirsiniz." />
-    <p v-else-if="draft === 'invalid'" class="text-ink-soft text-sm">Kayıtlı plan beklenen biçimde değil; yeniden oluşturun.</p>
+    <p v-else-if="draft === 'invalid'" class="text-ink-soft type-small">Kayıtlı plan beklenen biçimde değil; yeniden oluşturun.</p>
     <div v-else class="flex flex-col gap-4">
       <div v-if="draft.focus.length">
-        <h3 class="mb-2 text-sm font-semibold">Odak noktaları (AI varsayımı)</h3>
+        <h3 class="mb-2 type-small font-semibold">Odak noktaları (AI varsayımı)</h3>
         <EvidenceStatements :statements="draft.focus" :facts="[]" />
       </div>
       <SpeakingPlanBlocks :plan="draft.plan" />

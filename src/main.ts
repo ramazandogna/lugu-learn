@@ -10,3 +10,5 @@ setThemeStorageKey('lugu-theme')
 const app = createApp(App)
 app.use(router)
 router.isReady().then(() => app.mount('#app'))
+// iOS only runs :active (the press feedback) when something listens for touch.
+document.addEventListener('touchstart', () => {}, { passive: true })

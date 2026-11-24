@@ -70,7 +70,7 @@ function answer(response: number | string | string[], ms: number) {
       <PracticeQuestion :question="question" :order="order" :hint="hint" :hint-available="!!question.hint" @answer="answer" @order="placeOrder" @hint="showHint" />
     </template>
 
-    <div v-else class="surface rounded-card flex flex-col gap-3 p-5">
+    <div v-else class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Ödevini tamamladın!</p>
       <BaseButton class="self-start" @click="emit('complete')">Devam et</BaseButton>
     </div>

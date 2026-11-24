@@ -53,10 +53,10 @@ async function confirm(note: string) {
   <BaseCard as="section" :aria-label="`${detail.curriculumName} programı`">
     <template #head>
       <div class="flex flex-wrap items-center gap-2">
-        <h2 class="text-base font-semibold">{{ detail.curriculumName }} · sürüm {{ detail.version }}</h2>
+        <h2 class="type-body font-semibold">{{ detail.curriculumName }} · sürüm {{ detail.version }}</h2>
         <BaseBadge :tone="a.status === 'active' ? 'success' : a.status === 'paused' ? 'warning' : 'neutral'">{{ ASSIGNMENT_STATUS[a.status] }}</BaseBadge>
       </div>
-      <p class="text-ink-soft text-sm">
+      <p class="text-ink-soft type-small">
         Şu anki ders: <strong class="text-ink">{{ lessonTitle(a.current_lesson_id) }}</strong> · {{ detail.completedLessonIds.size }}/{{ lessons.length }} ders tamamlandı ·
         atanma {{ formatDateTime(a.created_at) }}
       </p>
@@ -78,7 +78,7 @@ async function confirm(note: string) {
     </div>
 
     <BaseDisclosure class="mt-3" :title="`Olay kaydı (${detail.events.length})`" :heading-level="3">
-      <ul class="divide-hair divide-y text-sm">
+      <ul class="divide-hair divide-y type-small">
         <li v-for="e in detail.events" :key="e.id" class="py-2">
           <span class="font-semibold">{{ PROGRAM_EVENT_LABEL[e.kind] ?? e.kind }}</span>
           <span class="text-ink-soft"> · {{ formatDateTime(e.created_at) }}</span>

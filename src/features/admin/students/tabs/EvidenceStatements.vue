@@ -39,7 +39,7 @@ function evidenceLabel(key: string): string {
         <BaseBadge>{{ CONFIDENCE[s.confidence] }}</BaseBadge>
       </div>
       <p class="mt-2">{{ s.text }}</p>
-      <p class="text-ink-soft mt-1 text-xs">Dayanak: {{ s.evidence.map(evidenceLabel).join(' · ') }}</p>
+      <p class="text-ink-soft mt-1 type-small">Dayanak: {{ s.evidence.map(evidenceLabel).join(' · ') }}</p>
     </li>
   </ul>
 </template>

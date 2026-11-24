@@ -45,11 +45,11 @@ function submit() {
 <template>
   <form class="flex flex-col gap-3" @submit.prevent="submit">
     <div v-for="b in BLOCKS" :key="b.key" class="grid gap-2 md:grid-cols-[10rem_1fr]">
-      <NumberInput v-model="form.blocks[b.key].minutes" size="sm" :label="`${b.label} (dk)`" :min="1" :max="60" decrement-label="Azalt" increment-label="Artır" />
-      <BaseTextarea v-model="form.blocks[b.key].activities" size="sm" :label="`${b.label}: etkinlikler (her satıra bir tane)`" :rows="2" />
+      <NumberInput v-model="form.blocks[b.key].minutes" :label="`${b.label} (dk)`" :min="1" :max="60" decrement-label="Azalt" increment-label="Artır" />
+      <BaseTextarea v-model="form.blocks[b.key].activities" :label="`${b.label}: etkinlikler (her satıra bir tane)`" :rows="2" />
     </div>
-    <BaseTextarea v-model="form.script" size="sm" label="Dinleme metni" :rows="4" />
-    <BaseInput v-model="form.closing" size="sm" label="Kapanış görevi" />
+    <BaseTextarea v-model="form.script" label="Dinleme metni" :rows="4" />
+    <BaseInput v-model="form.closing" label="Kapanış görevi" />
     <div class="flex gap-2">
       <BaseButton type="submit" :loading="busy">Planı kaydet</BaseButton>
       <BaseButton variant="secondary" @click="emit('cancel')">Vazgeç</BaseButton>

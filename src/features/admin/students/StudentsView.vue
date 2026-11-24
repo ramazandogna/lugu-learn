@@ -68,12 +68,12 @@ const hasFilters = computed(() => JSON.stringify(filters) !== JSON.stringify(EMP
     </PageHeader>
 
     <section aria-label="Filtreler" class="surface rounded-card grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-6">
-      <BaseInput v-model="filters.q" class="md:col-span-3 xl:col-span-1" type="search" label="Ara" placeholder="Ad, kod veya okul" size="sm" />
-      <BaseSelect v-model="filters.grade" label="Sınıf" placeholder="Tümü" size="sm" :options="options.grades" />
-      <BaseSelect v-model="filters.schoolId" label="Okul" placeholder="Tümü" size="sm" :options="options.schools" />
-      <BaseSelect v-model="filters.curriculumId" label="Program" placeholder="Tümü" size="sm" :options="options.programs" />
-      <BaseSelect v-model="filters.lessonId" label="Şu anki ders" placeholder="Tümü" size="sm" :options="options.lessons" />
-      <BaseSelect v-model="filters.status" label="Durum" placeholder="Tümü" size="sm" :options="statusOptions" />
+      <BaseInput v-model="filters.q" class="md:col-span-3 xl:col-span-1" type="search" label="Ara" placeholder="Ad, kod veya okul" />
+      <BaseSelect v-model="filters.grade" label="Sınıf" placeholder="Tümü" :options="options.grades" />
+      <BaseSelect v-model="filters.schoolId" label="Okul" placeholder="Tümü" :options="options.schools" />
+      <BaseSelect v-model="filters.curriculumId" label="Program" placeholder="Tümü" :options="options.programs" />
+      <BaseSelect v-model="filters.lessonId" label="Şu anki ders" placeholder="Tümü" :options="options.lessons" />
+      <BaseSelect v-model="filters.status" label="Durum" placeholder="Tümü" :options="statusOptions" />
       <div v-if="hasFilters" class="md:col-span-3 xl:col-span-6">
         <BaseButton variant="link" @click="Object.assign(filters, EMPTY_FILTERS)">Filtreleri temizle</BaseButton>
       </div>
@@ -90,19 +90,19 @@ const hasFilters = computed(() => JSON.stringify(filters) !== JSON.stringify(EMP
       <template #emptyAction><BaseButton @click="creating = true">Yeni öğrenci</BaseButton></template>
       <DataTable v-model:sort="sort" :columns="columns" :rows="rows" caption="Öğrenci listesi" caption-hidden row-key="id">
         <template #name="{ row }">
-          <RouterLink :to="{ name: 'admin-student', params: { studentId: row.id } }" class="focus-ring rounded-control font-semibold hover:underline">
+          <RouterLink :to="{ name: 'admin-student', params: { studentId: row.id } }" class="focus-ring rounded-cell font-semibold hover:underline">
             {{ row.name }}
           </RouterLink>
-          <div class="text-ink-soft text-xs">{{ row.code }}</div>
+          <div class="text-ink-soft type-small">{{ row.code }}</div>
         </template>
         <template #grade="{ row }">{{ row.grade || '—' }}</template>
         <template #school="{ row }">{{ row.school || '—' }}</template>
         <template #lesson="{ row }">
           <template v-if="row.summary.program">
-            <div class="text-sm">{{ row.summary.program.curriculumName }}</div>
-            <div class="text-ink-soft text-xs">{{ row.lesson || 'Program tamamlandı' }}</div>
+            <div class="type-small">{{ row.summary.program.curriculumName }}</div>
+            <div class="text-ink-soft type-small">{{ row.lesson || 'Program tamamlandı' }}</div>
           </template>
-          <span v-else class="text-ink-soft text-sm">Program atanmadı</span>
+          <span v-else class="text-ink-soft type-small">Program atanmadı</span>
         </template>
         <template #status="{ row }"><BaseBadge :tone="ACCOUNT_TONE[row.status]">{{ ACCOUNT_STATUS[row.status] }}</BaseBadge></template>
         <template #lastActivity="{ row }">{{ row.lastActivity ? formatDateTime(row.summary.lastActivityAt) : 'Hiç' }}</template>

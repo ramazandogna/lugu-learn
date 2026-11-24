@@ -60,28 +60,28 @@ const THEMES = [
     <header>
       <p class="type-eyebrow text-ink-soft">Profilim</p>
       <h1 class="type-title text-ink">Bilgilerin</h1>
-      <p v-if="code" class="text-ink-soft text-sm">Öğrenci kodun: <span class="text-ink font-bold">{{ code }}</span></p>
+      <p v-if="code" class="text-ink-soft type-small">Öğrenci kodun: <span class="text-ink font-bold">{{ code }}</span></p>
     </header>
 
-    <EmptyScene v-if="error" tone="error" title="Profilin açılamadı" :description="error">
+    <EmptyScene v-if="error" tone="danger" title="Profilin açılamadı" :description="error">
       <BaseButton @click="load">Tekrar dene</BaseButton>
     </EmptyScene>
     <LoadingScene v-else-if="!values" label="Profilin hazırlanıyor" compact />
-    <section v-else aria-labelledby="info-title" class="surface rounded-card p-5">
+    <section v-else aria-labelledby="info-title" class="surface rounded-card p-4 sm:p-6">
       <h2 id="info-title" class="sr-only">Profil bilgileri</h2>
       <ProfileForm :key="formKey" :initial="values" :school="school" submit-label="Kaydet" @saved="saved" />
     </section>
 
-    <section aria-labelledby="look-title" class="surface rounded-card flex flex-col gap-3 p-5">
+    <section aria-labelledby="look-title" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <h2 id="look-title" class="type-section text-ink">Görünüm</h2>
       <SegmentedControl v-model="theme" :options="THEMES" aria-label="Tema" />
     </section>
 
-    <section aria-labelledby="account-title" class="surface rounded-card flex flex-col gap-3 p-5">
+    <section aria-labelledby="account-title" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <h2 id="account-title" class="type-section text-ink">Hesabım</h2>
       <div class="flex flex-wrap gap-2">
         <BaseButton as="router-link" to="/sifre-degistir" variant="secondary">Şifremi değiştir</BaseButton>
-        <BaseButton variant="ghost" @click="logout">Çıkış yap</BaseButton>
+        <BaseButton variant="quiet" @click="logout">Çıkış yap</BaseButton>
       </div>
     </section>
   </div>

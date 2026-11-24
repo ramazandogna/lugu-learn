@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
-import { BaseButton, BaseTextarea } from 'rei-kit'
+import { BaseTextarea } from 'rei-kit'
 import { BaseDisclosure } from 'rei-kit/web'
 import { resumeLessonGeneration, startLessonGeneration, type AiJob } from '@/lib/api/admin'
+import { features } from '@/lib/features'
+import AiButton from '../components/AiButton.vue'
 import JobProgress from '../components/JobProgress.vue'
 import { useAction, useJobPoll } from '../lib/use-load'
 
@@ -23,12 +25,14 @@ const shown = computed(() => poll.job.value ?? job)
 const running = computed(() => shown.value?.status === 'queued' || shown.value?.status === 'running')
 
 async function start() {
+  if (!features.ai) return
   await run(async () => {
     const { jobId } = await startLessonGeneration(lessonId, instructions.value.trim() || undefined)
     poll.track(jobId)
   }, 'AI içerik üretimi başladı; birkaç dakika sürebilir')
 }
 async function resume() {
+  if (!features.ai) return
   const id = shown.value?.id
   if (id) await run(async () => poll.track((await resumeLessonGeneration(id)).jobId), 'Üretim kaldığı yerden sürüyor')
 }
@@ -38,10 +42,10 @@ async function resume() {
   <section class="surface rounded-card flex flex-col gap-3 p-4" aria-labelledby="gen-title">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div>
-        <h2 id="gen-title" class="text-base font-semibold">AI ile oluştur</h2>
-        <p class="text-ink-soft text-sm">Müfredat kaynakları ve ders notlarından yeni bir “AI taslağı” revizyonu üretilir. Yayına çıkmadan önce sizin onayınız gerekir.</p>
+        <h2 id="gen-title" class="type-body font-semibold">AI ile oluştur</h2>
+        <p class="text-ink-soft type-small">Müfredat kaynakları ve ders notlarından yeni bir “AI taslağı” revizyonu üretilir. Yayına çıkmadan önce sizin onayınız gerekir.</p>
       </div>
-      <BaseButton :loading="busy" :disabled="running" @click="start"><Sparkles class="size-4" aria-hidden="true" /> AI ile oluştur</BaseButton>
+      <AiButton :loading="busy" :disabled="running" @click="start"><Sparkles class="size-4" aria-hidden="true" /> AI ile oluştur</AiButton>
     </div>
     <BaseDisclosure title="Ek yönergeler (isteğe bağlı)" :heading-level="3">
       <BaseTextarea v-model="instructions" label="Yönergeler" label-hidden placeholder="ör. Hikâyede okul kantini geçsin; kelimeleri günlük rutinlerden seçin." :rows="3" />

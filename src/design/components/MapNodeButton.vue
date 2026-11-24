@@ -40,16 +40,16 @@ const icon = computed(() => ({ completed: Check, in_progress: Play, available: P
     @click="emit('press')"
   >
     <span class="relative">
-      <span v-if="current" class="animate-glow absolute inset-0 rounded-full" aria-hidden="true" />
+      <span v-if="current" class="animate-pulse-ring bg-primary-fill/40 absolute inset-0 rounded-full" aria-hidden="true" />
       <span
-        class="lugu-stone relative flex size-[4.5rem] items-center justify-center rounded-full transition-[translate] duration-(--duration-fast) group-active:translate-y-1"
+        class="lugu-stone relative flex size-(--node-size) items-center justify-center rounded-full transition-[translate] duration-(--duration-fast) group-active:translate-y-1"
         :class="STONE[node.state]"
       >
-        <component :is="icon" class="size-8" :stroke-width="2.6" aria-hidden="true" />
+        <component :is="icon" class="size-8" :stroke-width="2.4" aria-hidden="true" />
       </span>
       <span
         v-if="node.state === 'completed'"
-        class="bg-surface text-ink absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border-2 border-(--color-hair)"
+        class="bg-surface text-ink absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full border-2 border-(--color-hair)"
         aria-hidden="true"
       >
         <RotateCcw class="size-4" :stroke-width="2.6" />
@@ -58,10 +58,10 @@ const icon = computed(() => ({ completed: Check, in_progress: Play, available: P
     <!-- A ground under the words, so the trail never runs through them. -->
     <span class="rounded-control mt-1 flex flex-col items-center bg-[color-mix(in_oklab,var(--color-canvas)_90%,transparent)] px-2 py-0.5">
       <span class="type-eyebrow text-ink-soft">{{ numberLabel }}</span>
-      <span class="text-ink line-clamp-2 text-sm leading-tight font-extrabold">{{ node.title }}</span>
+      <span class="text-ink line-clamp-2 type-small leading-tight font-extrabold">{{ node.title }}</span>
     </span>
     <span
-      class="bg-surface rounded-full px-2 py-0.5 text-xs font-bold shadow-(--shadow-card)"
+      class="bg-surface rounded-full px-2 py-0.5 type-small font-bold shadow-(--shadow-card)"
       :class="node.state === 'locked' ? 'text-ink-soft' : 'text-ink'"
     >
       {{ stateLabel }}<span v-if="current" class="sr-only"> — {{ currentLabel }}</span>
@@ -71,7 +71,7 @@ const icon = computed(() => ({ completed: Check, in_progress: Play, available: P
 
 <style scoped>
 .lugu-stone {
-  box-shadow: 0 5px 0 0 var(--stone-lip);
+  box-shadow: 0 var(--lip-lg) 0 0 var(--stone-lip);
 }
 
 .group:active .lugu-stone {
@@ -81,6 +81,6 @@ const icon = computed(() => ({ completed: Check, in_progress: Play, available: P
 /* A locked stop does not sink: it opens nothing, so it should not feel pressed. */
 .lugu-stop[data-state='locked'] .lugu-stone {
   translate: none;
-  box-shadow: 0 5px 0 0 var(--stone-lip);
+  box-shadow: 0 var(--lip-lg) 0 0 var(--stone-lip);
 }
 </style>

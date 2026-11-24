@@ -54,12 +54,12 @@ const optional = (v: string) => v.trim() || undefined
 <template>
   <div class="grid gap-3 md:grid-cols-2">
     <BaseSelect v-if="types.length > 1" v-model="type" size="sm" label="Soru türü" :options="typeOptions" />
-    <p class="text-ink-soft self-end text-xs">Kimlik: <code>{{ q.id }}</code></p>
-    <BaseInput v-model="q.prompt" class="md:col-span-2" size="sm" label="Soru metni" />
+    <p class="text-ink-soft self-end type-small">Kimlik: <code>{{ q.id }}</code></p>
+    <BaseInput v-model="q.prompt" class="md:col-span-2" label="Soru metni" />
 
     <template v-if="q.type === 'choice'">
-      <BaseTextarea v-model="optionsText" size="sm" label="Seçenekler (her satıra bir tane)" :rows="4" />
-      <BaseSelect v-model="q.answer" size="sm" label="Doğru seçenek" :options="answerOptions" />
+      <BaseTextarea v-model="optionsText" label="Seçenekler (her satıra bir tane)" :rows="4" />
+      <BaseSelect v-model="q.answer" label="Doğru seçenek" :options="answerOptions" />
     </template>
     <BaseInput
       v-else-if="q.type === 'order'"
@@ -69,11 +69,11 @@ const optional = (v: string) => v.trim() || undefined
       label="Doğru cümle"
       hint="Parçalar boşlukla ya da | ile ayrılır; öğrenciye karışık gösterilir"
     />
-    <BaseTextarea v-else v-model="acceptText" class="md:col-span-2" size="sm" label="Kabul edilen cevaplar (her satıra bir tane)" :rows="3" />
+    <BaseTextarea v-else v-model="acceptText" class="md:col-span-2" label="Kabul edilen cevaplar (her satıra bir tane)" :rows="3" />
 
     <template v-if="!noHints">
-      <BaseInput :model-value="q.hint ?? ''" size="sm" label="İpucu (Türkçe, isteğe bağlı)" @update:model-value="(v: string) => (q.hint = optional(v))" />
-      <BaseInput :model-value="q.explain ?? ''" size="sm" label="Açıklama (yanıttan sonra)" @update:model-value="(v: string) => (q.explain = optional(v))" />
+      <BaseInput :model-value="q.hint ?? ''" label="İpucu (Türkçe, isteğe bağlı)" @update:model-value="(v: string) => (q.hint = optional(v))" />
+      <BaseInput :model-value="q.explain ?? ''" label="Açıklama (yanıttan sonra)" @update:model-value="(v: string) => (q.explain = optional(v))" />
     </template>
     <BaseSelect
       :model-value="q.objectiveId"

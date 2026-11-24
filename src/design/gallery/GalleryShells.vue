@@ -67,7 +67,7 @@ const adminItems = [
       >
         <template #topbar><p class="text-ink truncate font-bold">Öğrenciler</p></template>
         <h3 class="type-title text-ink">Öğrenciler</h3>
-        <p class="text-ink-soft mt-1 text-sm">Örnek içerik — gerçek veri değildir.</p>
+        <p class="text-ink-soft mt-1 type-small">Örnek içerik — gerçek veri değildir.</p>
       </AdminShell>
     </div>
   </GallerySection>

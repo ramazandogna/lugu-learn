@@ -55,7 +55,7 @@ useDocumentArea('admin', () => scopeDocument)
   >
     <SkipLink for="lugu-admin-main" :label="skipLabel" />
     <aside class="bg-surface border-hair hidden w-64 shrink-0 flex-col border-e lg:flex" :class="fill === 'viewport' ? 'sticky top-0 h-dvh' : ''">
-      <div class="flex h-16 items-center px-5">
+      <div class="flex h-(--header-h) items-center px-4">
         <LuguLogo size="sm" :suffix="brandSuffix" />
       </div>
       <div class="flex-1 overflow-y-auto px-3 py-2">
@@ -67,7 +67,7 @@ useDocumentArea('admin', () => scopeDocument)
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col" :class="{ 'overflow-y-auto': fill === 'parent' }">
-      <header class="bg-surface border-hair sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b px-4 lg:px-8">
+      <header class="bg-surface border-hair sticky top-0 z-(--z-header) flex h-(--header-h) shrink-0 items-center gap-3 border-b px-4 lg:px-8">
         <BaseButton class="lg:hidden" variant="quiet" icon :aria-label="menuLabel" :aria-expanded="open" @click="open = true">
           <Menu class="size-5" aria-hidden="true" />
         </BaseButton>

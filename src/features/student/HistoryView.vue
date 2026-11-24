@@ -29,13 +29,13 @@ const total = computed(() => (rows.value ?? []).reduce((s, r) => s + r.active_se
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-4xl flex-col gap-5 px-4 py-6">
+  <div class="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6">
     <header>
       <p class="type-eyebrow text-ink-soft">Öğrenme geçmişim</p>
       <h1 class="type-title text-ink">Yaptıkların</h1>
     </header>
 
-    <EmptyScene v-if="error" tone="error" title="Geçmişin açılamadı" :description="error">
+    <EmptyScene v-if="error" tone="danger" title="Geçmişin açılamadı" :description="error">
       <BaseButton @click="load">Tekrar dene</BaseButton>
     </EmptyScene>
     <SkeletonList v-else-if="!rows" :rows="5" />
@@ -53,7 +53,7 @@ const total = computed(() => (rows.value ?? []).reduce((s, r) => s + r.active_se
               <BaseBadge :tone="r.status === 'completed' ? 'success' : 'neutral'">{{ STATUS_TEXT[r.status] }}</BaseBadge>
             </div>
           </div>
-          <p class="text-ink-soft text-sm">
+          <p class="text-ink-soft type-small">
             {{ fmtDate(r.started_at) }} · {{ duration(r.active_seconds) }} çalışma
             <template v-if="r.breaks.length"> · {{ r.breaks.length }} mola ({{ duration(r.break_seconds) }})</template>
           </p>

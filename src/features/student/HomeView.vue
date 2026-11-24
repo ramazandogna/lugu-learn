@@ -2,9 +2,9 @@
 import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { BaseButton, ProgressBar } from 'rei-kit'
-import { Clock, Sparkles, Trophy } from 'lucide-vue-next'
+import { Clock, Sparkles, Star, Trophy } from 'lucide-vue-next'
 
-import { AvatarArt, CharacterBubble, EmptyScene, LoadingScene, WorldBackground, XpBadge } from '@/design'
+import { AvatarArt, CharacterBubble, EmptyScene, LoadingScene, WorldBackground } from '@/design'
 
 import UpcomingLessons from './components/UpcomingLessons.vue'
 import { greetingName, isAvatarKey } from './profile'
@@ -26,18 +26,18 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
 </script>
 
 <template>
-  <EmptyScene v-if="error && !home" tone="error" title="Ana sayfan açılamadı" :description="error">
+  <EmptyScene v-if="error && !home" tone="danger" title="Ana sayfan açılamadı" :description="error">
     <BaseButton @click="refresh">Tekrar dene</BaseButton>
   </EmptyScene>
   <LoadingScene v-else-if="!home" label="Ana sayfan hazırlanıyor" />
   <div v-else class="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
     <WorldBackground character="piko" intensity="rich" class="rounded-card overflow-hidden">
-      <div class="flex items-center gap-4 p-5 sm:p-7">
+      <div class="flex items-center gap-4 p-4 sm:p-6">
         <AvatarArt v-if="avatar" :avatar="avatar" :size="72" />
         <div class="min-w-0">
           <p class="type-eyebrow text-ink-soft">{{ greeting() }}</p>
           <h1 class="type-hero text-ink">{{ name ? `${name}!` : 'Hoş geldin!' }}</h1>
-          <p class="text-ink-soft mt-1">{{ lineOfTheDay() }}</p>
+          <p class="type-body text-ink-soft mt-1">{{ lineOfTheDay() }}</p>
         </div>
       </div>
     </WorldBackground>
@@ -45,14 +45,13 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
     <EmptyScene v-if="!mainAssignment" title="Henüz bir programın yok" description="Öğretmenin sana bir program atadığında ilk dersin burada görünecek." />
 
     <template v-else>
-      <section aria-labelledby="current-title" class="surface rounded-card flex flex-col gap-4 p-5 sm:p-6">
-        <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }}</p>
+      <section aria-labelledby="current-title" class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
         <template v-if="current && !paused">
           <div>
-            <p class="type-eyebrow text-ink-soft">Ders {{ current.sequence }}</p>
+            <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }} · Ders {{ current.sequence }}</p>
             <h2 id="current-title" class="type-title text-ink">{{ current.title }}</h2>
-            <p v-if="current.tagline" class="text-ink-soft mt-1">{{ current.tagline }}</p>
-            <p class="text-ink-soft mt-2 flex items-center gap-1 text-sm">
+            <p v-if="current.tagline" class="type-body text-ink-soft mt-1">{{ current.tagline }}</p>
+            <p class="text-ink-soft mt-2 flex items-center gap-1 type-small">
               <Clock :size="16" aria-hidden="true" /> Yaklaşık {{ current.estimated_minutes }} dakika
             </p>
           </div>
@@ -61,21 +60,22 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
           </BaseButton>
         </template>
         <template v-else-if="paused">
+          <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }}</p>
           <h2 id="current-title" class="type-section text-ink">Programın şu an duraklatıldı</h2>
-          <p class="text-ink-soft">Öğretmenin programı yeniden açınca kaldığın yerden devam edeceksin. Bitirdiğin dersleri haritadan tekrar oynayabilirsin.</p>
+          <p class="type-body text-ink-soft">Öğretmenin programı yeniden açınca kaldığın yerden devam edeceksin. Bitirdiğin dersleri haritadan tekrar oynayabilirsin.</p>
         </template>
         <template v-else>
+          <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }}</p>
           <h2 id="current-title" class="type-section text-ink">Programını tamamladın!</h2>
-          <p class="text-ink-soft">Tüm dersleri bitirdin. İstediğin dersi haritadan tekrar oynayabilirsin.</p>
+          <p class="type-body text-ink-soft">Tüm dersleri bitirdin. İstediğin dersi haritadan tekrar oynayabilirsin.</p>
         </template>
         <ProgressBar
           :value="mainAssignment.lessons_completed"
           :max="Math.max(1, mainAssignment.lessons_total)"
           :label="`${mainAssignment.lessons_total} dersten ${mainAssignment.lessons_completed} ders tamamlandı`"
         />
-        <p class="text-ink-soft text-sm">{{ mainAssignment.lessons_completed }} / {{ mainAssignment.lessons_total }} ders tamamlandı</p>
-        <BaseButton as="router-link" :to="`/harita/${mainAssignment.id}`" variant="secondary" class="self-start">Haritamı aç</BaseButton>
       </section>
+      <BaseButton as="router-link" :to="`/harita/${mainAssignment.id}`" variant="secondary" class="self-start">Haritamı aç</BaseButton>
 
       <UpcomingLessons :key="mainAssignment.id" :assignment-id="mainAssignment.id" />
 
@@ -85,10 +85,10 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
           v-for="a in others"
           :key="a.id"
           :to="`/harita/${a.id}`"
-          class="surface rounded-card focus-ring flex min-h-11 items-center justify-between gap-3 p-4"
+          class="surface surface-interactive rounded-card flex min-h-11 items-center justify-between gap-3 p-4"
         >
           <span class="type-task text-ink">{{ a.curriculum.name }}</span>
-          <span class="text-ink-soft text-sm">{{ a.lessons_completed }} / {{ a.lessons_total }}</span>
+          <span class="text-ink-soft type-small">{{ a.lessons_completed }} / {{ a.lessons_total }}</span>
         </RouterLink>
       </section>
     </template>
@@ -97,15 +97,18 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
       <h2 id="peek-title" class="sr-only">Özetim</h2>
       <div class="surface rounded-card flex flex-col gap-2 p-4">
         <p class="type-eyebrow text-ink-soft">Toplam puanın</p>
-        <XpBadge :xp="home.xp" :label="`Toplam ${fmt(home.xp)} XP`" />
+        <p class="type-display text-ink">{{ fmt(home.xp) }}</p>
+        <p class="type-small text-ink-soft flex items-center gap-1"><Star :size="16" aria-hidden="true" /> XP</p>
       </div>
-      <RouterLink to="/basarilar" class="surface rounded-card focus-ring flex flex-col gap-2 p-4">
+      <RouterLink to="/basarilar" class="surface surface-interactive rounded-card flex flex-col gap-2 p-4">
         <p class="type-eyebrow text-ink-soft">Başarıların</p>
-        <p class="type-task text-ink flex items-center gap-2"><Trophy :size="20" aria-hidden="true" /> {{ home.achievements_count }} rozet</p>
+        <p class="type-display text-ink">{{ home.achievements_count }}</p>
+        <p class="type-small text-ink-soft flex items-center gap-1"><Trophy :size="16" aria-hidden="true" /> rozet</p>
       </RouterLink>
       <div class="surface rounded-card flex flex-col gap-2 p-4">
         <p class="type-eyebrow text-ink-soft">Öğrendiğin kelimeler</p>
-        <p class="type-task text-ink flex items-center gap-2"><Sparkles :size="20" aria-hidden="true" /> {{ fmt(home.mastered_words) }} kelime</p>
+        <p class="type-display text-ink">{{ fmt(home.mastered_words) }}</p>
+        <p class="type-small text-ink-soft flex items-center gap-1"><Sparkles :size="16" aria-hidden="true" /> kelime</p>
       </div>
     </section>
 

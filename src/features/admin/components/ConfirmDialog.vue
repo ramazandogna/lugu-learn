@@ -32,7 +32,7 @@ watch(open, (v) => {
 
 <template>
   <ResponsiveDialog v-model="open" :title="title" close-label="Kapat" :tone="tone === 'danger' ? 'alert' : 'default'">
-    <p class="text-ink-soft text-sm">{{ message }}</p>
+    <p class="text-ink-soft type-small">{{ message }}</p>
     <slot />
     <BaseTextarea v-if="withNote" v-model="note" class="mt-4" :label="noteLabel" :rows="3" />
     <template #actions>

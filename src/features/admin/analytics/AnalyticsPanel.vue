@@ -61,8 +61,8 @@ const signals = computed(() =>
 <template>
   <div class="flex flex-col gap-4">
     <BaseCard as="section" aria-labelledby="an-signals">
-      <template #head><h2 id="an-signals" class="text-base font-semibold">Gözlemler</h2></template>
-      <ul class="flex flex-col gap-2 text-sm">
+      <template #head><h2 id="an-signals" class="type-body font-semibold">Gözlemler</h2></template>
+      <ul class="flex flex-col gap-2 type-small">
         <li v-for="(s, i) in signals" :key="i" class="border-hair rounded-card border p-3">{{ s.text }}</li>
         <li v-if="!signals.length" class="text-ink-soft">Belirgin bir örüntü görülmedi.</li>
       </ul>
@@ -71,8 +71,8 @@ const signals = computed(() =>
     <div class="grid gap-4 lg:grid-cols-2">
       <BaseCard as="section" aria-labelledby="an-sections">
         <template #head>
-          <h2 id="an-sections" class="text-base font-semibold">Bölüm başına ortalama etkin süre</h2>
-          <p class="text-ink-soft text-sm">{{ data.sessions.length }} oturumdan.</p>
+          <h2 id="an-sections" class="type-body font-semibold">Bölüm başına ortalama etkin süre</h2>
+          <p class="text-ink-soft type-small">{{ data.sessions.length }} oturumdan.</p>
         </template>
         <EmptyState v-if="!sectionBars.length" title="Bölüm süresi kaydı yok" />
         <template v-else>
@@ -94,8 +94,8 @@ const signals = computed(() =>
       </BaseCard>
       <BaseCard as="section" aria-labelledby="an-time">
         <template #head>
-          <h2 id="an-time" class="text-base font-semibold">Zaman dağılımı</h2>
-          <p class="text-ink-soft text-sm">Oturumlardaki etkin, hareketsiz ve mola süreleri. Hareketsizlik oturum düzeyinde ölçülür.</p>
+          <h2 id="an-time" class="type-body font-semibold">Zaman dağılımı</h2>
+          <p class="text-ink-soft type-small">Oturumlardaki etkin, hareketsiz ve mola süreleri. Hareketsizlik oturum düzeyinde ölçülür.</p>
         </template>
         <EmptyState v-if="!totalTime" title="Süre kaydı yok" />
         <DonutChart v-else :slices="time" label="Zaman dağılımı" :value-label="(v: number) => formatDuration(v)" :fill="(s) => FILL[s.key] ?? 'bg-muted'" />
@@ -103,7 +103,7 @@ const signals = computed(() =>
     </div>
 
     <BaseCard as="section" aria-labelledby="an-q">
-      <template #head><h2 id="an-q" class="text-base font-semibold">Soru doğruluğu ve yanıt süresi (en zor 20)</h2></template>
+      <template #head><h2 id="an-q" class="type-body font-semibold">Soru doğruluğu ve yanıt süresi (en zor 20)</h2></template>
       <EmptyState v-if="!questions.length" title="Yanıt kaydı yok" />
       <BaseTable
         v-else
@@ -124,7 +124,7 @@ const signals = computed(() =>
     </BaseCard>
 
     <BaseCard as="section" aria-labelledby="an-v">
-      <template #head><h2 id="an-v" class="text-base font-semibold">Zorlanılan kelimeler</h2></template>
+      <template #head><h2 id="an-v" class="type-body font-semibold">Zorlanılan kelimeler</h2></template>
       <EmptyState v-if="!vocab.length" title="Hatalı kelime yanıtı yok" />
       <BaseTable
         v-else

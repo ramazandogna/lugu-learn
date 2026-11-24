@@ -41,18 +41,75 @@
   --color-wash: #efebfb;
   --color-star: #f6b92b;
 
+  /* Contrast roles. `*-ink` is for text and icons on a light ground; the plain
+     role stays a fill. `field-edge` is the 3:1 edge of an input. `primary-fill`
+     paints buttons (on-primary on top); `primary` is the text/edge twin. */
+  --color-primary-fill: #43399e;
+  --color-warning-ink: #8a5a00;
+  --color-accent-ink: #b24a22;
+  --color-field-edge: #8e84a3;
+  --color-retry-wash: var(--color-wash);
+
   --font-sans: 'Nunito Variable', ui-rounded, 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Fredoka', 'Nunito Variable', ui-rounded, system-ui, sans-serif;
 
+  /* Radius, one rule: a control is 12, a tile inside a card is 16, a card is
+     24, a stage is 32; a pill is `rounded-full`. Admin overrides below. */
   --radius-cell: 4px;
-  --radius-control: 14px;
-  --radius-card: 20px;
+  --radius-control: 12px;
+  --radius-tile: 16px;
+  --radius-card: 24px;
   --radius-shell: 32px;
+
+  /* Space: a 4px base. 20px (5) and 40px (10) are not steps. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --icon-xl: 32px;
+
+  /* Motion: three curves, five durations. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 340ms;
+  --duration-slower: 420ms;
+
+  /* Depth: field (inset), press (the lip of something you can press), then
+     the kit's card / raised / overlay. */
+  --shadow-field: inset 0 1px 2px color-mix(in oklab, var(--color-ink) 8%, transparent);
+  --shadow-press: 0 3px 0 0 color-mix(in oklab, var(--color-ink) 16%, transparent);
+  --shadow-press-down: 0 1px 0 0 color-mix(in oklab, var(--color-ink) 16%, transparent);
+  --lip-sm: 3px;
+  --lip-lg: 5px;
+
+  /* Stacking: no magic z-index in a component. */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-header: 20;
+  --z-tabbar: 30;
+  --z-popover: 40;
+  --z-overlay: 50;
+  --z-vignette: 55;
+  --z-toast: 60;
 
   --animate-bob: lugu-bob 3.6s ease-in-out infinite;
   --animate-twinkle: lugu-twinkle 2.6s ease-in-out infinite;
   --animate-drift: lugu-drift 18s ease-in-out infinite alternate;
-  --animate-burst: lugu-burst 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-burst: lugu-burst var(--duration-celebrate) var(--ease-pop) both;
+  --animate-pulse-ring: lugu-pulse-ring 1200ms ease-out 3;
+  --animate-float: lugu-float 9s ease-in-out infinite alternate;
+  --animate-shake: lugu-shake 150ms ease-in-out 2;
+  --animate-stamp: lugu-stamp var(--duration-slower) var(--ease-sheet) both;
 
   @keyframes lugu-bob {
     0%,
@@ -82,6 +139,50 @@
     }
     to {
       transform: translateX(8px);
+    }
+  }
+
+  @keyframes lugu-pulse-ring {
+    from {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    to {
+      transform: scale(1.7);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lugu-float {
+    from {
+      transform: translate3d(0, 0, 0) rotate(-6deg);
+    }
+    to {
+      transform: translate3d(10px, -24px, 0) rotate(8deg);
+    }
+  }
+
+  @keyframes lugu-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    35% {
+      transform: translateX(-5px);
+    }
+    70% {
+      transform: translateX(5px);
+    }
+  }
+
+  @keyframes lugu-stamp {
+    from {
+      transform: scale(0.6) rotate(-14deg);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
     }
   }
 
@@ -120,6 +221,10 @@
 
   --color-wash: #241e44;
   --color-star: #f6c443;
+  --color-primary-fill: #a9a1ff;
+  --color-warning-ink: #f5c04f;
+  --color-accent-ink: #ff9c7a;
+  --color-field-edge: #8f86aa;
 
   --shadow-color: #000000;
 }
@@ -130,13 +235,21 @@
    --------------------------------------------------------------------------- */
 :root {
   --shadow-color: #4a3412;
-  --shadow-control: 0 3px 0 0 color-mix(in oklab, var(--color-ink) 16%, transparent);
-  --shadow-control-pressed: 0 1px 0 0 color-mix(in oklab, var(--color-ink) 16%, transparent);
-  --press-scale: 0.98;
+  /* The kit's `control` surface and filled buttons read --shadow-control.
+     It is flat here; a pressable gets its lip from the button rules below. */
+  --shadow-control: var(--shadow-field);
+  --shadow-control-pressed: var(--shadow-field);
+  --press-scale: 0.97;
 
-  /* Lugu motion beyond the kit's four durations. */
   --duration-celebrate: 900ms;
   --duration-idle: 3600ms;
+  --stagger: 60ms;
+
+  --header-h: 64px;
+  --tabbar-h: 72px;
+  --node-size: 4.5rem;
+  --glass: color-mix(in oklab, var(--color-canvas) 88%, transparent);
+  --type-body-size: 1rem;
 
   /* Character theme hooks; [data-character] reads them (see characters.ts). */
   --char-motif: none;
@@ -145,13 +258,14 @@
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-celebrate: 0ms;
+    --duration-idle: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+    --stagger: 0ms;
   }
 
-  .animate-bob,
-  .animate-twinkle,
-  .animate-drift,
-  .animate-burst {
-    animation: none;
+  [class*='animate-'] {
+    animation: none !important;
   }
 }
 
@@ -162,6 +276,7 @@
    --------------------------------------------------------------------------- */
 [data-character] {
   --color-primary: var(--char-primary);
+  --color-primary-fill: var(--char-primary);
   --color-on-primary: var(--char-on-primary);
   --color-accent: var(--char-accent);
   --color-on-accent: var(--char-on-accent);
@@ -171,6 +286,7 @@
 .dark [data-character],
 .dark[data-character] {
   --color-primary: var(--char-primary-night);
+  --color-primary-fill: var(--char-primary-night);
   --color-on-primary: var(--char-on-primary-night);
   --color-accent: var(--char-accent-night);
   --color-on-accent: var(--char-on-accent-night);
@@ -189,15 +305,20 @@
   --color-hair: #e2e1ea;
   --color-wash: #eeecf8;
 
-  --radius-control: 10px;
+  --color-primary: #2b66dc;
+  --color-primary-fill: #2b66dc;
+  --color-on-primary: #ffffff;
+
+  --radius-control: 8px;
+  --radius-tile: 10px;
   --radius-card: 14px;
   --radius-shell: 20px;
 
   --font-display: var(--font-sans);
   --shadow-color: #1d1b2e;
-  --shadow-control: 0 1px 2px color-mix(in oklab, var(--shadow-color) 6%, transparent);
-  --shadow-control-pressed: none;
-  --press-scale: 0.98;
+  --shadow-press: 0 1px 2px color-mix(in oklab, var(--shadow-color) 8%, transparent);
+  --shadow-press-down: none;
+  --type-body-size: 0.875rem;
 }
 
 .dark [data-area='admin'],
@@ -209,6 +330,9 @@
   --color-ink-soft: #a9abbd;
   --color-hair: #2e2e45;
   --color-wash: #1f1d36;
+  --color-primary: #8fb3ff;
+  --color-primary-fill: #8fb3ff;
+  --color-on-primary: #121220;
   --shadow-color: #000000;
 }
 
@@ -234,6 +358,16 @@
     font-family: var(--font-display);
     text-wrap: balance;
   }
+}
+
+/* Type scale. These are the only sizes; `text-sm`, `text-lg` and friends do
+   not appear in a component. Student body is 16, admin body 14 (`--type-body-size`). */
+@utility type-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 3rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Level 2–4: page, program/lesson title. */
@@ -268,13 +402,253 @@
   line-height: 1.4;
 }
 
+@utility type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--type-body-size);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* Meta only: never the one place an instruction lives. */
+@utility type-small {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+@utility type-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
 /* A short label above a title: "Bölüm 3", "Ders 12". Never coloured text on
-   a wash — ink-soft on the surface. */
+   a wash — ink-soft on the surface. `capitalize`, not `uppercase`: the Turkish
+   dotted/dotless I survives. */
 @utility type-eyebrow {
   font-family: var(--font-sans);
   font-weight: 800;
   font-size: 0.75rem;
   line-height: 1.2;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: capitalize;
+}
+
+/* ---------------------------------------------------------------------------
+   Press, hover, focus: one language for everything you can tap.
+   Hover is a bonus on a mouse; the real feedback is :active (touch included).
+   --------------------------------------------------------------------------- */
+@utility focus-ring-primary {
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* A clickable card: lifts on hover/press, sinks on :active, shows focus. */
+@utility surface-interactive {
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-raised);
+    }
+  }
+  &:active {
+    transform: scale(var(--press-scale));
+    box-shadow: var(--shadow-card);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* A pressable thing: stands on a lip, sinks onto it. */
+@utility btn-press {
+  box-shadow: var(--shadow-press);
+  transition:
+    transform var(--duration-fast) var(--ease-pop),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+  &:active:not(:disabled, [aria-disabled='true']) {
+    transform: scale(var(--press-scale));
+    box-shadow: var(--shadow-press-down);
+  }
+}
+
+/* Kit surfaces follow the radius rule without touching the kit: a button,
+   input, select, textarea and the password field are controls (12 / admin 8),
+   not cards. Unlayered on purpose (beats the kit's `rounded-card` utility);
+   a BaseCard (a div) stays a card. */
+button.rounded-card,
+a.rounded-card,
+input.rounded-card,
+select.rounded-card,
+textarea.rounded-card,
+[role='combobox'].rounded-card {
+  border-radius: var(--radius-control);
+}
+
+/* Field edge at 3:1, inset shadow, no lip: a field is not pressable. */
+input.control,
+select.control,
+textarea.control {
+  border-color: var(--color-field-edge);
+  border-width: 1.5px;
+  box-shadow: var(--shadow-field);
+  background-color: var(--color-surface);
+  &:focus-visible {
+    border-color: var(--color-primary);
+  }
+  &[aria-invalid='true'] {
+    border-color: var(--color-warning-ink);
+  }
+}
+
+/* Filled variants stand on a lip and sink onto it (Jöle Düğme, no skew). The
+   fill is `primary-fill`, the ink on it `on-primary`. */
+:is(button, a)[class*='shadow-(--shadow-control)'],
+button.control,
+a.control {
+  box-shadow: var(--shadow-press);
+  transition-timing-function: var(--ease-pop);
+  &:active:not(:disabled, [aria-disabled='true']) {
+    box-shadow: var(--shadow-press-down);
+  }
+}
+
+:is(button, a).bg-primary {
+  background-color: var(--color-primary-fill);
+  @media (hover: hover) {
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: color-mix(in oklab, var(--color-primary-fill) 88%, var(--color-ink));
+    }
+  }
+}
+
+/* Admin: one button height, `md` = 40; `sm` is for inside a table. */
+[data-area='admin'] :is(button, a).h-11:not(.size-11) {
+  height: 2.5rem;
+}
+
+/* A tappable surface that is not a kit button (row, chip, tab). */
+:is(button, a, [role='button'], [role='menuitem']):focus-visible {
+  outline-offset: 2px;
+}
+
+/* A bare, unstyled field label/readability switch (settings toggle). */
+[data-readable='on'] {
+  font-family: system-ui, sans-serif;
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------------------------------
+   Unit themes (Kavanoz Kütüphanesi). A unit's colour set lives in --unit-*
+   on the `data-unit` element and is mapped onto the kit's roles for its whole
+   subtree — a character theme inside a unit does not beat the unit. Colour
+   only: radius, space and type never change. Admin never carries data-unit.
+   AA: text sits on --color-canvas/--color-surface only; accent/extra1/extra2
+   are decoration, never behind text.
+   --------------------------------------------------------------------------- */
+[data-unit='u1-morning'] {
+  --unit-ink-soft: #7a4a63;
+  --unit-hair: #f4cfdc;
+  --unit-bg: #fff1f5;
+  --unit-surface: #ffffff;
+  --unit-ink: #4a1d35;
+  --unit-primary-fill: #b8326a;
+  --unit-primary-ink: #b8326a;
+  --unit-on-primary: #ffffff;
+  --unit-accent: #ffb3cf;
+  --unit-extra1: #ffe27a;
+  --unit-extra2: #bfebdd;
+  --unit-wash: #ffe3ec;
+}
+
+[data-unit='u2-night-oven'] {
+  --unit-ink-soft: #d9c8b0;
+  --unit-hair: #4a3d6b;
+  --unit-bg: #1f1830;
+  --unit-surface: #2e2445;
+  --unit-ink: #fff3e0;
+  --unit-primary-fill: #ffb347;
+  --unit-primary-ink: #ffb347;
+  --unit-on-primary: #1f1830;
+  --unit-accent: #f7d9a8;
+  --unit-extra1: #6b3f2a;
+  --unit-extra2: #c9b8ff;
+  --unit-wash: #3a2e58;
+}
+
+[data-unit='u3-neon-street'] {
+  --unit-ink-soft: #3f6179;
+  --unit-hair: #b5d7ea;
+  --unit-bg: #e4f4ff;
+  --unit-surface: #ffffff;
+  --unit-ink: #12344d;
+  --unit-primary-fill: #177a86;
+  --unit-primary-ink: #136e79;
+  --unit-on-primary: #ffffff;
+  --unit-accent: #ff8fb1;
+  --unit-extra1: #ffd93d;
+  --unit-extra2: #7a6cfe;
+  --unit-wash: #cdebfa;
+}
+
+/* The user's `.dark` is its own axis: Ü2 is already dark and stays; Ü1/Ü3 keep
+   the dark grounds and only lighten their primary. */
+.dark [data-unit='u1-morning'] {
+  --unit-ink-soft: #7a4a63;
+  --unit-hair: #f4cfdc;
+  --unit-bg: #15112a;
+  --unit-surface: #1f1a38;
+  --unit-ink: #f3eefc;
+  --unit-primary-fill: #ff8fba;
+  --unit-primary-ink: #ff8fba;
+  --unit-on-primary: #15112a;
+  --unit-wash: #241e44;
+  --unit-ink-soft: #b4abc8;
+  --unit-hair: #342d52;
+}
+
+.dark [data-unit='u3-neon-street'] {
+  --unit-ink-soft: #3f6179;
+  --unit-hair: #b5d7ea;
+  --unit-bg: #15112a;
+  --unit-surface: #1f1a38;
+  --unit-ink: #f3eefc;
+  --unit-primary-fill: #5fd0dc;
+  --unit-primary-ink: #5fd0dc;
+  --unit-on-primary: #15112a;
+  --unit-wash: #241e44;
+  --unit-ink-soft: #b4abc8;
+  --unit-hair: #342d52;
+}
+
+[data-unit]:not([data-unit='base']),
+[data-unit]:not([data-unit='base']) [data-character] {
+  --color-canvas: var(--unit-bg);
+  --color-surface: var(--unit-surface);
+  --color-ink: var(--unit-ink);
+  --color-ink-soft: var(--unit-ink-soft);
+  --color-hair: var(--unit-hair);
+  --color-muted: var(--unit-wash);
+  --color-primary: var(--unit-primary-ink);
+  --color-primary-fill: var(--unit-primary-fill);
+  --color-on-primary: var(--unit-on-primary);
+  --color-accent: var(--unit-accent);
+  --color-wash: var(--unit-wash);
+  --color-unit-extra1: var(--unit-extra1);
+  --color-unit-extra2: var(--unit-extra2);
+  color: var(--color-ink);
+}
+
+[data-unit]:not([data-unit='base']) {
+  background-color: var(--color-canvas);
+  transition: background-color var(--duration-slower) var(--ease-standard);
 }

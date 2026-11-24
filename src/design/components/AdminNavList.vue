@@ -24,8 +24,8 @@ const emit = defineEmits<{ navigate: [key: K] }>()
       <li v-for="item in items" :key="item.key">
         <RouterLink
           :to="item.to"
-          class="focus-ring rounded-control relative flex min-h-11 items-center gap-3 px-3 text-sm font-semibold transition-colors duration-(--duration-fast)"
-          :class="item.key === active ? 'bg-wash text-ink' : 'text-ink-soft hover:bg-muted hover:text-ink'"
+          class="focus-ring rounded-control relative flex min-h-11 items-center gap-3 px-3 type-small font-semibold transition-colors duration-(--duration-fast)"
+          :class="item.key === active ? 'bg-wash text-ink' : 'text-ink-soft hover:bg-muted hover:text-ink active:bg-muted'"
           :aria-current="item.key === active ? 'page' : undefined"
           @click="emit('navigate', item.key)"
         >
@@ -34,7 +34,7 @@ const emit = defineEmits<{ navigate: [key: K] }>()
             class="bg-primary absolute inset-y-2 -start-3 w-1 rounded-full"
             aria-hidden="true"
           />
-          <component :is="item.icon" class="size-[18px] shrink-0" :stroke-width="item.key === active ? 2.4 : 2" aria-hidden="true" />
+          <component :is="item.icon" class="size-5 shrink-0" :stroke-width="item.key === active ? 2.4 : 2" aria-hidden="true" />
           <span class="truncate">{{ item.label }}</span>
         </RouterLink>
       </li>

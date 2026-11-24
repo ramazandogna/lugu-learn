@@ -55,7 +55,7 @@ async function submit() {
 </script>
 
 <template>
-  <form class="flex flex-col gap-5" novalidate @submit.prevent="submit">
+  <form class="flex flex-col gap-4" novalidate @submit.prevent="submit">
     <BaseAlert v-if="error" tone="danger">{{ error }}</BaseAlert>
     <BaseAlert v-else-if="tried && !valid" tone="warning">Birkaç bilgi eksik kaldı. İşaretli alanlara bakar mısın?</BaseAlert>
     <div class="grid gap-4 sm:grid-cols-2">

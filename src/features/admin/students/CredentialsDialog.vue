@@ -23,8 +23,8 @@ const both = computed(() => `Öğrenci kodu: ${code}\nGeçici şifre: ${password
         { key: 'password', term: 'Geçici şifre' },
       ]"
     >
-      <template #code><code class="text-lg font-semibold">{{ code }}</code></template>
-      <template #password><code class="text-lg font-semibold tracking-wider">{{ password }}</code></template>
+      <template #code><code class="type-task font-semibold">{{ code }}</code></template>
+      <template #password><code class="type-task font-semibold tracking-wider">{{ password }}</code></template>
     </DescriptionList>
     <template #actions>
       <CopyButton :text="both" copy-label="Bilgileri kopyala" copied-label="Kopyalandı" error-label="Kopyalanamadı" with-text />

@@ -54,10 +54,10 @@ async function logout() {
     brand-suffix="Yönetim"
   >
     <template #topbar>
-      <p class="text-ink-soft truncate text-sm font-semibold">{{ route.meta.title }}</p>
+      <p class="text-ink-soft truncate type-small font-semibold">{{ route.meta.title }}</p>
     </template>
     <template #account>
-      <BaseButton variant="quiet" size="sm" @click="logout">
+      <BaseButton variant="quiet" @click="logout">
         <LogOut class="size-4" aria-hidden="true" />
         Çıkış yap
       </BaseButton>

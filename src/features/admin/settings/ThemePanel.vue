@@ -7,8 +7,8 @@ const theme = useTheme()
 <template>
   <BaseCard as="section" aria-labelledby="theme-title">
     <template #head>
-      <h2 id="theme-title" class="text-base font-semibold">Tema</h2>
-      <p class="text-ink-soft text-sm">Bu tarayıcıda yönetim paneli için geçerlidir.</p>
+      <h2 id="theme-title" class="type-body font-semibold">Tema</h2>
+      <p class="text-ink-soft type-small">Bu tarayıcıda yönetim paneli için geçerlidir.</p>
     </template>
     <SegmentedControl
       v-model="theme"

@@ -16,8 +16,8 @@ const scheduling = ref(false)
   <BaseCard as="section" aria-labelledby="sp-title">
     <template #head>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="sp-title" class="text-base font-semibold">Konuşma oturumları</h2>
-        <BaseButton size="sm" :disabled="student.status !== 'active'" @click="scheduling = true">Oturum planla</BaseButton>
+        <h2 id="sp-title" class="type-body font-semibold">Konuşma oturumları</h2>
+        <BaseButton :disabled="student.status !== 'active'" @click="scheduling = true">Oturum planla</BaseButton>
       </div>
     </template>
     <LoadState :loading="sessions.loading.value" :error="sessions.error.value" @retry="sessions.reload">

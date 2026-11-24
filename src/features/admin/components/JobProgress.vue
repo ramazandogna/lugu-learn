@@ -30,10 +30,10 @@ const resumable = computed(
     {{ formatDateTime(job.updated_at) }}
   </BaseAlert>
   <div v-else class="surface rounded-card p-4" role="status">
-    <p class="text-sm font-semibold">{{ stepped ? info.label : 'Yapay zekâ çalışıyor…' }}</p>
+    <p class="type-small font-semibold">{{ stepped ? info.label : 'Yapay zekâ çalışıyor…' }}</p>
     <ProgressBar v-if="stepped" class="mt-2" :value="info.step" :max="info.total" :label="`Aşama ${info.step}/${info.total}`" />
-    <p class="text-ink-soft mt-2 text-xs">Son güncelleme {{ formatDateTime(job.updated_at) }}. Sayfa açık kaldıkça durum otomatik yenilenir.</p>
-    <p v-if="pollError" class="text-ink-soft mt-1 text-xs">{{ pollError }}</p>
+    <p class="text-ink-soft mt-2 type-small">Son güncelleme {{ formatDateTime(job.updated_at) }}. Sayfa açık kaldıkça durum otomatik yenilenir.</p>
+    <p v-if="pollError" class="text-ink-soft mt-1 type-small">{{ pollError }}</p>
     <BaseButton v-if="resumable" class="mt-3" size="sm" variant="secondary" @click="emit('resume')">Kaldığı yerden sürdür</BaseButton>
   </div>
 </template>

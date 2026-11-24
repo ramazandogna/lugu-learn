@@ -35,7 +35,7 @@ async function remove(id: string) {
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p class="font-semibold">{{ e.title }}</p>
-          <p class="text-ink-soft text-sm">{{ formatDate(e.exam_date) }} · {{ KIND[e.kind] }}<template v-if="e.notes"> · {{ e.notes }}</template></p>
+          <p class="text-ink-soft type-small">{{ formatDate(e.exam_date) }} · {{ KIND[e.kind] }}<template v-if="e.notes"> · {{ e.notes }}</template></p>
         </div>
         <div class="flex gap-2">
           <BaseButton size="sm" variant="secondary" @click="emit('edit', e)">Düzenle</BaseButton>

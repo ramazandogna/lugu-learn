@@ -46,7 +46,7 @@ const learning = useLoad(() => studentLearning(studentId.value), studentId)
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink :to="{ name: 'admin-students' }" class="focus-ring rounded-control text-ink-soft w-fit text-sm hover:underline">‹ Öğrenciler</RouterLink>
+    <RouterLink :to="{ name: 'admin-students' }" class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline">‹ Öğrenciler</RouterLink>
     <LoadState
       :loading="student.loading.value"
       :error="student.error.value"
@@ -69,7 +69,7 @@ const learning = useLoad(() => studentLearning(studentId.value), studentId)
             </div>
           </template>
         </PageHeader>
-        <p class="text-ink-soft -mt-4 text-sm">
+        <p class="text-ink-soft -mt-4 type-small">
           {{ student.data.value.code }}
           <template v-if="student.data.value.grade"> · {{ student.data.value.grade }}. sınıf</template>
           <template v-if="student.data.value.school"> · {{ student.data.value.school.name }}</template>

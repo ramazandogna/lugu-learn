@@ -28,10 +28,10 @@ const optional = (s: string) => s.trim() || undefined
 
 <template>
   <div class="flex flex-col gap-3">
-    <p class="text-ink-soft text-sm">{{ pkg.vocabulary.length }} öğe (önerilen 10–20). Tek kelime yerine kalıp tercih edin: “have breakfast”.</p>
+    <p class="text-ink-soft type-small">{{ pkg.vocabulary.length }} öğe (önerilen 10–20). Tek kelime yerine kalıp tercih edin: “have breakfast”.</p>
     <ol class="flex flex-col gap-3">
       <li v-for="(v, i) in pkg.vocabulary" :key="i" class="border-hair rounded-card grid gap-2 border p-3 md:grid-cols-4">
-        <p class="text-ink-soft text-xs md:col-span-4">{{ i + 1 }}. · kimlik <code>{{ v.id }}</code></p>
+        <p class="text-ink-soft type-small md:col-span-4">{{ i + 1 }}. · kimlik <code>{{ v.id }}</code></p>
         <BaseInput v-model="v.en" size="sm" label="İngilizce" @blur="syncId(i)" />
         <BaseInput v-model="v.tr" size="sm" label="Türkçe" />
         <BaseSelect v-model="v.difficulty" size="sm" label="Zorluk" :options="difficulty" />

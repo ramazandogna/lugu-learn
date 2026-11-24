@@ -66,7 +66,7 @@ async function requestDeletion(reason: string) {
 <template>
   <div class="grid gap-4 lg:grid-cols-3">
     <BaseCard class="lg:col-span-2" as="section" aria-labelledby="profile-edit">
-      <template #head><h2 id="profile-edit" class="text-base font-semibold">Profil bilgileri</h2></template>
+      <template #head><h2 id="profile-edit" class="type-body font-semibold">Profil bilgileri</h2></template>
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
         <BaseInput v-model="form.first_name" label="Ad" autocomplete="off" />
         <BaseInput v-model="form.last_name" label="Soyad" autocomplete="off" />
@@ -91,7 +91,7 @@ async function requestDeletion(reason: string) {
       </form>
     </BaseCard>
     <BaseCard as="section" aria-labelledby="profile-account">
-      <template #head><h2 id="profile-account" class="text-base font-semibold">Hesap</h2></template>
+      <template #head><h2 id="profile-account" class="type-body font-semibold">Hesap</h2></template>
       <DescriptionList
         :items="[
           { term: 'Öğrenci kodu', description: student.code },

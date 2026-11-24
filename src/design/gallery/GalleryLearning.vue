@@ -34,7 +34,7 @@ const avatar = ref<AvatarKey | undefined>('fox-scout')
 
 <template>
   <GallerySection title="Öğrenme haritası" note="Kıvrılan yol; durum ikon + yazı ile de gösterilir. Telefonda dar, tablette geniş salınım.">
-    <p class="text-ink-soft mb-2 text-sm" aria-live="polite">Seçilen: {{ picked || '—' }}</p>
+    <p class="text-ink-soft mb-2 type-small" aria-live="polite">Seçilen: {{ picked || '—' }}</p>
     <div class="rounded-card border-hair h-[36rem] overflow-y-auto border">
       <LearningMap :nodes="nodes" label="Öğrenme haritam" @select="picked = $event" @locked="picked = `${$event} (kilitli)`" />
     </div>

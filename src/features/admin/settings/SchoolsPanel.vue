@@ -35,13 +35,13 @@ const mergeOpen = ref(false)
         <template #district="{ row }">{{ row.district || '—' }}</template>
         <template #id="{ row }">
           <div class="flex justify-end gap-1">
-            <BaseButton size="sm" variant="quiet" @click="(editing = row.school), (editOpen = true)">Düzenle</BaseButton>
-            <BaseButton size="sm" variant="quiet" @click="(merging = row.school), (mergeOpen = true)">Birleştir</BaseButton>
+            <BaseButton variant="quiet" @click="(editing = row.school), (editOpen = true)">Düzenle</BaseButton>
+            <BaseButton variant="quiet" @click="(merging = row.school), (mergeOpen = true)">Birleştir</BaseButton>
           </div>
         </template>
       </DataTable>
     </LoadState>
-    <p class="text-ink-soft text-sm">Öğrenciler okullarını profil ekranında arayıp ekler; aynı okulun farklı yazımlarını burada birleştirin.</p>
+    <p class="text-ink-soft type-small">Öğrenciler okullarını profil ekranında arayıp ekler; aynı okulun farklı yazımlarını burada birleştirin.</p>
     <SchoolDialog v-if="editing" v-model="editOpen" :school="editing" @saved="state.reload" />
     <SchoolMergeDialog v-if="merging" v-model="mergeOpen" :school="merging" @merged="state.reload" />
   </div>

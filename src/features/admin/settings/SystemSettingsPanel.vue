@@ -47,8 +47,8 @@ async function save(key: string, kind: string) {
         <div class="flex flex-wrap items-end gap-3">
           <div class="min-w-60 flex-1">
             <p class="font-semibold">{{ KNOWN[r.key]?.label ?? r.key }}</p>
-            <p class="text-ink-soft text-xs"><code>{{ r.key }}</code> · {{ r.stored ? `güncelleme ${formatDateTime(r.updatedAt)}` : 'varsayılan değer' }}</p>
-            <p v-if="r.description" class="text-ink-soft text-sm">{{ r.description }}</p>
+            <p class="text-ink-soft type-small"><code>{{ r.key }}</code> · {{ r.stored ? `güncelleme ${formatDateTime(r.updatedAt)}` : 'varsayılan değer' }}</p>
+            <p v-if="r.description" class="text-ink-soft type-small">{{ r.description }}</p>
           </div>
           <template v-if="kindOf(r.value) === 'number'">
             <BaseInput
@@ -59,13 +59,13 @@ async function save(key: string, kind: string) {
               label="Değer"
               :error="Number.isFinite(parsedNumber(r.key)) ? undefined : 'Sayı girin'"
             />
-            <BaseButton size="sm" :loading="busy" @click="save(r.key, 'number')">Kaydet</BaseButton>
+            <BaseButton :loading="busy" @click="save(r.key, 'number')">Kaydet</BaseButton>
           </template>
           <BaseSwitch v-else-if="kindOf(r.value) === 'boolean'" :model-value="Boolean(drafts[r.key])" label="Etkin" @update:model-value="(v: boolean) => ((drafts[r.key] = v), save(r.key, 'boolean'))" />
           <template v-else-if="kindOf(r.value) === 'string'">
             <BaseInput :model-value="String(drafts[r.key] ?? '')"
               @update:model-value="(v: string) => (drafts[r.key] = v)" size="sm" label="Değer" />
-            <BaseButton size="sm" :loading="busy" @click="save(r.key, 'string')">Kaydet</BaseButton>
+            <BaseButton :loading="busy" @click="save(r.key, 'string')">Kaydet</BaseButton>
           </template>
         </div>
         <CodeBlock v-if="kindOf(r.value) === 'json'" class="mt-2" :code="JSON.stringify(r.value, null, 2)" :label="`${r.key} değeri`" language="json" />

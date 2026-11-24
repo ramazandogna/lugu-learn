@@ -28,7 +28,7 @@ const path = star(12, 12.6, 10.5, 5)
 <template>
   <span
     class="control inline-flex items-center gap-1.5 rounded-full font-extrabold text-ink"
-    :class="size === 'sm' ? 'h-8 ps-1.5 pe-2.5 text-sm' : 'h-10 ps-2 pe-3.5 text-base'"
+    :class="size === 'sm' ? 'h-8 ps-1.5 pe-2.5 type-small' : 'h-10 ps-2 pe-3.5 type-body'"
     :aria-label="label"
     :role="label ? 'img' : undefined"
   >
@@ -36,6 +36,6 @@ const path = star(12, 12.6, 10.5, 5)
       <path :d="path" fill="var(--color-star)" stroke="var(--color-ink)" stroke-width="1.6" stroke-linejoin="round" />
     </svg>
     <span class="tabular-nums">{{ formatted }}</span>
-    <span class="text-ink-soft text-xs font-black tracking-wide">{{ unit }}</span>
+    <span class="text-ink-soft type-small font-black tracking-wide">{{ unit }}</span>
   </span>
 </template>

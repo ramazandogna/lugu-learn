@@ -50,7 +50,7 @@ async function apply(status: PackageStatus) {
 
 <template>
   <div class="surface rounded-card flex flex-col gap-3 p-4">
-    <ol class="flex flex-wrap items-center gap-1 text-xs" aria-label="İçerik onay akışı">
+    <ol class="flex flex-wrap items-center gap-1 type-small" aria-label="İçerik onay akışı">
       <li v-for="(s, i) in FLOW" :key="s" class="flex items-center gap-1">
         <BaseBadge :tone="s === pkg.status ? PACKAGE_TONE[s] : 'neutral'" :aria-current="s === pkg.status ? 'step' : undefined">
           {{ PACKAGE_STATUS[s] }}<span v-if="s === pkg.status" class="sr-only"> (şu anki durum)</span>
@@ -64,8 +64,8 @@ async function apply(status: PackageStatus) {
       <BaseButton v-if="canRevoke" size="sm" variant="secondary" @click="ask('draft')">Taslağa geri çek</BaseButton>
       <BaseButton v-if="pkg.status !== 'archived'" size="sm" variant="quiet" @click="ask('archived')">Arşivle</BaseButton>
     </BaseToolbar>
-    <p v-if="next === 'published' && !valid" class="text-ink-soft text-sm">Paket doğrulanmadan yayınlanamaz; düzenleyicide kaydedip sorunları görün.</p>
-    <p v-if="frozen && pkg.status === 'archived'" class="text-ink-soft text-sm">Bir kez yayınlanmış bu revizyon kalıcı olarak dondurulmuştur.</p>
+    <p v-if="next === 'published' && !valid" class="text-ink-soft type-small">Paket doğrulanmadan yayınlanamaz; düzenleyicide kaydedip sorunları görün.</p>
+    <p v-if="frozen && pkg.status === 'archived'" class="text-ink-soft type-small">Bir kez yayınlanmış bu revizyon kalıcı olarak dondurulmuştur.</p>
     <ConfirmDialog
       v-if="pending"
       v-model="confirmOpen"

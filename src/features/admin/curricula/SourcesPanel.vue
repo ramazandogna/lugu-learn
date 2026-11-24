@@ -73,8 +73,8 @@ async function remove(s: CurriculumSource) {
   <div class="grid gap-4 lg:grid-cols-2">
     <BaseCard as="section" aria-labelledby="src-add">
       <template #head>
-        <h2 id="src-add" class="text-base font-semibold">Kaynak ekle</h2>
-        <p class="text-ink-soft text-sm">AI ders içeriği üretirken bu sürümün ve seçilen dersin kaynaklarını kullanır.</p>
+        <h2 id="src-add" class="type-body font-semibold">Kaynak ekle</h2>
+        <p class="text-ink-soft type-small">AI ders içeriği üretirken bu sürümün ve seçilen dersin kaynaklarını kullanır.</p>
       </template>
       <div class="flex flex-col gap-4">
         <BaseSelect v-model="lessonId" label="Bağlı ders" placeholder="Tüm sürüm" :options="lessonOptions" />
@@ -98,13 +98,13 @@ async function remove(s: CurriculumSource) {
       </div>
     </BaseCard>
     <BaseCard as="section" aria-labelledby="src-list">
-      <template #head><h2 id="src-list" class="text-base font-semibold">Kaynaklar ({{ sources.length }})</h2></template>
+      <template #head><h2 id="src-list" class="type-body font-semibold">Kaynaklar ({{ sources.length }})</h2></template>
       <EmptyState v-if="!sources.length" title="Bu sürüm için kaynak yok" />
       <ul v-else class="divide-hair divide-y">
-        <li v-for="s in sources" :key="s.id" class="flex flex-wrap items-center gap-2 py-2 text-sm">
+        <li v-for="s in sources" :key="s.id" class="flex flex-wrap items-center gap-2 py-2 type-small">
           <div class="min-w-40 flex-1">
             <p class="font-semibold">{{ s.title }}</p>
-            <p class="text-ink-soft text-xs">{{ KIND[s.kind] }} · {{ lessonTitle(s.lesson_id) }} · {{ formatDate(s.created_at) }}</p>
+            <p class="text-ink-soft type-small">{{ KIND[s.kind] }} · {{ lessonTitle(s.lesson_id) }} · {{ formatDate(s.created_at) }}</p>
           </div>
           <BaseButton v-if="s.storage_path" size="sm" variant="quiet" @click="openSource(s)">Aç</BaseButton>
           <BasePopconfirm :message="`${s.title} silinsin mi?`" confirm-label="Sil" cancel-label="Vazgeç" tone="danger" @confirm="remove(s)">

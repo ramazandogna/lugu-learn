@@ -81,7 +81,7 @@ async function send() {
 <template>
   <div class="flex flex-col gap-4">
     <AssessmentResult v-if="score" :score="score" @continue="emit('complete')" />
-    <div v-else-if="submitted" class="surface rounded-card flex flex-col gap-3 p-5">
+    <div v-else-if="submitted" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Cevapların gönderildi.</p>
       <p v-if="sending" class="text-ink-soft">Puanın hesaplanıyor…</p>
       <BaseButton v-else class="self-start" @click="emit('complete')">Devam et</BaseButton>
@@ -89,11 +89,11 @@ async function send() {
 
     <template v-else-if="view">
       <CharacterBubble character="sasha" size="sm">Son adım! Burada ipucu yok ama acele etme. Cevaplarını göndermeden önce değiştirebilirsin.</CharacterBubble>
-      <article v-if="view.part === 'reading'" class="surface rounded-card flex flex-col gap-2 p-4 sm:p-5">
+      <article v-if="view.part === 'reading'" class="surface rounded-card flex flex-col gap-2 p-4 sm:p-6">
         <h3 class="type-section text-ink" lang="en">{{ sitting.reading.title }}</h3>
         <p v-for="(p, i) in sitting.reading.paragraphs" :key="i" class="text-ink" lang="en">{{ p }}</p>
       </article>
-      <div class="surface rounded-card flex flex-col gap-4 p-4 sm:p-5">
+      <div class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
         <p class="type-eyebrow text-ink-soft">{{ view.part === 'quiz' ? 'Test' : 'Okuma' }} · Soru {{ index + 1 }} / {{ total }}</p>
         <p class="type-task text-ink" lang="en">{{ view.prompt }}</p>
         <div v-if="view.type === 'choice'" class="grid gap-2" role="group" :aria-label="view.prompt">
@@ -107,7 +107,7 @@ async function send() {
         <BaseButton v-if="index < total - 1" @click="go(index + 1)">Sonraki</BaseButton>
         <BaseButton v-else :loading="sending" @click="askSubmit">Cevaplarımı gönder</BaseButton>
       </nav>
-      <p class="text-ink-soft text-sm">{{ total - unanswered.length }} / {{ total }} soru cevaplandı</p>
+      <p class="text-ink-soft type-small">{{ total - unanswered.length }} / {{ total }} soru cevaplandı</p>
     </template>
 
     <ResponsiveDialog v-model="confirming" title="Boş sorular var" close-label="Kapat">

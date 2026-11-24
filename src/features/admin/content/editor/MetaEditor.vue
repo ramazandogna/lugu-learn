@@ -16,26 +16,26 @@ const addObjective = () => pkg.value.meta.objectives.push({ id: newId('', 'objec
   <div class="flex flex-col gap-6">
     <fieldset class="grid gap-3 md:grid-cols-2">
       <legend class="mb-2 font-semibold">Ders kartı</legend>
-      <BaseInput v-model="pkg.meta.title" size="sm" label="Başlık (İngilizce)" />
-      <BaseInput v-model="pkg.meta.tagline" size="sm" label="Kısa açıklama (Türkçe, öğrenci görür)" />
-      <BaseInput v-model="pkg.meta.theme" size="sm" label="Tema" />
-      <BaseInput v-model="pkg.meta.level" size="sm" label="Seviye" />
-      <BaseSelect v-model="pkg.meta.character" size="sm" label="Ders karakteri" :options="CHARACTER_OPTIONS" />
-      <NumberInput v-model="pkg.meta.estimatedMinutes" size="sm" label="Tahmini süre (dk)" :min="5" :max="180" :step="5" decrement-label="Azalt" increment-label="Artır" />
-      <BaseTextarea v-model="grammar" class="md:col-span-2" size="sm" label="Dil bilgisi konuları (her satıra bir tane)" :rows="3" />
+      <BaseInput v-model="pkg.meta.title" label="Başlık (İngilizce)" />
+      <BaseInput v-model="pkg.meta.tagline" label="Kısa açıklama (Türkçe, öğrenci görür)" />
+      <BaseInput v-model="pkg.meta.theme" label="Tema" />
+      <BaseInput v-model="pkg.meta.level" label="Seviye" />
+      <BaseSelect v-model="pkg.meta.character" label="Ders karakteri" :options="CHARACTER_OPTIONS" />
+      <NumberInput v-model="pkg.meta.estimatedMinutes" label="Tahmini süre (dk)" :min="5" :max="180" :step="5" decrement-label="Azalt" increment-label="Artır" />
+      <BaseTextarea v-model="grammar" class="md:col-span-2" label="Dil bilgisi konuları (her satıra bir tane)" :rows="3" />
     </fieldset>
 
     <fieldset class="flex flex-col gap-2">
       <legend class="mb-2 font-semibold">Hedefler</legend>
-      <p class="text-ink-soft text-sm">Kimlik, müfredattaki hedef koduyla aynı olmalı; sorular ve ödev grupları bu kimliğe bağlanır.</p>
+      <p class="text-ink-soft type-small">Kimlik, müfredattaki hedef koduyla aynı olmalı; sorular ve ödev grupları bu kimliğe bağlanır.</p>
       <div v-for="(o, i) in pkg.meta.objectives" :key="i" class="grid items-end gap-2 md:grid-cols-[14rem_1fr_auto]">
-        <BaseInput v-model="o.id" size="sm" label="Kimlik" />
-        <BaseInput v-model="o.text" size="sm" label="Hedef" />
-        <BaseButton size="sm" variant="quiet" icon :aria-label="`${i + 1}. hedefi sil`" @click="pkg.meta.objectives.splice(i, 1)">
+        <BaseInput v-model="o.id" label="Kimlik" />
+        <BaseInput v-model="o.text" label="Hedef" />
+        <BaseButton variant="quiet" icon :aria-label="`${i + 1}. hedefi sil`" @click="pkg.meta.objectives.splice(i, 1)">
           <Trash2 class="size-4" aria-hidden="true" />
         </BaseButton>
       </div>
-      <BaseButton class="w-fit" size="sm" variant="secondary" @click="addObjective"><Plus class="size-4" aria-hidden="true" /> Hedef ekle</BaseButton>
+      <BaseButton class="w-fit" variant="secondary" @click="addObjective"><Plus class="size-4" aria-hidden="true" /> Hedef ekle</BaseButton>
     </fieldset>
 
     <fieldset class="grid gap-3 md:grid-cols-2">

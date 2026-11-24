@@ -60,17 +60,17 @@ function next() {
   <div class="flex flex-col gap-4">
     <CharacterBubble character="sasha" size="sm">Her kelimeyi art arda iki kez doğru bilince o kelimeyi öğrenmiş olursun. Yanlış yapmak sorun değil, kelime tekrar gelir!</CharacterBubble>
     <ProgressBar :value="progress.mastered" :max="progress.total" :label="`${progress.total} kelimeden ${progress.mastered} tanesini öğrendin`" />
-    <p class="text-ink-soft text-sm">
+    <p class="text-ink-soft type-small">
       {{ progress.mastered }} / {{ progress.total }} kelime öğrenildi
       <template v-if="progress.accuracyPercent !== null"> · Doğru cevap oranın %{{ progress.accuracyPercent }} (sadece bilgi için)</template>
     </p>
 
-    <div v-if="done || completed" class="surface rounded-card flex flex-col gap-3 p-5">
+    <div v-if="done || completed" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Tüm kelimeleri öğrendin!</p>
       <BaseButton class="self-start" @click="emit('complete')">Devam et</BaseButton>
     </div>
 
-    <div v-else-if="q" class="surface rounded-card flex flex-col gap-4 p-4 sm:p-5">
+    <div v-else-if="q" class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
       <p class="type-eyebrow text-ink-soft">{{ direction === 'en_tr' ? 'Türkçesi ne?' : 'İngilizcesi ne?' }}</p>
       <p class="type-title text-ink" :lang="direction === 'en_tr' ? 'en' : 'tr'">{{ q.prompt }}</p>
       <div class="grid gap-2 sm:grid-cols-2" role="group" aria-label="Seçenekler">

@@ -28,7 +28,7 @@ const message = computed(() =>
 </script>
 
 <template>
-  <EmptyScene v-if="session.loadError.value" tone="error" title="Ders açılamadı" :description="message">
+  <EmptyScene v-if="session.loadError.value" tone="danger" title="Ders açılamadı" :description="message">
     <div class="flex flex-wrap justify-center gap-2">
       <BaseButton v-if="code === 'LUGU_USE_REPLAY'" as="router-link" :to="`/ders/${lessonId}/tekrar`">Dersi tekrar oyna</BaseButton>
       <BaseButton v-else-if="code === 'NETWORK' || code === 'UNKNOWN'" @click="session.load">Tekrar dene</BaseButton>

@@ -24,9 +24,9 @@ onMounted(async () => {
     <h2 id="upcoming-title" class="type-section text-ink">Sıradaki dersler</h2>
     <ol class="grid gap-3 sm:grid-cols-3">
       <li v-for="l in lessons" :key="l.id" class="surface rounded-card flex flex-col gap-1 p-4">
-        <span class="type-eyebrow text-ink-soft flex items-center gap-1"><Lock :size="14" aria-hidden="true" /> Ders {{ l.sequence }} · kilitli</span>
+        <span class="type-eyebrow text-ink-soft flex items-center gap-1"><Lock :size="16" aria-hidden="true" /> Ders {{ l.sequence }} · kilitli</span>
         <span class="type-task text-ink">{{ l.title }}</span>
-        <span v-if="l.tagline" class="text-ink-soft text-sm">{{ l.tagline }}</span>
+        <span v-if="l.tagline" class="text-ink-soft type-small">{{ l.tagline }}</span>
       </li>
     </ol>
   </section>

@@ -5,6 +5,8 @@ import { BaseButton, BaseCard, EmptyState } from 'rei-kit'
 import { AcademicInsight, ObservedFacts } from '@/domain/insights'
 import { latestJob, latestReviewedInsight, saveReviewedInsight, startInsight } from '@/lib/api/admin'
 import type { Json } from '@/lib/database.types'
+import { features } from '@/lib/features'
+import AiButton from '../components/AiButton.vue'
 import JobProgress from '../components/JobProgress.vue'
 import LoadState from '../components/LoadState.vue'
 import EvidenceStatements from '../students/tabs/EvidenceStatements.vue'
@@ -40,6 +42,7 @@ async function markReviewed() {
 }
 
 async function generate() {
+  if (!features.ai) return
   await run(async () => {
     const { jobId } = await startInsight({ action: 'academic_insight', studentId })
     poll.track(jobId)
@@ -52,29 +55,28 @@ async function generate() {
     <template #head>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 id="ac-ai" class="text-base font-semibold">AI akademik gözlem</h2>
-          <p class="text-ink-soft text-sm">Taslaktır: yalnızca eğilimleri anlatır, neden iddia etmez. Öğrenciyle paylaşmadan önce gözden geçirin.</p>
+          <h2 id="ac-ai" class="type-body font-semibold">AI akademik gözlem</h2>
+          <p class="text-ink-soft type-small">Taslaktır: yalnızca eğilimleri anlatır, neden iddia etmez. Öğrenciyle paylaşmadan önce gözden geçirin.</p>
         </div>
-        <BaseButton
-          size="sm"
+        <AiButton
           variant="secondary"
           :loading="busy"
           :disabled="!hasExams || job?.status === 'running' || job?.status === 'queued'"
           @click="generate"
         >
           <Sparkles class="size-4" aria-hidden="true" /> Oluştur
-        </BaseButton>
+        </AiButton>
       </div>
     </template>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <JobProgress v-if="job && job.status !== 'succeeded'" class="mb-3" :job="job" :poll-error="poll.error.value" />
       <EmptyState v-if="!insight" :title="hasExams ? 'Henüz akademik gözlem yok' : 'Gözlem için önce sınav sonucu girin'" />
       <div v-else class="flex flex-col gap-3">
-        <p class="text-ink-soft text-xs">Oluşturma: {{ formatDateTime(lastSucceeded?.updated_at) }}</p>
+        <p class="text-ink-soft type-small">Oluşturma: {{ formatDateTime(lastSucceeded?.updated_at) }}</p>
         <p>{{ insight.summary }}</p>
         <EvidenceStatements :statements="insight.observations" :facts="facts" />
-        <p v-if="alreadyReviewed" class="text-ink-soft text-sm">Gözden geçirildi: {{ formatDateTime(reviewed.data.value?.reviewed_at) }}</p>
-        <BaseButton v-else class="self-start" size="sm" :loading="busy" @click="markReviewed">Gözden geçirdim, kaydet</BaseButton>
+        <p v-if="alreadyReviewed" class="text-ink-soft type-small">Gözden geçirildi: {{ formatDateTime(reviewed.data.value?.reviewed_at) }}</p>
+        <BaseButton v-else class="self-start" :loading="busy" @click="markReviewed">Gözden geçirdim, kaydet</BaseButton>
       </div>
     </LoadState>
   </BaseCard>

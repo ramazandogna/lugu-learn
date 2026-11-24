@@ -60,7 +60,7 @@ const attemptRows = computed(() =>
     </div>
 
     <BaseCard as="section" aria-labelledby="pr-current">
-      <template #head><h2 id="pr-current" class="text-base font-semibold">Şu anki ders</h2></template>
+      <template #head><h2 id="pr-current" class="type-body font-semibold">Şu anki ders</h2></template>
       <EmptyState v-if="!student.program" title="Program atanmadı" description="Program yönetimi sekmesinden bir müfredat sürümü atayın." />
       <div v-else class="flex flex-wrap items-center gap-3">
         <p class="font-semibold">
@@ -73,7 +73,7 @@ const attemptRows = computed(() =>
 
     <BaseCard as="section" aria-labelledby="pr-vocab">
       <template #head>
-        <h2 id="pr-vocab" class="text-base font-semibold">Kelime ustalığı</h2>
+        <h2 id="pr-vocab" class="type-body font-semibold">Kelime ustalığı</h2>
         <ProgressBar v-if="data.mastery.length" class="mt-2" :value="mastered" :max="data.mastery.length" label="Öğrenilen kelimeler" />
       </template>
       <EmptyState v-if="!vocabRows.length" title="Henüz kelime çalışması yok" />
@@ -92,7 +92,7 @@ const attemptRows = computed(() =>
     </BaseCard>
 
     <BaseCard as="section" aria-labelledby="pr-assess">
-      <template #head><h2 id="pr-assess" class="text-base font-semibold">Değerlendirme sonuçları</h2></template>
+      <template #head><h2 id="pr-assess" class="type-body font-semibold">Değerlendirme sonuçları</h2></template>
       <EmptyState v-if="!assessmentRows.length" title="Henüz değerlendirme yok" />
       <BaseTable
         v-else
@@ -111,7 +111,7 @@ const attemptRows = computed(() =>
     </BaseCard>
 
     <BaseCard as="section" aria-labelledby="pr-attempts">
-      <template #head><h2 id="pr-attempts" class="text-base font-semibold">Son yanıtlar</h2></template>
+      <template #head><h2 id="pr-attempts" class="type-body font-semibold">Son yanıtlar</h2></template>
       <EmptyState v-if="!attemptRows.length" title="Henüz yanıt yok" />
       <BaseTable
         v-else

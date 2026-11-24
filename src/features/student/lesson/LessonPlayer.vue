@@ -112,7 +112,7 @@ onBeforeUnmount(() => window.removeEventListener('online', wake))
 
 <template>
   <WorldBackground :character="character" intensity="soft" class="min-h-full">
-    <div class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-5">
+    <div class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-4">
       <LessonHeader :pkg="loaded.pkg" :replay="replay" :saving="session.saving.value" />
 
       <template v-if="done && session.completion.value">
@@ -170,7 +170,7 @@ onBeforeUnmount(() => window.removeEventListener('online', wake))
             @state="(s: unknown) => ctx.saveState(current!, s)"
             @complete="onComplete(current!)"
           />
-          <BaseButton v-if="canSkip" variant="ghost" class="self-start" @click="skipCurrent">Bu bölümü atla</BaseButton>
+          <BaseButton v-if="canSkip" variant="quiet" class="self-start" @click="skipCurrent">Bu bölümü atla</BaseButton>
         </template>
         <p v-if="finishing" class="text-ink-soft" role="status">Dersin tamamlanıyor…</p>
       </template>

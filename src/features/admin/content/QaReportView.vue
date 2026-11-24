@@ -17,14 +17,14 @@ const issues = computed(() => (parsed.value && parsed.value !== 'invalid' ? [...
 
 <template>
   <EmptyState v-if="!parsed" title="Bu revizyon için kalite raporu yok" description="Kalite raporu AI üretiminde otomatik oluşur." />
-  <p v-else-if="parsed === 'invalid'" class="text-ink-soft text-sm">Kayıtlı rapor okunamadı.</p>
+  <p v-else-if="parsed === 'invalid'" class="text-ink-soft type-small">Kayıtlı rapor okunamadı.</p>
   <div v-else class="flex flex-col gap-3">
     <BaseAlert :tone="parsed.passed ? 'success' : 'warning'">
       <template #title>{{ parsed.passed ? 'Kalite kontrolünden geçti' : 'Çözülmemiş sorunlar var' }}</template>
       {{ issues.length }} bulgu · {{ formatDateTime(parsed.checkedAt) }}
     </BaseAlert>
     <ul class="divide-hair divide-y">
-      <li v-for="(x, i) in issues" :key="i" class="flex flex-wrap items-start gap-2 py-2 text-sm">
+      <li v-for="(x, i) in issues" :key="i" class="flex flex-wrap items-start gap-2 py-2 type-small">
         <BaseBadge :tone="SEVERITY[x.severity].tone">{{ SEVERITY[x.severity].label }}</BaseBadge>
         <span class="text-ink-soft">{{ x.area }}</span>
         <span class="min-w-60 flex-1">{{ x.message }}</span>

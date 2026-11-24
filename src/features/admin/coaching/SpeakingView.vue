@@ -36,11 +36,11 @@ const past = computed(() => (state.data.value?.sessions ?? []).filter((s) => s.s
       <template #emptyAction><BaseButton @click="scheduling = true">Oturum planla</BaseButton></template>
       <div class="grid gap-4 lg:grid-cols-2">
         <BaseCard as="section" aria-labelledby="sp-up">
-          <template #head><h2 id="sp-up" class="text-base font-semibold">Yaklaşan ve süren</h2></template>
+          <template #head><h2 id="sp-up" class="type-body font-semibold">Yaklaşan ve süren</h2></template>
           <SpeakingSessionList :sessions="upcoming" :student-name="name" />
         </BaseCard>
         <BaseCard as="section" aria-labelledby="sp-past">
-          <template #head><h2 id="sp-past" class="text-base font-semibold">Geçmiş</h2></template>
+          <template #head><h2 id="sp-past" class="type-body font-semibold">Geçmiş</h2></template>
           <SpeakingSessionList :sessions="past" :student-name="name" />
         </BaseCard>
       </div>

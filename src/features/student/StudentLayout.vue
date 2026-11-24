@@ -42,7 +42,7 @@ const xpLabel = computed(() => `Toplam ${new Intl.NumberFormat('tr-TR').format(h
   <StudentShell :items="items" :active="active" nav-label="Ana menü" skip-label="İçeriğe geç" home-label="Lugu ana sayfa" toast-close-label="Kapat">
     <template #account>
       <XpBadge v-if="home" :xp="home.xp" size="sm" :label="xpLabel" />
-      <RouterLink v-if="avatar" to="/profil" class="focus-ring rounded-full" aria-label="Profilim">
+      <RouterLink v-if="avatar" to="/profil" class="focus-ring grid size-11 place-items-center rounded-full" aria-label="Profilim">
         <AvatarArt :avatar="avatar" :size="36" />
       </RouterLink>
     </template>

@@ -24,19 +24,19 @@ function addGroup() {
 
 <template>
   <div class="flex flex-col gap-3">
-    <p class="text-ink-soft text-sm">Her grup aynı cümle üzerinde üç adım: tamamla → sırala → anlam. Önerilen 6–8 grup.</p>
+    <p class="text-ink-soft type-small">Her grup aynı cümle üzerinde üç adım: tamamla → sırala → anlam. Önerilen 6–8 grup.</p>
     <div v-for="(g, i) in pkg.homework.groups" :key="g.id" class="border-hair rounded-card flex flex-col gap-3 border p-3">
       <div class="flex flex-wrap items-end justify-between gap-2">
-        <BaseSelect v-model="g.objectiveId" class="min-w-64" size="sm" :label="`${i + 1}. grup hedefi`" :options="objectiveOptions" />
-        <BaseButton size="xs" variant="quiet" @click="pkg.homework.groups.splice(i, 1)"><Trash2 class="size-4" aria-hidden="true" /> Grubu sil</BaseButton>
+        <BaseSelect v-model="g.objectiveId" class="min-w-64" :label="`${i + 1}. grup hedefi`" :options="objectiveOptions" />
+        <BaseButton variant="quiet" @click="pkg.homework.groups.splice(i, 1)"><Trash2 class="size-4" aria-hidden="true" /> Grubu sil</BaseButton>
       </div>
-      <h4 class="text-sm font-semibold">1 · Cümle tamamlama</h4>
+      <h4 class="type-small font-semibold">1 · Cümle tamamlama</h4>
       <QuestionEditor :model-value="g.complete" :types="['choice', 'text']" @update:model-value="(q: Question) => (g.complete = q)" />
-      <h4 class="text-sm font-semibold">2 · Cümle sıralama</h4>
+      <h4 class="type-small font-semibold">2 · Cümle sıralama</h4>
       <QuestionEditor :model-value="g.order" :types="['order']" @update:model-value="(q: Question) => q.type === 'order' && (g.order = q)" />
-      <h4 class="text-sm font-semibold">3 · Anlam</h4>
+      <h4 class="type-small font-semibold">3 · Anlam</h4>
       <QuestionEditor :model-value="g.meaning" :types="['choice', 'text']" @update:model-value="(q: Question) => (g.meaning = q)" />
     </div>
-    <BaseButton class="w-fit" size="sm" variant="secondary" @click="addGroup"><Plus class="size-4" aria-hidden="true" /> Grup ekle</BaseButton>
+    <BaseButton class="w-fit" variant="secondary" @click="addGroup"><Plus class="size-4" aria-hidden="true" /> Grup ekle</BaseButton>
   </div>
 </template>

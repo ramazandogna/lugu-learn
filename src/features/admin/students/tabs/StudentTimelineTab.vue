@@ -38,8 +38,8 @@ const items = computed(() => {
       <EmptyState v-if="!items.length" title="Henüz kayıtlı etkinlik yok" />
       <BaseTimeline v-else :events="items" label="Öğrencinin etkinlik zaman çizelgesi">
         <template #default="{ event }">
-          <p class="text-sm font-semibold">{{ event.title }}</p>
-          <p v-if="event.description" class="text-ink-soft text-sm">{{ event.description }}</p>
+          <p class="type-small font-semibold">{{ event.title }}</p>
+          <p v-if="event.description" class="text-ink-soft type-small">{{ event.description }}</p>
         </template>
       </BaseTimeline>
     </div>

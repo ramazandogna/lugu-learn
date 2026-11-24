@@ -42,8 +42,8 @@ const MASCOT = { sm: 56, md: 80, lg: 112 } as const
   >
     <LuguMascot :character="character" :expression="expression" :size="MASCOT[size]" :animated="animated" />
     <div
-      class="lugu-bubble rounded-card relative min-w-0 flex-1 border-2 border-(--color-accent) bg-surface px-4 py-3 shadow-(--shadow-card)"
-      :class="[side === 'end' ? 'is-end' : 'is-start', size === 'sm' ? 'text-sm' : 'text-base']"
+      class="lugu-bubble rounded-card relative min-w-0 flex-1 surface border-s-4 border-s-(--bubble-edge) px-4 py-3 shadow-(--shadow-raised)"
+      :class="[side === 'end' ? 'is-end' : 'is-start', 'type-body']"
       :aria-live="live ? 'polite' : undefined"
     >
       <p v-if="showName" class="type-eyebrow text-ink-soft mb-1">{{ CHARACTERS[character].name }}</p>
@@ -55,7 +55,11 @@ const MASCOT = { sm: 56, md: 80, lg: 112 } as const
 </template>
 
 <style scoped>
-/* The tail: a rotated square sharing the bubble's border, pointing at the speaker. */
+/* The strip and the tail both read --bubble-edge (the character's colour). */
+.lugu-bubble {
+  --bubble-edge: var(--color-accent);
+}
+
 .lugu-bubble::before {
   content: '';
   position: absolute;
@@ -63,7 +67,7 @@ const MASCOT = { sm: 56, md: 80, lg: 112 } as const
   width: 0.9rem;
   height: 0.9rem;
   background: var(--color-surface);
-  border: 2px solid var(--color-accent);
+  border: 4px solid var(--bubble-edge);
   border-top-color: transparent;
   border-right-color: transparent;
   transform: rotate(45deg);

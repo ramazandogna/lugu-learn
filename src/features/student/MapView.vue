@@ -51,7 +51,7 @@ function locked(lessonId: string) {
 </script>
 
 <template>
-  <EmptyScene v-if="error" tone="error" title="Haritan açılamadı" :description="error">
+  <EmptyScene v-if="error" tone="danger" title="Haritan açılamadı" :description="error">
     <BaseButton @click="load">Tekrar dene</BaseButton>
   </EmptyScene>
   <LoadingScene v-else-if="!map" label="Haritan hazırlanıyor" character="momo" />

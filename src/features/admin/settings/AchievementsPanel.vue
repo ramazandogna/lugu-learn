@@ -76,11 +76,11 @@ async function submit() {
       <DataTable :columns="columns" :rows="rows" caption="Başarı kataloğu" caption-hidden row-key="id">
         <template #title="{ row }">
           <p class="font-semibold">{{ row.title }}</p>
-          <p class="text-ink-soft text-xs">{{ row.a.key }}</p>
+          <p class="text-ink-soft type-small">{{ row.a.key }}</p>
         </template>
         <template #threshold="{ row }">{{ row.a.kind === 'manual' ? '—' : row.threshold }}</template>
         <template #active="{ row }"><BaseBadge :tone="row.active ? 'success' : 'neutral'">{{ row.active ? 'Etkin' : 'Pasif' }}</BaseBadge></template>
-        <template #id="{ row }"><BaseButton size="sm" variant="quiet" @click="edit(row.a)">Düzenle</BaseButton></template>
+        <template #id="{ row }"><BaseButton variant="quiet" @click="edit(row.a)">Düzenle</BaseButton></template>
       </DataTable>
     </LoadState>
     <ResponsiveDialog v-model="open" :title="editingId ? 'Başarıyı düzenle' : 'Yeni başarı'" close-label="Kapat">

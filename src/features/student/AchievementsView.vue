@@ -34,7 +34,7 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
 <template>
   <div class="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6">
     <WorldBackground character="sasha" intensity="rich" class="rounded-card overflow-hidden">
-      <div class="flex flex-wrap items-center justify-between gap-4 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-6">
         <div>
           <p class="type-eyebrow text-ink-soft">Başarılarım</p>
           <h1 class="type-hero text-ink">Topladıkların</h1>
@@ -43,7 +43,7 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
       </div>
     </WorldBackground>
 
-    <EmptyScene v-if="error" tone="error" title="Başarıların açılamadı" :description="error">
+    <EmptyScene v-if="error" tone="danger" title="Başarıların açılamadı" :description="error">
       <BaseButton @click="load">Tekrar dene</BaseButton>
     </EmptyScene>
     <SkeletonList v-else-if="!data" :rows="4" />
@@ -53,11 +53,11 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
         <EmptyScene v-if="!earned.length" compact title="İlk rozetin yolda!" description="Dersleri tamamladıkça rozetler burada birikecek." />
         <ul v-else class="grid gap-3 sm:grid-cols-2">
           <li v-for="a in earned" :key="a.id" class="surface rounded-card flex items-start gap-3 p-4">
-            <Trophy :size="28" class="text-accent shrink-0" aria-hidden="true" />
+            <Trophy :size="24" class="text-accent-ink shrink-0" aria-hidden="true" />
             <div>
               <p class="type-task text-ink">{{ a.title }}</p>
-              <p v-if="a.description" class="text-ink-soft text-sm">{{ a.description }}</p>
-              <p class="text-ink-soft text-sm">{{ fmtDate(a.awardedAt!) }}<template v-if="a.xp"> · +{{ a.xp }} XP</template></p>
+              <p v-if="a.description" class="text-ink-soft type-small">{{ a.description }}</p>
+              <p class="text-ink-soft type-small">{{ fmtDate(a.awardedAt!) }}<template v-if="a.xp"> · +{{ a.xp }} XP</template></p>
             </div>
           </li>
         </ul>
@@ -70,8 +70,8 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
             <Lock :size="24" class="text-ink-soft shrink-0" aria-hidden="true" />
             <div>
               <p class="type-task text-ink">{{ a.title }} <span class="sr-only">(henüz kazanılmadı)</span></p>
-              <p v-if="a.description" class="text-ink-soft text-sm">{{ a.description }}</p>
-              <p v-else-if="a.kind === 'lessons_completed' && a.threshold" class="text-ink-soft text-sm">{{ a.threshold }} ders tamamlayınca</p>
+              <p v-if="a.description" class="text-ink-soft type-small">{{ a.description }}</p>
+              <p v-else-if="a.kind === 'lessons_completed' && a.threshold" class="text-ink-soft type-small">{{ a.threshold }} ders tamamlayınca</p>
             </div>
           </li>
         </ul>
@@ -81,7 +81,7 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
         <h2 id="xp-title" class="type-section text-ink">XP geçmişin</h2>
         <ul class="surface rounded-card divide-hair divide-y">
           <li v-for="r in data.rewards" :key="r.id" class="flex items-center justify-between gap-3 px-4 py-3">
-            <span class="text-ink">{{ r.note || REASON[r.reason] }}<span class="text-ink-soft block text-sm">{{ fmtDate(r.created_at) }}</span></span>
+            <span class="text-ink">{{ r.note || REASON[r.reason] }}<span class="text-ink-soft block type-small">{{ fmtDate(r.created_at) }}</span></span>
             <span class="text-ink font-bold">+{{ fmt(r.amount) }} XP</span>
           </li>
         </ul>

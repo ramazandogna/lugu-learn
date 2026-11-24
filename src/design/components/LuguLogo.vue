@@ -22,7 +22,7 @@ const {
 }>()
 
 const mark = computed(() => ({ sm: 28, md: 36, lg: 56 })[size])
-const word = computed(() => ({ sm: 'text-xl', md: 'text-2xl', lg: 'text-4xl' })[size])
+const word = computed(() => ({ sm: 'type-section', md: 'type-title', lg: 'type-hero' })[size])
 </script>
 
 <template>
@@ -32,9 +32,9 @@ const word = computed(() => ({ sm: 'text-xl', md: 'text-2xl', lg: 'text-4xl' })[
     <span class="flex flex-col">
       <span class="flex items-baseline gap-2">
         <span class="font-display text-ink leading-none font-semibold tracking-tight" :class="word">lugu</span>
-        <span v-if="suffix" class="text-ink-soft text-xs font-bold tracking-wide uppercase">{{ suffix }}</span>
+        <span v-if="suffix" class="text-ink-soft type-small font-bold tracking-wide uppercase">{{ suffix }}</span>
       </span>
-      <span v-if="tagline" class="text-ink-soft mt-1 text-xs font-semibold">{{ tagline }}</span>
+      <span v-if="tagline" class="text-ink-soft mt-1 type-small font-semibold">{{ tagline }}</span>
     </span>
   </span>
 </template>

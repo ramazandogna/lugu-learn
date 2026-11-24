@@ -37,8 +37,8 @@ async function remove(id: string) {
 <template>
   <BaseCard as="section" aria-labelledby="subjects-title">
     <template #head>
-      <h2 id="subjects-title" class="text-base font-semibold">Dersler</h2>
-      <p class="text-ink-soft text-sm">Sonucu girilmiş bir ders silinmez, pasife alınır.</p>
+      <h2 id="subjects-title" class="type-body font-semibold">Dersler</h2>
+      <p class="text-ink-soft type-small">Sonucu girilmiş bir ders silinmez, pasife alınır.</p>
     </template>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <ul class="divide-hair divide-y">
@@ -57,7 +57,7 @@ async function remove(id: string) {
             </BasePopconfirm>
           </template>
         </li>
-        <li v-if="!state.data.value?.length" class="text-ink-soft py-2 text-sm">Henüz ders yok.</li>
+        <li v-if="!state.data.value?.length" class="text-ink-soft py-2 type-small">Henüz ders yok.</li>
       </ul>
       <form class="mt-3 flex items-end gap-2" @submit.prevent="add">
         <BaseInput v-model="newName" class="flex-1" size="sm" label="Yeni ders" placeholder="ör. Matematik" />

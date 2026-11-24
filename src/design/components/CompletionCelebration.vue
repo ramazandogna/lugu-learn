@@ -40,7 +40,7 @@ const {
 
 <template>
   <section
-    class="surface rounded-shell relative flex flex-col items-center overflow-hidden px-6 pt-4 pb-6 text-center sm:px-10"
+    class="surface rounded-shell relative flex flex-col items-center overflow-hidden px-6 pt-4 pb-6 text-center sm:px-12"
     :data-character="character"
     :style="characterThemeStyle(character)"
   >
@@ -50,7 +50,7 @@ const {
     </div>
     <div role="status" class="-mt-4">
       <h2 class="type-hero text-ink">{{ title }}</h2>
-      <p v-if="message" class="text-ink-soft mx-auto mt-2 max-w-[42ch] text-base">{{ message }}</p>
+      <p v-if="message" class="text-ink-soft mx-auto mt-2 max-w-[42ch] type-body">{{ message }}</p>
     </div>
     <div v-if="stars !== undefined || xp !== undefined" class="mt-4 flex flex-wrap items-center justify-center gap-3">
       <ProgressStars v-if="stars !== undefined" :value="stars" :label="starsLabel" size="lg" />

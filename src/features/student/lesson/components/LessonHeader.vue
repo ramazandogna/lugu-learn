@@ -15,18 +15,18 @@ const { pkg, replay, saving } = defineProps<{ pkg: StudentPackage; replay: boole
     <div class="min-w-0">
       <p class="type-eyebrow text-ink-soft">{{ pkg.meta.theme }}</p>
       <h1 class="type-title text-ink" lang="en">{{ pkg.meta.title }}</h1>
-      <p class="text-ink-soft text-sm">{{ pkg.meta.tagline }}</p>
+      <p class="text-ink-soft type-small">{{ pkg.meta.tagline }}</p>
       <BaseBadge v-if="replay" class="mt-2">
-        <Repeat :size="14" aria-hidden="true" /> Tekrar modu · İlk sonuçların değişmez
+        <Repeat :size="16" aria-hidden="true" /> Tekrar modu · İlk sonuçların değişmez
       </BaseBadge>
     </div>
     <div class="flex items-center gap-2">
-      <p class="text-ink-soft flex items-center gap-1 text-sm" role="status">
+      <p class="text-ink-soft flex items-center gap-1 type-small" role="status">
         <template v-if="saving === 'saving'"><LoaderCircle :size="16" class="motion-safe:animate-spin" aria-hidden="true" /> Kaydediliyor…</template>
-        <template v-else-if="saving === 'offline'"><CloudOff :size="16" class="text-warning" aria-hidden="true" /> Bağlantı bekleniyor, cevapların güvende</template>
+        <template v-else-if="saving === 'offline'"><CloudOff :size="16" class="text-warning-ink" aria-hidden="true" /> Bağlantı bekleniyor, cevapların güvende</template>
         <template v-else><Check :size="16" class="text-positive" aria-hidden="true" /> Kaydedildi</template>
       </p>
-      <BaseButton as="router-link" to="/" variant="ghost" size="sm">Dersten çık</BaseButton>
+      <BaseButton as="router-link" to="/" variant="quiet" size="sm">Dersten çık</BaseButton>
     </div>
   </header>
 </template>

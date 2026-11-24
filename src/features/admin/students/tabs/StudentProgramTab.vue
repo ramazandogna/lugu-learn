@@ -46,7 +46,7 @@ async function changed() {
   <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
     <div v-if="state.data.value" class="flex flex-col gap-4">
       <BaseCard as="section" aria-labelledby="assign-title">
-        <template #head><h2 id="assign-title" class="text-base font-semibold">Program ata</h2></template>
+        <template #head><h2 id="assign-title" class="type-body font-semibold">Program ata</h2></template>
         <EmptyState
           v-if="!versionOptions.length"
           title="Yayınlanmış müfredat sürümü yok"

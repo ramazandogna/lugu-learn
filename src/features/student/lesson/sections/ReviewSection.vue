@@ -79,7 +79,7 @@ function next() {
   <div class="flex flex-col gap-4">
     <CharacterBubble character="momo" size="sm">Önceki derslerden birkaç soruyla ısınalım. İstersen bu bölümü atlayabilirsin.</CharacterBubble>
     <template v-if="q">
-      <p class="text-ink-soft text-sm">Soru {{ st.index + 1 }} / {{ questions.length }}</p>
+      <p class="text-ink-soft type-small">Soru {{ st.index + 1 }} / {{ questions.length }}</p>
       <PracticeQuestion :question="q" :hint="hint" :hint-available="!!q.hint" @answer="answer" @hint="hint = q.hint ?? null" />
       <AnswerFeedback v-if="result" :correct="result.correct" character="momo" :explain="q.explain" />
       <BaseButton v-if="result || finished" class="self-start" @click="next">{{ st.index + 1 < questions.length ? 'Sonraki soru' : 'Isınmayı bitir' }}</BaseButton>

@@ -71,7 +71,7 @@ async function remove() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink :to="{ name: 'admin-curricula' }" class="focus-ring rounded-control text-ink-soft w-fit text-sm hover:underline">‹ Müfredatlar</RouterLink>
+    <RouterLink :to="{ name: 'admin-curricula' }" class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline">‹ Müfredatlar</RouterLink>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <template v-if="state.data.value">
         <PageHeader :title="state.data.value.curriculum.name" as="h1">
@@ -91,7 +91,7 @@ async function remove() {
             </div>
           </template>
         </PageHeader>
-        <p v-if="state.data.value.curriculum.description" class="text-ink-soft -mt-4 max-w-(--measure-reading) text-sm">
+        <p v-if="state.data.value.curriculum.description" class="text-ink-soft -mt-4 max-w-(--measure-reading) type-small">
           {{ state.data.value.curriculum.description }}
         </p>
 

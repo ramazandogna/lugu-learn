@@ -37,7 +37,7 @@ async function remove(id: string) {
 
 <template>
   <div class="flex flex-col gap-4">
-    <p class="text-ink-soft text-sm">Kod, ders paketindeki hedef kimliği olarak kullanılır (küçük harf, rakam ve tire).</p>
+    <p class="text-ink-soft type-small">Kod, ders paketindeki hedef kimliği olarak kullanılır (küçük harf, rakam ve tire).</p>
     <EmptyState v-if="!objectives.length" title="Henüz hedef yok" />
     <ul v-else class="divide-hair surface rounded-card divide-y px-4">
       <li v-for="o in objectives" :key="o.id" class="py-3">
@@ -48,7 +48,7 @@ async function remove(id: string) {
           <BaseButton size="sm" variant="quiet" @click="editingId = null">Vazgeç</BaseButton>
         </form>
         <div v-else class="flex flex-wrap items-center gap-3">
-          <code class="text-ink-soft text-sm">{{ o.code }}</code>
+          <code class="text-ink-soft type-small">{{ o.code }}</code>
           <span class="flex-1">{{ o.text }}</span>
           <BaseButton size="sm" variant="quiet" @click="(editingId = o.id), Object.assign(edit, { code: o.code, text: o.text })">Düzenle</BaseButton>
           <BasePopconfirm :message="`${o.code} silinsin mi?`" confirm-label="Sil" cancel-label="Vazgeç" tone="danger" @confirm="remove(o.id)">

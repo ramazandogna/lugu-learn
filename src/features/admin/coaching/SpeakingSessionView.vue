@@ -33,15 +33,15 @@ const guide = computed(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink :to="{ name: 'admin-speaking' }" class="focus-ring rounded-control text-ink-soft w-fit text-sm hover:underline">‹ Konuşma & Koçluk</RouterLink>
+    <RouterLink :to="{ name: 'admin-speaking' }" class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline">‹ Konuşma & Koçluk</RouterLink>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <template v-if="state.data.value">
         <PageHeader :title="`Konuşma oturumu · ${state.data.value.student?.name ?? 'Öğrenci'}`" as="h1" />
-        <p class="text-ink-soft -mt-4 text-sm">
+        <p class="text-ink-soft -mt-4 type-small">
           Planlanan: {{ formatDateTime(state.data.value.session.planned_at) }}
           <template v-if="state.data.value.student">
             ·
-            <RouterLink :to="{ name: 'admin-student', params: { studentId: state.data.value.student.id } }" class="focus-ring rounded-control hover:underline">
+            <RouterLink :to="{ name: 'admin-student', params: { studentId: state.data.value.student.id } }" class="focus-ring rounded-cell hover:underline">
               öğrenci profili
             </RouterLink>
           </template>
@@ -54,8 +54,8 @@ const guide = computed(() => {
           </div>
           <BaseCard as="aside" aria-labelledby="sp-guide" class="h-fit">
             <template #head>
-              <h2 id="sp-guide" class="text-base font-semibold">Öğretmen rehberi</h2>
-              <p class="text-ink-soft text-sm">Öğrencinin şu anki dersinin rehberi (yalnızca yönetici görür).</p>
+              <h2 id="sp-guide" class="type-body font-semibold">Öğretmen rehberi</h2>
+              <p class="text-ink-soft type-small">Öğrencinin şu anki dersinin rehberi (yalnızca yönetici görür).</p>
             </template>
             <EmptyState v-if="!guide" title="Bu ders için öğretmen rehberi yok" />
             <TeacherGuideView v-else :guide="guide" compact />

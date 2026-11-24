@@ -53,7 +53,7 @@ const sessions = computed(() =>
             </BaseBadge>
           </span>
         </template>
-        <div class="flex flex-col gap-3 py-2 text-sm">
+        <div class="flex flex-col gap-3 py-2 type-small">
           <p class="text-ink-soft">
             Etkin {{ formatDuration(x.session.active_seconds) }} · hareketsiz {{ formatDuration(x.session.idle_seconds) }} · mola
             {{ formatDuration(x.session.break_seconds) }} · {{ x.correct }}/{{ x.attempts }} doğru yanıt · son görülme
@@ -73,7 +73,7 @@ const sessions = computed(() =>
           />
           <div v-if="x.breaks.length">
             <h4 class="font-semibold">Molalar</h4>
-            <ul class="text-ink-soft list-disc ps-5">
+            <ul class="text-ink-soft list-disc ps-6">
               <li v-for="b in x.breaks" :key="b.id">
                 {{ sectionLabel(b.after_section) }} sonrası, {{ b.planned_minutes ? `${b.planned_minutes} dk planlandı` : 'süresiz' }}
                 <template v-if="b.ended_at"> · {{ formatDuration((Date.parse(b.ended_at) - Date.parse(b.started_at)) / 1000) }} sürdü</template>

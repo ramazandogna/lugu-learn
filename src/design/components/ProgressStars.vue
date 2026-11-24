@@ -22,7 +22,7 @@ const {
 }>()
 
 const earned = computed(() => Math.max(0, Math.min(max, Math.round(Number.isFinite(value) ? value : 0))))
-const px = computed(() => ({ sm: 18, md: 28, lg: 44 })[size])
+const px = computed(() => ({ sm: 20, md: 24, lg: 32 })[size])
 const path = star(12, 12.6, 10.5, 5)
 </script>
 

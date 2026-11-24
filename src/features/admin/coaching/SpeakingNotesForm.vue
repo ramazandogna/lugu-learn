@@ -34,8 +34,8 @@ async function save() {
 <template>
   <BaseCard as="section" aria-labelledby="sp-notes">
     <template #head>
-      <h2 id="sp-notes" class="text-base font-semibold">Öğretmen notları</h2>
-      <p class="text-ink-soft text-sm">Bu notlar öğrenme profilinde öğretmen gözlemi olarak kullanılır.</p>
+      <h2 id="sp-notes" class="type-body font-semibold">Öğretmen notları</h2>
+      <p class="text-ink-soft type-small">Bu notlar öğrenme profilinde öğretmen gözlemi olarak kullanılır.</p>
     </template>
     <form class="grid gap-4 md:grid-cols-2" @submit.prevent="save">
       <BaseTextarea v-model="form.observations" label="Gözlemler" :rows="4" />

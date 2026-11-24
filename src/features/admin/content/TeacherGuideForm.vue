@@ -48,21 +48,21 @@ function submit() {
 
 <template>
   <form class="grid gap-3 md:grid-cols-2" @submit.prevent="submit">
-    <p class="text-ink-soft text-sm md:col-span-2">Listelerde her satır bir madde.</p>
-    <BaseInput v-model="form.objective" class="md:col-span-2" size="sm" label="Hedef" />
-    <BaseTextarea v-model="form.vocabulary" size="sm" label="Kelimeler" :rows="4" />
-    <BaseTextarea v-model="form.grammar" size="sm" label="Dil bilgisi" :rows="4" />
-    <BaseTextarea v-model="form.expectedDifficulties" size="sm" label="Beklenen zorluklar" :rows="4" />
-    <BaseTextarea v-model="form.commonErrors" size="sm" label="Sık hatalar" hint="Satır başına: hata => doğrusu" :rows="4" />
-    <BaseTextarea v-model="form.questionsToAsk" size="sm" label="Sorulacak sorular" :rows="4" />
-    <BaseTextarea v-model="form.speakingPrompts" size="sm" label="Konuşma soruları" :rows="4" />
-    <BaseInput v-model="form.situation" class="md:col-span-2" size="sm" label="Canlandırma durumu" />
-    <BaseTextarea v-model="form.roles" size="sm" label="Roller" :rows="3" />
-    <BaseTextarea v-model="form.steps" size="sm" label="Canlandırma adımları" :rows="3" />
-    <BaseTextarea v-model="form.script" size="sm" label="Dinleme metni" :rows="5" />
-    <BaseTextarea v-model="form.listeningQuestions" size="sm" label="Dinleme soruları" :rows="5" />
-    <BaseTextarea v-model="form.reinforcement" size="sm" label="Pekiştirme" :rows="3" />
-    <BaseTextarea v-model="form.suggestedActivities" size="sm" label="Önerilen etkinlikler" :rows="3" />
+    <p class="text-ink-soft type-small md:col-span-2">Listelerde her satır bir madde.</p>
+    <BaseInput v-model="form.objective" class="md:col-span-2" label="Hedef" />
+    <BaseTextarea v-model="form.vocabulary" label="Kelimeler" :rows="4" />
+    <BaseTextarea v-model="form.grammar" label="Dil bilgisi" :rows="4" />
+    <BaseTextarea v-model="form.expectedDifficulties" label="Beklenen zorluklar" :rows="4" />
+    <BaseTextarea v-model="form.commonErrors" label="Sık hatalar" hint="Satır başına: hata => doğrusu" :rows="4" />
+    <BaseTextarea v-model="form.questionsToAsk" label="Sorulacak sorular" :rows="4" />
+    <BaseTextarea v-model="form.speakingPrompts" label="Konuşma soruları" :rows="4" />
+    <BaseInput v-model="form.situation" class="md:col-span-2" label="Canlandırma durumu" />
+    <BaseTextarea v-model="form.roles" label="Roller" :rows="3" />
+    <BaseTextarea v-model="form.steps" label="Canlandırma adımları" :rows="3" />
+    <BaseTextarea v-model="form.script" label="Dinleme metni" :rows="5" />
+    <BaseTextarea v-model="form.listeningQuestions" label="Dinleme soruları" :rows="5" />
+    <BaseTextarea v-model="form.reinforcement" label="Pekiştirme" :rows="3" />
+    <BaseTextarea v-model="form.suggestedActivities" label="Önerilen etkinlikler" :rows="3" />
     <div class="flex gap-2 md:col-span-2">
       <BaseButton type="submit" :loading="busy">Rehberi kaydet</BaseButton>
       <BaseButton variant="secondary" @click="emit('cancel')">Vazgeç</BaseButton>

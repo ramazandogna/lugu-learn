@@ -91,16 +91,16 @@ const speakerName = (k: string) => (k === 'narrator' ? null : k)
     </header>
 
     <template v-if="phase === 'scenes' && scene">
-      <p class="text-ink-soft text-sm">Sahne {{ run.scene + 1 }} / {{ story.scenes.length }}</p>
+      <p class="text-ink-soft type-small">Sahne {{ run.scene + 1 }} / {{ story.scenes.length }}</p>
       <div class="flex flex-col gap-3">
         <template v-for="(line, i) in scene.lines" :key="`${scene.id}-${i}`">
           <CharacterBubble v-if="speakerName(line.speaker)" :character="line.speaker === 'narrator' ? story.character : line.speaker" :side="i % 2 ? 'end' : 'start'" size="sm">
             <p class="text-ink" lang="en">{{ line.en }}</p>
-            <p v-if="line.tr" class="text-ink-soft text-sm">{{ line.tr }}</p>
+            <p v-if="line.tr" class="text-ink-soft type-small">{{ line.tr }}</p>
           </CharacterBubble>
           <p v-else class="text-ink italic">
             <span lang="en">{{ line.en }}</span>
-            <span v-if="line.tr" class="text-ink-soft block text-sm not-italic">{{ line.tr }}</span>
+            <span v-if="line.tr" class="text-ink-soft block type-small not-italic">{{ line.tr }}</span>
           </p>
         </template>
       </div>
@@ -113,20 +113,20 @@ const speakerName = (k: string) => (k === 'narrator' ? null : k)
         <BaseButton variant="secondary" :disabled="run.scene === 0" @click="back">Önceki sahne</BaseButton>
         <BaseButton :disabled="!canNext" @click="forward">{{ run.scene + 1 < story.scenes.length ? 'Sonraki sahne' : 'Sorulara geç' }}</BaseButton>
       </div>
-      <p v-if="!canNext" class="text-ink-soft text-sm">Devam etmek için bir seçim yap.</p>
+      <p v-if="!canNext" class="text-ink-soft type-small">Devam etmek için bir seçim yap.</p>
     </template>
 
     <template v-else-if="phase === 'questions' && question">
-      <p class="text-ink-soft text-sm">Soru {{ run.question + 1 }} / {{ story.questions.length }}</p>
+      <p class="text-ink-soft type-small">Soru {{ run.question + 1 }} / {{ story.questions.length }}</p>
       <PracticeQuestion :question="question" :hint="hint" :hint-available="!!question.hint" @answer="answer" @hint="showHint" />
       <AnswerFeedback v-if="result" :correct="result.correct" :character="story.character" :explain="result.explain" />
       <BaseButton v-if="result" class="self-start" @click="nextQuestion">{{ run.question + 1 < story.questions.length ? 'Sonraki soru' : 'Hikâyeyi bitir' }}</BaseButton>
     </template>
 
-    <div v-if="phase === 'done' || (completed && phase !== 'scenes' && !question)" class="surface rounded-card flex flex-col gap-3 p-5">
+    <div v-if="phase === 'done' || (completed && phase !== 'scenes' && !question)" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Hikâyeyi tamamladın!</p>
       <BaseButton class="self-start" :disabled="!finished" @click="emit('complete')">Devam et</BaseButton>
     </div>
-    <BaseButton v-else-if="completed" variant="ghost" class="self-start" @click="emit('complete')">Bu bölümden çık</BaseButton>
+    <BaseButton v-else-if="completed" variant="quiet" class="self-start" @click="emit('complete')">Bu bölümden çık</BaseButton>
   </div>
 </template>

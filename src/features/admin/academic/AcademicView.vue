@@ -26,7 +26,7 @@ const options = computed(() => (students.data.value ?? []).map((s) => ({ value: 
       <SubjectsCard class="h-fit" />
       <div class="flex flex-col gap-4">
         <BaseCard as="section" aria-labelledby="ac-student">
-          <template #head><h2 id="ac-student" class="text-base font-semibold">Öğrenci</h2></template>
+          <template #head><h2 id="ac-student" class="type-body font-semibold">Öğrenci</h2></template>
           <LoadState :loading="students.loading.value" :error="students.error.value" :empty="!options.length" empty-title="Henüz öğrenci yok" @retry="students.reload">
             <BaseSelect v-model="studentId" label="Öğrenci seçin" label-hidden placeholder="Öğrenci seçin" :options="options" />
           </LoadState>

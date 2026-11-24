@@ -10,7 +10,7 @@ import TinyCat from './TinyCat.vue'
 /*
  * Nothing here yet, said by a character. The words and the way out are
  * rei-kit's EmptyState (title, sentence, action slot); Lugu adds the picture.
- * `tone="error"` is the same scene for a failed load: the host looks
+ * `tone="danger"` is the same scene for a failed load: the host looks
  * surprised, and the action is "Tekrar dene".
  */
 const {
@@ -23,16 +23,16 @@ const {
   title: string
   description?: string
   character?: CharacterKey
-  tone?: 'empty' | 'error'
+  tone?: 'empty' | 'danger'
   /** Smaller picture, for a panel rather than a page. */
   compact?: boolean
 }>()
 
-const expression: Record<'empty' | 'error', Expression> = { empty: 'thinking', error: 'surprised' }
+const expression: Record<'empty' | 'danger', Expression> = { empty: 'thinking', danger: 'surprised' }
 </script>
 
 <template>
-  <div class="flex flex-col items-center" :role="tone === 'error' ? 'alert' : undefined">
+  <div class="flex flex-col items-center" :role="tone === 'danger' ? 'alert' : undefined">
     <div class="relative">
       <LuguMascot :character="character" :expression="expression[tone]" :size="compact ? 88 : 128" />
       <TinyCat v-if="!compact" class="absolute -right-8 bottom-1" pose="peek" :size="36" />

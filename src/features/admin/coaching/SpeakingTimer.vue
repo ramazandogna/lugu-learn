@@ -39,13 +39,13 @@ const cancel = () => change({ status: 'cancelled' }, 'Oturum iptal edildi')
 
 <template>
   <BaseCard as="section" aria-labelledby="sp-timer">
-    <template #head><h2 id="sp-timer" class="text-base font-semibold">Oturum süresi</h2></template>
+    <template #head><h2 id="sp-timer" class="type-body font-semibold">Oturum süresi</h2></template>
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <p class="text-3xl font-semibold tabular-nums" :aria-live="session.status === 'started' ? 'off' : 'polite'">
+        <p class="type-title font-semibold tabular-nums" :aria-live="session.status === 'started' ? 'off' : 'polite'">
           {{ elapsed === null ? '0 sn' : formatDuration(elapsed) }}
         </p>
-        <p class="text-ink-soft text-sm">
+        <p class="text-ink-soft type-small">
           <template v-if="session.started_at">Başlangıç {{ formatDateTime(session.started_at) }}</template>
           <template v-if="session.ended_at"> · bitiş {{ formatDateTime(session.ended_at) }}</template>
           <template v-if="session.status === 'started' && elapsed !== null && elapsed > PLANNED_MINUTES * 60"> · planlanan {{ PLANNED_MINUTES }} dakika aşıldı</template>

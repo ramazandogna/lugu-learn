@@ -23,10 +23,10 @@ const duration = (s: SpeakingSession) => (s.started_at && s.ended_at ? formatDur
   <ul v-else class="divide-hair divide-y">
     <li v-for="s in sorted" :key="s.id" class="flex flex-wrap items-center justify-between gap-2 py-3">
       <div>
-        <RouterLink :to="{ name: 'admin-speaking-session', params: { sessionId: s.id } }" class="focus-ring rounded-control font-semibold hover:underline">
+        <RouterLink :to="{ name: 'admin-speaking-session', params: { sessionId: s.id } }" class="focus-ring rounded-cell font-semibold hover:underline">
           {{ studentName ? studentName(s.student_id) : formatDateTime(s.planned_at ?? s.created_at) }}
         </RouterLink>
-        <p class="text-ink-soft text-sm">
+        <p class="text-ink-soft type-small">
           <template v-if="studentName">{{ formatDateTime(s.planned_at) }}</template>
           <template v-if="duration(s)"> · {{ duration(s) }}</template>
           <template v-if="s.plan"> · plan hazır</template>

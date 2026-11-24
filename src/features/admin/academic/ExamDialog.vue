@@ -79,16 +79,16 @@ async function submit() {
         <BaseInput v-model="form.notes" label="Not" />
       </div>
       <fieldset class="flex flex-col gap-3">
-        <legend class="mb-2 text-sm font-semibold">Ders sonuçları (boş bırakılan dersler kaydedilmez)</legend>
+        <legend class="mb-2 type-small font-semibold">Ders sonuçları (boş bırakılan dersler kaydedilmez)</legend>
         <div v-for="l in lines" :key="l.subject_id" class="border-hair rounded-card grid grid-cols-2 items-end gap-2 border p-3 md:grid-cols-5">
           <p class="col-span-2 font-semibold md:col-span-5">
             {{ l.name }}
-            <span v-if="filled(l)" class="text-ink-soft text-sm font-normal">· tahmini net {{ formatNumber(computeNet(l.correct ?? 0, l.incorrect ?? 0, penalty)) }}</span>
+            <span v-if="filled(l)" class="text-ink-soft type-small font-normal">· tahmini net {{ formatNumber(computeNet(l.correct ?? 0, l.incorrect ?? 0, penalty)) }}</span>
           </p>
-          <NumberInput v-model="l.total" size="sm" label="Soru sayısı" :min="0" decrement-label="Azalt" increment-label="Artır" />
-          <NumberInput v-model="l.correct" size="sm" label="Doğru" :min="0" decrement-label="Azalt" increment-label="Artır" />
-          <NumberInput v-model="l.incorrect" size="sm" label="Yanlış" :min="0" decrement-label="Azalt" increment-label="Artır" />
-          <NumberInput v-model="l.blank" size="sm" label="Boş" :min="0" decrement-label="Azalt" increment-label="Artır" />
+          <NumberInput v-model="l.total" label="Soru sayısı" :min="0" decrement-label="Azalt" increment-label="Artır" />
+          <NumberInput v-model="l.correct" label="Doğru" :min="0" decrement-label="Azalt" increment-label="Artır" />
+          <NumberInput v-model="l.incorrect" label="Yanlış" :min="0" decrement-label="Azalt" increment-label="Artır" />
+          <NumberInput v-model="l.blank" label="Boş" :min="0" decrement-label="Azalt" increment-label="Artır" />
         </div>
       </fieldset>
       <BaseAlert v-if="invalid.length" tone="danger">Doğru + yanlış + boş, soru sayısını aşamaz: {{ invalid.join(', ') }}</BaseAlert>

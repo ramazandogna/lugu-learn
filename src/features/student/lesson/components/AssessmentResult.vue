@@ -13,17 +13,17 @@ const line = (p: number) =>
 </script>
 
 <template>
-  <section aria-labelledby="score-title" class="surface rounded-card flex flex-col gap-4 p-5">
+  <section aria-labelledby="score-title" class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
     <h3 id="score-title" class="type-section text-ink">Değerlendirme sonucun</h3>
     <p class="type-hero text-ink">%{{ score.percent }}</p>
     <dl class="grid gap-3 sm:grid-cols-2">
       <div>
-        <dt class="text-ink-soft text-sm">Test</dt>
+        <dt class="text-ink-soft type-small">Test</dt>
         <dd class="text-ink font-bold">{{ score.quiz_total }} sorudan {{ score.quiz_correct }} doğru</dd>
         <ProgressBar :value="score.quiz_correct" :max="Math.max(1, score.quiz_total)" size="sm" :label="`Test: ${score.quiz_total} sorudan ${score.quiz_correct} doğru`" />
       </div>
       <div>
-        <dt class="text-ink-soft text-sm">Okuma</dt>
+        <dt class="text-ink-soft type-small">Okuma</dt>
         <dd class="text-ink font-bold">{{ score.reading_total }} sorudan {{ score.reading_correct }} doğru</dd>
         <ProgressBar :value="score.reading_correct" :max="Math.max(1, score.reading_total)" size="sm" :label="`Okuma: ${score.reading_total} sorudan ${score.reading_correct} doğru`" />
       </div>

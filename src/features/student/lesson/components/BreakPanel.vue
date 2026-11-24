@@ -36,7 +36,7 @@ const spoken = (s: number) => `${Math.floor(s / 60)} dakika ${s % 60} saniye kal
   >
     <template #countdown>
       <p class="type-eyebrow text-ink-soft">Kalan süre</p>
-      <p class="font-display text-ink text-5xl font-semibold tabular-nums" aria-hidden="true">{{ countdown }}</p>
+      <p class="font-display text-ink type-display font-semibold tabular-nums" aria-hidden="true">{{ countdown }}</p>
       <!-- Announced once a minute, not every second. -->
       <p class="sr-only" aria-live="polite">{{ secondsLeft % 60 === 0 || secondsLeft === 0 ? spoken(secondsLeft) : '' }}</p>
     </template>

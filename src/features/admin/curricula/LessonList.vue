@@ -56,17 +56,17 @@ async function remove(id: string) {
     <ol v-else class="flex flex-col gap-2" aria-label="Dersler, sırasıyla">
       <li v-for="(l, i) in order" :key="l.id" class="surface rounded-card flex flex-wrap items-center gap-3 p-3">
         <div v-if="!locked" class="flex flex-col">
-          <BaseButton size="xs" variant="quiet" icon :aria-label="`${l.title} yukarı taşı`" :disabled="i === 0" @click="move(i, -1)">
+          <BaseButton size="sm" variant="quiet" icon :aria-label="`${l.title} yukarı taşı`" :disabled="i === 0" @click="move(i, -1)">
             <ArrowUp class="size-4" aria-hidden="true" />
           </BaseButton>
-          <BaseButton size="xs" variant="quiet" icon :aria-label="`${l.title} aşağı taşı`" :disabled="i === order.length - 1" @click="move(i, 1)">
+          <BaseButton size="sm" variant="quiet" icon :aria-label="`${l.title} aşağı taşı`" :disabled="i === order.length - 1" @click="move(i, 1)">
             <ArrowDown class="size-4" aria-hidden="true" />
           </BaseButton>
         </div>
         <span class="text-ink-soft w-8 text-end font-semibold tabular-nums">{{ i + 1 }}.</span>
         <div class="min-w-48 flex-1">
           <p class="font-semibold">{{ l.title }}</p>
-          <p class="text-ink-soft text-xs">
+          <p class="text-ink-soft type-small">
             {{ l.estimated_minutes }} dk · {{ l.objective_ids.length }} hedef
             <template v-if="l.prerequisite_ids.length"> · ön koşul: {{ l.prerequisite_ids.map(titleOf).join(', ') }}</template>
           </p>
