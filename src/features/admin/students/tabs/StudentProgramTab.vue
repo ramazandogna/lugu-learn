@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { BaseButton, BaseCard, BaseSelect, EmptyState } from 'rei-kit'
+import { BaseButton, BaseCard, BaseSelect } from 'rei-kit'
 import { assignProgram, listAssignments, listPublishedVersions } from '@/lib/api/admin'
 import LoadState from '../../components/LoadState.vue'
 import { useAction, useLoad } from '../../lib/use-load'
 import AssignmentCard from './AssignmentCard.vue'
+import EmptyState from '../../components/AdminEmpty.vue'
 
 const { studentId } = defineProps<{ studentId: string }>()
 const emit = defineEmits<{ changed: [] }>()

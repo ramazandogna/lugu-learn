@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { BaseBadge, EmptyState } from 'rei-kit'
+import { BaseBadge } from 'rei-kit'
 import type { SpeakingSession } from '@/lib/api/admin'
 import { formatDateTime, formatDuration } from '../lib/format'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { sessions, studentName } = defineProps<{ sessions: readonly SpeakingSession[]; studentName?: (id: string) => string }>()
 

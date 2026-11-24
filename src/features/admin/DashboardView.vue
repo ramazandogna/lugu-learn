@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { PageHeader, StatCard } from 'rei-kit'
+import { StatCard } from 'rei-kit'
 import { listSpeakingSessions, listStudents, recentActivity, recentExams } from '@/lib/api/admin'
 import LoadState from './components/LoadState.vue'
 import DashboardAttention from './components/DashboardAttention.vue'
@@ -8,6 +8,7 @@ import DashboardDeclines from './components/DashboardDeclines.vue'
 import DashboardFeeds from './components/DashboardFeeds.vue'
 import { attentionReasons } from './lib/attention'
 import { useLoad } from './lib/use-load'
+import PageHeader from './components/AdminPageHeader.vue'
 
 const DAY = 86_400_000
 
@@ -33,8 +34,8 @@ const stats = computed(() => {
     { label: 'Toplam öğrenci', value: String(s.length) },
     { label: 'Etkin', value: String(s.filter((x) => x.status === 'active').length) },
     { label: 'Duraklatılmış', value: String(s.filter((x) => x.status === 'paused').length) },
-    { label: 'Tamamlanan ders (30 gün)', value: String(completed) },
-    { label: 'Yarım kalan oturum (30 gün)', value: String(abandoned) },
+    { label: 'Biten ders · 30 gün', value: String(completed) },
+    { label: 'Yarım oturum · 30 gün', value: String(abandoned) },
     { label: 'Açık oturum', value: String(open) },
   ]
 })
@@ -80,7 +81,7 @@ const attention = computed(() => {
       <template v-if="data">
         <section aria-labelledby="dash-stats">
           <h2 id="dash-stats" class="sr-only">Özet</h2>
-          <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6 [&>*]:h-full">
             <StatCard v-for="s in stats" :key="s.label" :label="s.label" :value="s.value" />
           </div>
         </section>

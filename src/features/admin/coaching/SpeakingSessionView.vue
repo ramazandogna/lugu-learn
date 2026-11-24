@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { BaseCard, EmptyState, PageHeader } from 'rei-kit'
+import { BaseCard } from 'rei-kit'
 import { TeacherGuide } from '@/domain/content'
 import { getSpeakingSession, getStudent, latestJob, lessonTeacherMaterial } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
@@ -11,6 +11,8 @@ import { useLoad } from '../lib/use-load'
 import SpeakingNotesForm from './SpeakingNotesForm.vue'
 import SpeakingPlanCard from './SpeakingPlanCard.vue'
 import SpeakingTimer from './SpeakingTimer.vue'
+import EmptyState from '../components/AdminEmpty.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
 
 const route = useRoute()
 const sessionId = computed(() => String(route.params.sessionId))
@@ -33,7 +35,7 @@ const guide = computed(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink :to="{ name: 'admin-speaking' }" class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline">‹ Konuşma & Koçluk</RouterLink>
+    <RouterLink :to="{ name: 'admin-speaking' }" class="focus-ring rounded-cell text-ink-soft -my-2 inline-flex min-h-10 w-fit items-center type-small hover:underline">‹ Konuşma & Koçluk</RouterLink>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <template v-if="state.data.value">
         <PageHeader :title="`Konuşma oturumu · ${state.data.value.student?.name ?? 'Öğrenci'}`" as="h1" />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BaseAlert, BaseButton, BaseCard, EmptyState } from 'rei-kit'
+import { BaseAlert, BaseButton, BaseCard } from 'rei-kit'
 import { SpeakingPlan, TeacherGuide } from '@/domain/content'
 import { saveAdminMaterial, type AdminMaterialRow } from '@/lib/api/admin'
 import type { Json } from '@/lib/database.types'
@@ -9,6 +9,7 @@ import { useAction } from '../lib/use-load'
 import SpeakingPlanForm from './SpeakingPlanForm.vue'
 import TeacherGuideForm from './TeacherGuideForm.vue'
 import TeacherGuideView from './TeacherGuideView.vue'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { packageId, material, part } = defineProps<{ packageId: string; material: AdminMaterialRow | null; part: 'guide' | 'speaking' }>()
 const emit = defineEmits<{ saved: [] }>()

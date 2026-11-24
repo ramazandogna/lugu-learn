@@ -22,7 +22,7 @@ const rows = computed(() => {
   const keys = [...new Set([...Object.keys(KNOWN), ...stored.map((s) => s.key)])].sort()
   return keys.map((key) => {
     const row = stored.find((s) => s.key === key)
-    return { key, value: row ? row.value : (KNOWN[key]?.fallback ?? null), stored: Boolean(row), updatedAt: row?.updated_at ?? null, description: row?.description ?? KNOWN[key]?.description ?? null }
+    return { key, value: row ? row.value : (KNOWN[key]?.fallback ?? null), stored: Boolean(row), updatedAt: row?.updated_at ?? null, description: KNOWN[key]?.description ?? row?.description ?? null }
   })
 })
 
@@ -45,10 +45,10 @@ async function save(key: string, kind: string) {
     <div class="flex flex-col gap-3">
       <BaseCard v-for="r in rows" :key="r.key" as="section" :aria-label="KNOWN[r.key]?.label ?? r.key">
         <div class="flex flex-wrap items-end gap-3">
-          <div class="min-w-60 flex-1">
+          <div class="min-w-0 flex-1 basis-60">
             <p class="font-semibold">{{ KNOWN[r.key]?.label ?? r.key }}</p>
-            <p class="text-ink-soft type-small"><code>{{ r.key }}</code> · {{ r.stored ? `güncelleme ${formatDateTime(r.updatedAt)}` : 'varsayılan değer' }}</p>
             <p v-if="r.description" class="text-ink-soft type-small">{{ r.description }}</p>
+            <p class="text-ink-soft type-small opacity-80">{{ r.stored ? `Güncelleme ${formatDateTime(r.updatedAt)}` : 'Varsayılan değer' }} · <code class="text-[0.75em]">{{ r.key }}</code></p>
           </div>
           <template v-if="kindOf(r.value) === 'number'">
             <BaseInput
@@ -59,13 +59,13 @@ async function save(key: string, kind: string) {
               label="Değer"
               :error="Number.isFinite(parsedNumber(r.key)) ? undefined : 'Sayı girin'"
             />
-            <BaseButton :loading="busy" @click="save(r.key, 'number')">Kaydet</BaseButton>
+            <BaseButton class="whitespace-nowrap" :loading="busy" @click="save(r.key, 'number')">Kaydet</BaseButton>
           </template>
           <BaseSwitch v-else-if="kindOf(r.value) === 'boolean'" :model-value="Boolean(drafts[r.key])" label="Etkin" @update:model-value="(v: boolean) => ((drafts[r.key] = v), save(r.key, 'boolean'))" />
           <template v-else-if="kindOf(r.value) === 'string'">
             <BaseInput :model-value="String(drafts[r.key] ?? '')"
               @update:model-value="(v: string) => (drafts[r.key] = v)" size="sm" label="Değer" />
-            <BaseButton :loading="busy" @click="save(r.key, 'string')">Kaydet</BaseButton>
+            <BaseButton class="whitespace-nowrap" :loading="busy" @click="save(r.key, 'string')">Kaydet</BaseButton>
           </template>
         </div>
         <CodeBlock v-if="kindOf(r.value) === 'json'" class="mt-2" :code="JSON.stringify(r.value, null, 2)" :label="`${r.key} değeri`" language="json" />

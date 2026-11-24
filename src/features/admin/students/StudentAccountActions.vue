@@ -7,7 +7,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useAction } from '../lib/use-load'
 import CredentialsDialog from './CredentialsDialog.vue'
 
-const { studentId, code, name, status } = defineProps<{ studentId: string; code: string; name: string; status: AccountStatus }>()
+const { studentId, code, name, status, size = 'md' } = defineProps<{ studentId: string; code: string; name: string; status: AccountStatus; size?: 'sm' | 'md' }>()
 const emit = defineEmits<{ changed: [] }>()
 
 type Pending = { kind: 'reset' } | { kind: 'status'; to: AccountStatus }
@@ -67,7 +67,7 @@ async function confirm() {
 <template>
   <BaseMenu :label="`${name} hesap işlemleri`" align="end">
     <template #trigger>
-      <BaseButton as="button" variant="secondary" size="sm">Hesap</BaseButton>
+      <BaseButton as="button" variant="secondary" :size="size">Hesap</BaseButton>
     </template>
     <BaseButton variant="row" role="menuitem" @click="ask({ kind: 'reset' })">Şifreyi sıfırla</BaseButton>
     <BaseButton v-if="status !== 'active'" variant="row" role="menuitem" @click="ask({ kind: 'status', to: 'active' })">Etkinleştir</BaseButton>

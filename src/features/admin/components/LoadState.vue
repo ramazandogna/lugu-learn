@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { BaseAlert, BaseButton, EmptyState, SkeletonList } from 'rei-kit'
+import { BaseAlert, BaseButton, SkeletonList } from 'rei-kit'
+import EmptyState from './/AdminEmpty.vue'
 
 const {
   loading,

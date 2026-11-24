@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
-import { BaseButton, BaseCard, BaseTextarea, EmptyState } from 'rei-kit'
+import { BaseButton, BaseCard, BaseTextarea } from 'rei-kit'
 import { LearningProfileInterpretation, ObservedFacts } from '@/domain/insights'
 import { latestJob, learningProfile, saveTeacherObservations, startInsight } from '@/lib/api/admin'
 import { features } from '@/lib/features'
@@ -12,6 +12,7 @@ import { formatDateTime } from '../../lib/format'
 import { useAction, useJobPoll, useLoad } from '../../lib/use-load'
 import EvidenceStatements from './EvidenceStatements.vue'
 import ObservedFactsTable from './ObservedFactsTable.vue'
+import EmptyState from '../../components/AdminEmpty.vue'
 
 const { studentId } = defineProps<{ studentId: string }>()
 

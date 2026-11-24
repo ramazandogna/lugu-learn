@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BaseBadge, BaseCard, BaseTable, EmptyState, ProgressBar, StatCard } from 'rei-kit'
+import { BaseBadge, BaseCard, BaseTable, ProgressBar, StatCard } from 'rei-kit'
 import type { LearningData, StudentSummary } from '@/lib/api/admin'
 import { ASSIGNMENT_STATUS, formatDateTime, formatPercent, sectionLabel } from '../../lib/format'
 import { labelFor, mergedLabels } from '../../lib/package-labels'
+import EmptyState from '../../components/AdminEmpty.vue'
 
 const { student, data } = defineProps<{ student: StudentSummary; data: LearningData }>()
 

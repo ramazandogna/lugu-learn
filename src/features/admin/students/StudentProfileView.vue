@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { BaseBadge, PageHeader } from 'rei-kit'
-import { BaseTabs, type TabPanel } from 'rei-kit/web'
+import { BaseBadge } from 'rei-kit'
+import type { TabPanel } from 'rei-kit/web'
 import { getStudent, studentLearning } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
 import StudentAcademicPanel from '../academic/StudentAcademicPanel.vue'
@@ -18,17 +18,19 @@ import StudentProgressTab from './tabs/StudentProgressTab.vue'
 import StudentSpeakingTab from './tabs/StudentSpeakingTab.vue'
 import StudentTasksTab from './tabs/StudentTasksTab.vue'
 import StudentTimelineTab from './tabs/StudentTimelineTab.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
+import BaseTabs from '../components/ScrollTabs.vue'
 
 type TabKey = 'profil' | 'ilerleme' | 'gecmis' | 'akademik' | 'konusma' | 'ai' | 'program' | 'zaman' | 'uzman' | 'gorevler'
 const tabs: TabPanel<TabKey>[] = [
   { key: 'profil', label: 'Profil' },
-  { key: 'ilerleme', label: 'Öğrenme ilerlemesi' },
-  { key: 'gecmis', label: 'Öğrenme geçmişi' },
+  { key: 'ilerleme', label: 'İlerleme' },
+  { key: 'gecmis', label: 'Geçmiş' },
   { key: 'akademik', label: 'Akademik' },
   { key: 'konusma', label: 'Konuşma' },
-  { key: 'ai', label: 'AI öğrenme profili' },
-  { key: 'program', label: 'Program yönetimi' },
-  { key: 'zaman', label: 'Etkinlik zaman çizelgesi' },
+  { key: 'ai', label: 'AI profili' },
+  { key: 'program', label: 'Program' },
+  { key: 'zaman', label: 'Zaman çizelgesi' },
   { key: 'uzman', label: 'Uzman analiz' },
   { key: 'gorevler', label: 'Görevler' },
 ]
@@ -50,7 +52,7 @@ const learning = useLoad(() => studentLearning(studentId.value), studentId)
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink :to="{ name: 'admin-students' }" class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline">‹ Öğrenciler</RouterLink>
+    <RouterLink :to="{ name: 'admin-students' }" class="focus-ring rounded-cell text-ink-soft -my-2 inline-flex min-h-10 w-fit items-center type-small hover:underline">‹ Öğrenciler</RouterLink>
     <LoadState
       :loading="student.loading.value"
       :error="student.error.value"

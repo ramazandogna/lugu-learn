@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { BaseCard, EmptyState } from 'rei-kit'
+import { BaseCard } from 'rei-kit'
 import type { StudentSummary } from '@/lib/api/admin'
 import type { AttentionReason } from '../lib/attention'
+import EmptyState from './/AdminEmpty.vue'
 
 defineProps<{ items: readonly { student: StudentSummary; reasons: AttentionReason[] }[] }>()
 </script>

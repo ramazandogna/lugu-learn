@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { BaseCard, EmptyState } from 'rei-kit'
+import { BaseCard } from 'rei-kit'
 import type { Exam, ExamResult, RecentActivity, SpeakingSession, StudentSummary } from '@/lib/api/admin'
 import { SESSION_STATUS, formatDate, formatDateTime, formatNumber } from '../lib/format'
+import EmptyState from './/AdminEmpty.vue'
 
 const props = defineProps<{
   students: readonly StudentSummary[]

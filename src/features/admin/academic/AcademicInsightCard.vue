@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
-import { BaseButton, BaseCard, EmptyState } from 'rei-kit'
+import { BaseButton, BaseCard } from 'rei-kit'
 import { AcademicInsight, ObservedFacts } from '@/domain/insights'
 import { latestJob, latestReviewedInsight, saveReviewedInsight, startInsight } from '@/lib/api/admin'
 import type { Json } from '@/lib/database.types'
@@ -12,6 +12,7 @@ import LoadState from '../components/LoadState.vue'
 import EvidenceStatements from '../students/tabs/EvidenceStatements.vue'
 import { formatDateTime } from '../lib/format'
 import { useAction, useJobPoll, useLoad } from '../lib/use-load'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { studentId, hasExams } = defineProps<{ studentId: string; hasExams: boolean }>()
 const state = useLoad(() => latestJob({ kind: 'academic_insight', studentId }))

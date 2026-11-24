@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { BaseDatePicker, BaseSelect, NumberInput } from 'rei-kit'
+import { computed, ref } from 'vue'
+import { SlidersHorizontal } from 'lucide-vue-next'
+import { BaseButton, BaseDatePicker, BaseSelect, NumberInput } from 'rei-kit'
 import type { StatsInput } from '@/domain/stats'
 import { WINDOW_OPTIONS, type Controls } from './stat-format'
 
@@ -22,11 +23,19 @@ const METRICS = [
   { value: 'net' as const, label: 'Net' },
 ]
 
+const open = ref(false)
+const windowLabel = computed(() => WINDOW_OPTIONS.find((o) => o.value === c.value.window)?.label ?? '')
+
 const set = <K extends keyof Controls>(k: K, v: Controls[K]) => (c.value = { ...c.value, [k]: v })
 </script>
 
 <template>
-  <div class="border-hair bg-surface rounded-card grid gap-3 border p-4 sm:grid-cols-2 xl:grid-cols-4" role="group" aria-label="Analiz süzgeçleri">
+  <div class="border-hair bg-surface rounded-card flex flex-col gap-3 border p-3 sm:p-4" role="group" aria-label="Analiz süzgeçleri">
+    <BaseButton class="w-full justify-between sm:hidden" variant="secondary" :aria-expanded="open" aria-controls="expert-filters" @click="open = !open">
+      <span class="inline-flex items-center gap-2"><SlidersHorizontal class="size-4" aria-hidden="true" /> Süzgeçler</span>
+      <span class="text-ink-soft type-small truncate">{{ windowLabel }}</span>
+    </BaseButton>
+    <div id="expert-filters" class="grid-cols-1 gap-3 sm:grid sm:grid-cols-2 xl:grid-cols-4" :class="open ? 'grid' : 'hidden'">
     <BaseSelect :model-value="c.window" label="Pencere" :options="WINDOW_OPTIONS" @update:model-value="(v) => v && set('window', v)" />
     <BaseSelect :model-value="c.subjectId" label="Okul dersi" :options="subjectOptions" @update:model-value="(v) => set('subjectId', v ?? '')" />
     <BaseSelect :model-value="c.lessonId" label="Müfredat dersi" :options="lessonOptions" @update:model-value="(v) => set('lessonId', v ?? '')" />
@@ -46,5 +55,6 @@ const set = <K extends keyof Controls>(k: K, v: Controls[K]) => (c.value = { ...
       increment-label="Artır"
       @update:model-value="(v) => set('nth', v ?? null)"
     />
+    </div>
   </div>
 </template>

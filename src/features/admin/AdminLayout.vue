@@ -53,9 +53,6 @@ async function logout() {
     toast-close-label="Bildirimi kapat"
     brand-suffix="Yönetim"
   >
-    <template #topbar>
-      <p class="text-ink-soft truncate type-small font-semibold">{{ route.meta.title }}</p>
-    </template>
     <template #account>
       <BaseButton variant="quiet" @click="logout">
         <LogOut class="size-4" aria-hidden="true" />

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { BaseAlert, BaseButton, CodeBlock } from 'rei-kit'
-import { BaseDisclosure, BaseTabs, type TabPanel } from 'rei-kit/web'
+import { BaseDisclosure, type TabPanel } from 'rei-kit/web'
 import type { LessonPackage } from '@/domain/content'
 import { createDraft, saveContent, type PackageRow } from '@/lib/api/admin'
 import type { Json } from '@/lib/database.types'
@@ -15,6 +15,7 @@ import MetaEditor from './editor/MetaEditor.vue'
 import StoryEditor from './editor/StoryEditor.vue'
 import VocabularyEditor from './editor/VocabularyEditor.vue'
 import { provideEditor } from './editor/context'
+import BaseTabs from '../components/ScrollTabs.vue'
 
 /* `pkg` null = a new manual draft for a lesson without content. */
 const { pkg, lessonId, lessonTitle, minutes } = defineProps<{ pkg: PackageRow | null; lessonId: string; lessonTitle: string; minutes: number }>()

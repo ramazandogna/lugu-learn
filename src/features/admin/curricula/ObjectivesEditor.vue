@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { BaseButton, BaseInput, BasePopconfirm, EmptyState } from 'rei-kit'
+import { BaseButton, BaseInput, BasePopconfirm } from 'rei-kit'
 import { deleteObjective, upsertObjective, type CurriculumObjective, type CurriculumVersion } from '@/lib/api/admin'
 import { useAction } from '../lib/use-load'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { version, objectives } = defineProps<{ version: CurriculumVersion; objectives: readonly CurriculumObjective[] }>()
 const emit = defineEmits<{ changed: [] }>()

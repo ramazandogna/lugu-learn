@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { BaseInput, EmptyState } from 'rei-kit'
-import { BaseTabs, type TabPanel } from 'rei-kit/web'
+import { BaseInput } from 'rei-kit'
+import type { TabPanel } from 'rei-kit/web'
 import { listStats, type StatGroup, type StatMeta } from '@/domain/stats'
 import { studentStatsInput } from '@/lib/api/admin'
 import LoadState from '../../components/LoadState.vue'
@@ -13,6 +13,8 @@ import ExpertStatCard from './ExpertStatCard.vue'
 import ExpertToolbar from './ExpertToolbar.vue'
 import LessonDrill from './LessonDrill.vue'
 import { buildParams, GROUP_LABEL, GROUP_ORDER, periodUnitOf, prevParams, safeRun, type Controls } from './stat-format'
+import EmptyState from '../../components/AdminEmpty.vue'
+import BaseTabs from '../../components/ScrollTabs.vue'
 
 const { studentId } = defineProps<{ studentId: string }>()
 
@@ -108,7 +110,7 @@ function pickLesson(id: string) {
                 <p v-else class="text-ink-soft type-small">Tüm gruplarda {{ cards.length }} sonuç.</p>
               </div>
               <EmptyState v-if="!cards.length" title="Eşleşen gösterge yok" description="Aramayı kısaltmayı dene." />
-              <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <ExpertStatCard v-for="c in cards" :key="c.meta.id" :meta="c.meta" :result="c.result" :prev="c.prev" :params="c.params" :label-of="labelOf" />
               </div>
             </template>

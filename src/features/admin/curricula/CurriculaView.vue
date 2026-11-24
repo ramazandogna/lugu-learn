@@ -2,13 +2,14 @@
 import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Plus } from 'lucide-vue-next'
-import { BaseBadge, BaseButton, PageHeader } from 'rei-kit'
+import { BaseBadge, BaseButton } from 'rei-kit'
 import { DataTable, type DataColumn } from 'rei-kit/web'
 import { listCurricula, type CurriculumListItem } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
 import { formatDate } from '../lib/format'
 import { useLoad } from '../lib/use-load'
 import CurriculumDialog from './CurriculumDialog.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
 
 const router = useRouter()
 const state = useLoad(listCurricula)
@@ -44,7 +45,7 @@ const columns: DataColumn<Row>[] = [
   <div class="flex flex-col gap-6">
     <PageHeader title="Müfredatlar" as="h1">
       <template #right>
-        <BaseButton @click="creating = true"><Plus class="size-4" aria-hidden="true" /> Yeni müfredat</BaseButton>
+        <BaseButton class="whitespace-nowrap" @click="creating = true"><Plus class="size-4" aria-hidden="true" /> Yeni müfredat</BaseButton>
       </template>
     </PageHeader>
     <LoadState

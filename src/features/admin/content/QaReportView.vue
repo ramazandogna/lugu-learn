@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BaseAlert, BaseBadge, EmptyState } from 'rei-kit'
+import { BaseAlert, BaseBadge } from 'rei-kit'
 import { QaReport } from '@/domain/content'
 import { formatDateTime } from '../lib/format'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { report } = defineProps<{ report: unknown }>()
 const parsed = computed(() => {

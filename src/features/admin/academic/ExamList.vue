@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { BaseButton, BasePopconfirm, BaseTable, EmptyState } from 'rei-kit'
+import { BaseButton, BasePopconfirm, BaseTable } from 'rei-kit'
 import { deleteExam, type Exam, type ExamResult } from '@/lib/api/admin'
 import { formatDate, formatNumber } from '../lib/format'
 import { useAction } from '../lib/use-load'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { exams, results, subjectName } = defineProps<{ exams: readonly Exam[]; results: readonly ExamResult[]; subjectName: (id: string) => string }>()
 const emit = defineEmits<{ edit: [exam: Exam]; changed: [] }>()

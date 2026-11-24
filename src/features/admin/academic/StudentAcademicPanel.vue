@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Plus } from 'lucide-vue-next'
-import { BarChart, BaseBadge, BaseButton, BaseCard, EmptyState } from 'rei-kit'
+import { BarChart, BaseBadge, BaseButton, BaseCard } from 'rei-kit'
 import { subjectTrends } from '@/domain/analytics'
 import { listSubjects, studentExams, wrongPenalty, type Exam } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
@@ -10,6 +10,7 @@ import { useLoad } from '../lib/use-load'
 import AcademicInsightCard from './AcademicInsightCard.vue'
 import ExamDialog from './ExamDialog.vue'
 import ExamList from './ExamList.vue'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { studentId } = defineProps<{ studentId: string }>()
 

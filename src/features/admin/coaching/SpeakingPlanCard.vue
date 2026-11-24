@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
-import { BaseCard, EmptyState } from 'rei-kit'
+import { BaseCard } from 'rei-kit'
 import { SpeakingPlanDraft } from '@/domain/insights'
 import { startInsight, type AiJob, type SpeakingSession } from '@/lib/api/admin'
 import { features } from '@/lib/features'
@@ -10,6 +10,7 @@ import JobProgress from '../components/JobProgress.vue'
 import EvidenceStatements from '../students/tabs/EvidenceStatements.vue'
 import { useAction, useJobPoll } from '../lib/use-load'
 import SpeakingPlanBlocks from './SpeakingPlanBlocks.vue'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { session, job } = defineProps<{ session: SpeakingSession; job: AiJob | null }>()
 const emit = defineEmits<{ changed: [] }>()

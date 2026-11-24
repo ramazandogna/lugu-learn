@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BarChart, EmptyState } from 'rei-kit'
+import { BarChart } from 'rei-kit'
 import type { StatsInput } from '@/domain/stats'
 import { SECTION_LABEL } from '../../lib/format'
 import ExpertStatCard from './ExpertStatCard.vue'
 import { formatStat, metaOf, safeRun, type Controls } from './stat-format'
 import { buildParams } from './stat-format'
+import EmptyState from '../../components/AdminEmpty.vue'
 
 const { input, now, controls } = defineProps<{ input: StatsInput; now: string; controls: Controls }>()
 const emit = defineEmits<{ pick: [lessonId: string] }>()

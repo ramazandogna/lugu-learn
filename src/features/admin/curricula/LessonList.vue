@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { ArrowDown, ArrowUp, Plus } from 'lucide-vue-next'
-import { BaseAlert, BaseBadge, BaseButton, BasePopconfirm, EmptyState, announce } from 'rei-kit'
+import { BaseAlert, BaseBadge, BaseButton, BasePopconfirm, announce } from 'rei-kit'
 import { deleteLesson, reorderLessons, type CurriculumLesson, type CurriculumObjective, type CurriculumVersion } from '@/lib/api/admin'
 import { moveItem } from '../lib/package-edit'
 import { useAction } from '../lib/use-load'
 import LessonDialog from './LessonDialog.vue'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { version, lessons, objectives } = defineProps<{ version: CurriculumVersion; lessons: readonly CurriculumLesson[]; objectives: readonly CurriculumObjective[] }>()
 const emit = defineEmits<{ changed: [] }>()

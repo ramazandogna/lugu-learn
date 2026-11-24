@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BaseBadge, BaseTable, EmptyState } from 'rei-kit'
+import { BaseBadge, BaseTable } from 'rei-kit'
 import { BaseDisclosure } from 'rei-kit/web'
 import type { LearningData } from '@/lib/api/admin'
 import { SECTION_KEYS } from '@/domain/content'
 import { SESSION_EVENT_LABEL, SESSION_STATUS, formatDateTime, formatDuration, sectionLabel } from '../../lib/format'
+import EmptyState from '../../components/AdminEmpty.vue'
 
 const { data } = defineProps<{ data: LearningData }>()
 

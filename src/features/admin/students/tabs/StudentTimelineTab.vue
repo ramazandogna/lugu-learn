@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BaseSwitch, BaseTimeline, EmptyState } from 'rei-kit'
+import { BaseSwitch, BaseTimeline } from 'rei-kit'
 import { listAssignments, type LearningData } from '@/lib/api/admin'
 import LoadState from '../../components/LoadState.vue'
 import { buildTimeline } from '../../lib/timeline'
 import { useLoad } from '../../lib/use-load'
+import EmptyState from '../../components/AdminEmpty.vue'
 
 const { studentId, data } = defineProps<{ studentId: string; data: LearningData }>()
 

@@ -40,7 +40,7 @@ const DIRECTION_TEXT = { higher_better: 'Yüksek iyi', lower_better: 'Düşük i
       <h3 class="type-small text-ink-soft font-semibold">{{ meta.name }}</h3>
       <button
         type="button"
-        class="focus-ring text-ink-soft rounded-cell shrink-0 p-1"
+        class="focus-ring text-ink-soft hover:bg-muted rounded-cell -me-2 -mt-2 inline-flex size-10 shrink-0 items-center justify-center"
         :aria-expanded="showHint"
         :aria-label="`${meta.name}: yorum ipucu`"
         :title="meta.hint"

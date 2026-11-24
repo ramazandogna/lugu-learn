@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { BaseBadge, BaseButton, BaseSelect, EmptyState, PageHeader } from 'rei-kit'
-import { BaseTabs, type TabPanel } from 'rei-kit/web'
+import { BaseBadge, BaseButton, BaseSelect } from 'rei-kit'
+import type { TabPanel } from 'rei-kit/web'
 import { adminMaterial, latestJob, lessonContext, listPackages, type PackageRow } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
 import { PACKAGE_STATUS, PACKAGE_TONE, formatDateTime } from '../lib/format'
@@ -12,6 +12,9 @@ import GeneratePanel from './GeneratePanel.vue'
 import PackageEditor from './PackageEditor.vue'
 import PackageStatusBar from './PackageStatusBar.vue'
 import QaReportView from './QaReportView.vue'
+import EmptyState from '../components/AdminEmpty.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
+import BaseTabs from '../components/ScrollTabs.vue'
 
 const route = useRoute()
 const lessonId = computed(() => String(route.params.lessonId))

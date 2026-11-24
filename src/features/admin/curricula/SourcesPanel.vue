@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BaseButton, BaseCard, BaseInput, BasePopconfirm, BaseSelect, BaseTextarea, EmptyState, FileDrop, useToast } from 'rei-kit'
+import { BaseButton, BaseCard, BaseInput, BasePopconfirm, BaseSelect, BaseTextarea, FileDrop, useToast } from 'rei-kit'
 import {
   addTextSource,
   deleteSource,
@@ -14,6 +14,7 @@ import {
 } from '@/lib/api/admin'
 import { formatDate } from '../lib/format'
 import { useAction } from '../lib/use-load'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { curriculumId, version, lessons, sources } = defineProps<{
   curriculumId: string

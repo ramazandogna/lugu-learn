@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ArrowDown, ArrowUp, Minus } from 'lucide-vue-next'
-import { BaseDatePicker, BaseSelect, EmptyState } from 'rei-kit'
+import { BaseDatePicker, BaseSelect } from 'rei-kit'
 import type { StatMeta, StatsInput } from '@/domain/stats'
 import { periodWindows, type Range } from '@/domain/stats/windows'
 import { buildParams, formatDelta, formatStat, rangeParams, safeRun, verdict, type Controls } from './stat-format'
+import EmptyState from '../../components/AdminEmpty.vue'
 
 const { input, now, controls, nthDefault, metas } = defineProps<{
   input: StatsInput

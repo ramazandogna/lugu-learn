@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BarChart, BaseCard, BaseTable, DonutChart, EmptyState } from 'rei-kit'
+import { BarChart, BaseCard, BaseTable, DonutChart } from 'rei-kit'
 import { classifySignals, questionStats, vocabDifficulty } from '@/domain/analytics'
 import type { LearningData } from '@/lib/api/admin'
 import { formatDuration, formatPercent, sectionLabel } from '../lib/format'
 import { summariseSections, toAnalyticsInput } from '../lib/analytics-input'
 import { labelFor, mergedLabels } from '../lib/package-labels'
+import EmptyState from '../components/AdminEmpty.vue'
 
 const { data, scope } = defineProps<{ data: LearningData; scope: 'student' | 'lesson' }>()
 

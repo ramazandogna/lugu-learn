@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PageHeader } from 'rei-kit'
-import { BaseTabs, type TabPanel } from 'rei-kit/web'
+import type { TabPanel } from 'rei-kit/web'
 import AchievementsPanel from './AchievementsPanel.vue'
 import DeletionPanel from './DeletionPanel.vue'
 import SchoolsPanel from './SchoolsPanel.vue'
 import SystemSettingsPanel from './SystemSettingsPanel.vue'
 import ThemePanel from './ThemePanel.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
+import BaseTabs from '../components/ScrollTabs.vue'
 
 type Tab = 'sistem' | 'okullar' | 'basarilar' | 'silme' | 'tema'
 const tabs: TabPanel<Tab>[] = [

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BaseCard, BaseSelect, EmptyState, PageHeader, SegmentedControl } from 'rei-kit'
+import { BaseCard, BaseSelect, SegmentedControl } from 'rei-kit'
 import { lessonLearning, listAllLessons, listStudents, studentLearning } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
 import { useLoad } from '../lib/use-load'
 import AnalyticsPanel from './AnalyticsPanel.vue'
+import EmptyState from '../components/AdminEmpty.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
 
 type Scope = 'student' | 'lesson'
 const route = useRoute()

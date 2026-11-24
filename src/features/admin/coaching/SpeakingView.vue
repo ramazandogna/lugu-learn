@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BaseButton, BaseCard, PageHeader } from 'rei-kit'
+import { BaseButton, BaseCard } from 'rei-kit'
 import { listSpeakingSessions, listStudents } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
 import { useLoad } from '../lib/use-load'
 import ScheduleSpeakingDialog from './ScheduleSpeakingDialog.vue'
 import SpeakingSessionList from './SpeakingSessionList.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
 
 const state = useLoad(async () => {
   const [students, sessions] = await Promise.all([listStudents(), listSpeakingSessions()])

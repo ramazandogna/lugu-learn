@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { BaseBadge, BaseButton, BasePopconfirm, BaseSelect, PageHeader } from 'rei-kit'
-import { BaseTabs, type TabPanel } from 'rei-kit/web'
+import { BaseBadge, BaseButton, BasePopconfirm, BaseSelect } from 'rei-kit'
+import type { TabPanel } from 'rei-kit/web'
 import { deleteCurriculum, getCurriculum, newVersion, publishVersion, versionContents } from '@/lib/api/admin'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import LoadState from '../components/LoadState.vue'
@@ -12,6 +12,8 @@ import CurriculumDialog from './CurriculumDialog.vue'
 import LessonList from './LessonList.vue'
 import ObjectivesEditor from './ObjectivesEditor.vue'
 import SourcesPanel from './SourcesPanel.vue'
+import PageHeader from '../components/AdminPageHeader.vue'
+import BaseTabs from '../components/ScrollTabs.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -71,7 +73,7 @@ async function remove() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink :to="{ name: 'admin-curricula' }" class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline">‹ Müfredatlar</RouterLink>
+    <RouterLink :to="{ name: 'admin-curricula' }" class="focus-ring rounded-cell text-ink-soft -my-2 inline-flex min-h-10 w-fit items-center type-small hover:underline">‹ Müfredatlar</RouterLink>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <template v-if="state.data.value">
         <PageHeader :title="state.data.value.curriculum.name" as="h1">
