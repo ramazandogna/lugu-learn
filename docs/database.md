@@ -18,6 +18,7 @@ what the migrations actually implement.
 | `0008_storage.sql` | buckets + `storage.objects` policies (skipped without a `storage` schema) |
 | `0009_gaps.sql` | `academic_insights`, `ai_jobs.speaking_session_id`, review items, open break, explanation rule, stars, atomic reorder / new revision |
 | `0010_qa.sql` | idempotent answers (`client_id`), verified password change, `source_notes` hidden from students, `complete_lesson` lock order, no listing policy on `lesson-assets` |
+| `0011_subjects_tasks.sql` | `school_subjects.short_name/color`, `school_exam_result_topics`, `student_tasks`; subject/task RPCs |
 
 ## Security model
 
@@ -70,6 +71,8 @@ work while paused):
 | `record_review_answer(session_id, package_id, item_id, chosen, response_ms, client_id)` | EN→TR answer on a review word; attempt in section `review` under the item's own package; mastery unchanged |
 | `student_open_break(session_id)` | the open break row or null |
 | `student_lesson_titles()` | `{id, title, sequence}` of lessons in the caller's assigned versions |
+| `student_tasks()` | the caller's non-cancelled tasks `{id, title, description, due_date, status, completed_at, subject, lesson}`, soonest due first |
+| `student_set_task_status(p_task_id, p_status)` | own task to `open`/`in_progress`/`done` (`done` sets `completed_at`); cancelled tasks `LUGU_INVALID_STATUS_TRANSITION` |
 
 `record_answer`, `record_vocab_answer`, `record_review_answer` and `submit_assessment` take an optional
 `client_id uuid` (unique per student). A repeat with the same id returns the first result and writes
@@ -79,7 +82,12 @@ Admin (each writes `admin_audit_logs`): `admin_assign_program(student_id, versio
 `admin_set_progress(assignment_id, action, lesson_id, note)`, `admin_set_package_status(package_id, status)`,
 `admin_publish_version(version_id)`, `admin_new_version(curriculum_id)`, `admin_merge_schools(from_id, into_id)`,
 `admin_reorder_lessons(version_id, lesson_ids)` (draft version; exactly its lessons, one transaction),
-`admin_new_revision(package_id, content)` (next draft revision + copied admin material).
+`admin_new_revision(package_id, content)` (next draft revision + copied admin material),
+`admin_upsert_subject(p_subject_id, p_name, p_short_name, p_color, p_sort, p_active)` (null id = create; duplicate name 23505),
+`admin_remove_subject(p_subject_id)` (`'deleted'`, or `'archived'` = inactive when exam results use it),
+`admin_assign_task(p_student_id, p_title, p_description, p_due_date, p_subject_id, p_lesson_id)`,
+`admin_update_task(p_task_id, ..., p_status)` (null = unchanged; `done` sets `completed_at`), `admin_delete_task(p_task_id)`.
+Students SELECT only their own `student_tasks` rows and have no write policy; admins write tables directly or via RPC.
 Service role only: `next_student_code()`, `refresh_password_marker(p_user_id)`.
 
 ### Learning rules
@@ -128,6 +136,7 @@ RPCs raise `P0001` with one of these messages (stable, for UI mapping):
 | `LUGU_INVALID_ARGUMENT` | bad enum value, empty name, malformed `answers`/`data` |
 | `LUGU_INVALID_SECTION` | unknown section, or section that takes no answers |
 | `LUGU_INVALID_PROFILE` | profile field fails validation |
+| `LUGU_SUBJECT_NOT_FOUND` / `LUGU_TASK_NOT_FOUND` | subject / task id unknown (task: or not the caller's) |
 | `LUGU_PASSWORD_NOT_CHANGED` | `mark_password_changed` before the Auth password was actually changed |
 | `LUGU_STATE_TOO_LARGE` | resume snapshot over 256 KB |
 | `LUGU_SESSION_NOT_FOUND` / `LUGU_SESSION_NOT_ACTIVE` | not the caller's session / already completed or abandoned |

@@ -44,6 +44,8 @@ const MESSAGES: Record<string, string> = {
   LUGU_INVALID_STATUS_TRANSITION: 'Bu durum değişikliğine izin verilmiyor.',
   LUGU_PACKAGE_IMMUTABLE: 'Yayınlanmış içerik değiştirilemez; yeni bir taslak oluşturun.',
   LUGU_PACKAGE_INVALID: 'Paket doğrulanamadı; yayınlamadan önce hataları düzeltin.',
+  LUGU_SUBJECT_NOT_FOUND: 'Ders bulunamadı.',
+  LUGU_TASK_NOT_FOUND: 'Görev bulunamadı.',
   // Edge functions.
   invalid_body: 'İstek geçersiz.',
   code_failed: 'Öğrenci kodu üretilemedi.',

@@ -199,3 +199,11 @@ export const recordReviewAnswer = (sessionId: string, a: { packageId: string; it
       client_id: a.clientId ?? null,
     }),
   )
+
+/* ── tasks ──────────────────────────────────────────────────────────── */
+
+/** The learner's tasks (cancelled ones are hidden), soonest due first. */
+export const getTasks = () => unwrap(db.rpc('student_tasks'))
+
+export const setTaskStatus = (taskId: string, status: 'open' | 'in_progress' | 'done') =>
+  unwrap(db.rpc('student_set_task_status', { p_task_id: taskId, p_status: status }))

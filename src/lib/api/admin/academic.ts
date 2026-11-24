@@ -11,13 +11,31 @@ export async function listSubjects(): Promise<Subject[]> {
   return must(await db.from('school_subjects').select('*').order('sort').order('name'))
 }
 
-export async function saveSubject(s: { id?: string; name: string; sort: number; active: boolean }): Promise<void> {
-  if (s.id) ok(await db.from('school_subjects').update({ name: s.name, sort: s.sort, active: s.active }).eq('id', s.id))
-  else ok(await db.from('school_subjects').insert({ name: s.name, sort: s.sort, active: s.active }))
+export interface SubjectInput {
+  id?: string
+  name: string
+  sort: number
+  active: boolean
+  short_name?: string | null
+  color?: string | null
 }
 
-export async function deleteSubject(id: string): Promise<void> {
-  ok(await db.from('school_subjects').delete().eq('id', id))
+export async function saveSubject(s: SubjectInput): Promise<Subject> {
+  return must(
+    await db.rpc('admin_upsert_subject', {
+      p_subject_id: s.id ?? null,
+      p_name: s.name,
+      p_short_name: s.short_name ?? null,
+      p_color: s.color ?? null,
+      p_sort: s.sort,
+      p_active: s.active,
+    }),
+  )
+}
+
+/** 'deleted' when no exam result uses it; 'archived' (set inactive) otherwise. */
+export async function deleteSubject(id: string): Promise<'deleted' | 'archived'> {
+  return must(await db.rpc('admin_remove_subject', { p_subject_id: id }))
 }
 
 export async function studentExams(studentId: string): Promise<{ exams: Exam[]; results: ExamResult[] }> {

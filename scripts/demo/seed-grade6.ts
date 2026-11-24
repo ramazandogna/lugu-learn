@@ -38,9 +38,9 @@ async function signIn(email: string, password: string) {
   if (error) throw new Error(`sign in ${email}: ${error.message}`)
   return c
 }
-function must<T>(r: { data: T; error: { message: string } | null }, what: string): T {
+function must<T>(r: { data: T; error: { message: string } | null } | { data: unknown; error: { message: string } }, what: string): T {
   if (r.error) throw new Error(`${what}: ${r.error.message}`)
-  return r.data
+  return r.data as T
 }
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10)
 

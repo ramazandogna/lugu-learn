@@ -29,7 +29,8 @@ async function update(s: { id: string; name: string; sort: number; active: boole
 }
 
 async function remove(id: string) {
-  if (await run(() => deleteSubject(id), 'Ders silindi')) await state.reload()
+  // Sonucu olan ders silinmez, pasife alınır (RPC karar verir).
+  if (await run(() => deleteSubject(id), 'Ders kaldırıldı')) await state.reload()
 }
 </script>
 
@@ -37,7 +38,7 @@ async function remove(id: string) {
   <BaseCard as="section" aria-labelledby="subjects-title">
     <template #head>
       <h2 id="subjects-title" class="text-base font-semibold">Dersler</h2>
-      <p class="text-ink-soft text-sm">Sonucu girilmiş bir ders silinemez; pasif yapın.</p>
+      <p class="text-ink-soft text-sm">Sonucu girilmiş bir ders silinmez, pasife alınır.</p>
     </template>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <ul class="divide-hair divide-y">

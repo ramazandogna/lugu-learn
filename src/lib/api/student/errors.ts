@@ -46,6 +46,7 @@ const MESSAGES: Record<string, string> = {
   NETWORK: 'İnternet bağlantısı kesilmiş gibi görünüyor. Bağlantı gelince kaldığın yerden devam ederiz.',
   UNKNOWN: 'Bir şeyler ters gitti. Biraz sonra tekrar dener misin?',
   LUGU_FORBIDDEN: 'Bu sayfayı açmak için izin yok. Tekrar giriş yapmayı dene.',
+  LUGU_TASK_NOT_FOUND: 'Bu görev bulunamadı.',
   LUGU_NOT_STUDENT: 'Bu bölüm öğrenci hesapları için.',
   LUGU_ACCOUNT_INACTIVE: 'Hesabın şu an dinlenmede. Öğretmeninle konuşabilirsin.',
   LUGU_INVALID_ARGUMENT: 'Bir bilgi eksik ya da hatalı görünüyor. Tekrar dener misin?',

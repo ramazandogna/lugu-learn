@@ -27,6 +27,7 @@ export type SessionEventKind =
   | 'resumed'
   | 'idle_start'
   | 'idle_end'
+export type TaskStatus = 'open' | 'in_progress' | 'done' | 'cancelled'
 export type VocabDirection = 'en_tr' | 'tr_en'
 export type BreakMinutes = 0 | 10 | 15 | 20 | 30
 /** Derived per lesson by `student_learning_map`; never stored. */
@@ -1318,6 +1319,47 @@ type LuguTables = {
       },
     ]
   }
+  school_exam_result_topics: {
+    Row: {
+      blank: number
+      correct: number
+      created_at: string
+      id: string
+      incorrect: number
+      result_id: string
+      topic: string
+      updated_at: string
+    }
+    Insert: {
+      blank?: number
+      correct?: number
+      created_at?: string
+      id?: string
+      incorrect?: number
+      result_id: string
+      topic: string
+      updated_at?: string
+    }
+    Update: {
+      blank?: number
+      correct?: number
+      created_at?: string
+      id?: string
+      incorrect?: number
+      result_id?: string
+      topic?: string
+      updated_at?: string
+    }
+    Relationships: [
+      {
+        foreignKeyName: 'school_exam_result_topics_result_id_fkey'
+        columns: ['result_id']
+        isOneToOne: false
+        referencedRelation: 'school_exam_results'
+        referencedColumns: ['id']
+      },
+    ]
+  }
   school_exam_results: {
     Row: {
       blank: number
@@ -1422,25 +1464,31 @@ type LuguTables = {
   school_subjects: {
     Row: {
       active: boolean
+      color: string | null
       created_at: string
       id: string
       name: string
+      short_name: string | null
       sort: number
       updated_at: string
     }
     Insert: {
       active?: boolean
+      color?: string | null
       created_at?: string
       id?: string
       name: string
+      short_name?: string | null
       sort?: number
       updated_at?: string
     }
     Update: {
       active?: boolean
+      color?: string | null
       created_at?: string
       id?: string
       name?: string
+      short_name?: string | null
       sort?: number
       updated_at?: string
     }
@@ -1966,6 +2014,85 @@ type LuguTables = {
       },
     ]
   }
+  student_tasks: {
+    Row: {
+      assigned_by: string | null
+      completed_at: string | null
+      created_at: string
+      description: string | null
+      due_date: string | null
+      id: string
+      lesson_id: string | null
+      status: TaskStatus
+      student_id: string
+      subject_id: string | null
+      title: string
+      updated_at: string
+    }
+    Insert: {
+      assigned_by?: string | null
+      completed_at?: string | null
+      created_at?: string
+      description?: string | null
+      due_date?: string | null
+      id?: string
+      lesson_id?: string | null
+      status?: TaskStatus
+      student_id: string
+      subject_id?: string | null
+      title: string
+      updated_at?: string
+    }
+    Update: {
+      assigned_by?: string | null
+      completed_at?: string | null
+      created_at?: string
+      description?: string | null
+      due_date?: string | null
+      id?: string
+      lesson_id?: string | null
+      status?: TaskStatus
+      student_id?: string
+      subject_id?: string | null
+      title?: string
+      updated_at?: string
+    }
+    Relationships: [
+      {
+        foreignKeyName: 'student_tasks_student_id_fkey'
+        columns: ['student_id']
+        isOneToOne: false
+        referencedRelation: 'student_profiles'
+        referencedColumns: ['user_id']
+      },
+      {
+        foreignKeyName: 'student_tasks_subject_id_fkey'
+        columns: ['subject_id']
+        isOneToOne: false
+        referencedRelation: 'school_subjects'
+        referencedColumns: ['id']
+      },
+      {
+        foreignKeyName: 'student_tasks_lesson_id_fkey'
+        columns: ['lesson_id']
+        isOneToOne: false
+        referencedRelation: 'curriculum_lessons'
+        referencedColumns: ['id']
+      },
+    ]
+  }
+}
+
+/** One entry of `student_tasks()`: subject name and lesson title are resolved server-side. */
+export type StudentTask = {
+  id: string
+  title: string
+  description: string | null
+  due_date: string | null
+  status: Exclude<TaskStatus, 'cancelled'>
+  completed_at: string | null
+  subject: string | null
+  lesson: string | null
 }
 
 type LuguFunctions = {
@@ -2093,6 +2220,34 @@ type LuguFunctions = {
   student_review_items: {
     Args: { lesson_id: string }
     Returns: ReviewItem[]
+  }
+  admin_upsert_subject: {
+    Args: { p_subject_id: string | null; p_name: string; p_short_name?: string | null; p_color?: string | null; p_sort?: number; p_active?: boolean }
+    Returns: Row<'school_subjects'>
+  }
+  admin_remove_subject: {
+    Args: { p_subject_id: string }
+    Returns: 'deleted' | 'archived'
+  }
+  admin_assign_task: {
+    Args: { p_student_id: string; p_title: string; p_description?: string | null; p_due_date?: string | null; p_subject_id?: string | null; p_lesson_id?: string | null }
+    Returns: Row<'student_tasks'>
+  }
+  admin_update_task: {
+    Args: { p_task_id: string; p_title?: string | null; p_description?: string | null; p_due_date?: string | null; p_subject_id?: string | null; p_lesson_id?: string | null; p_status?: TaskStatus | null }
+    Returns: Row<'student_tasks'>
+  }
+  admin_delete_task: {
+    Args: { p_task_id: string }
+    Returns: undefined
+  }
+  student_tasks: {
+    Args: never
+    Returns: StudentTask[]
+  }
+  student_set_task_status: {
+    Args: { p_task_id: string; p_status: Exclude<TaskStatus, 'cancelled'> }
+    Returns: Row<'student_tasks'>
   }
   student_lesson_titles: {
     Args: never
