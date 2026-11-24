@@ -12,7 +12,7 @@ export const NODE_STATE: Record<LessonState, MapNodeState> = {
 }
 
 export const toMapNodes = (lessons: readonly MapLesson[]): MapNode[] =>
-  lessons.map((l) => ({ id: l.id, title: l.title, sequence: l.sequence, state: NODE_STATE[l.state] }))
+  lessons.map((l) => ({ id: l.id, title: l.title, sequence: l.sequence, state: NODE_STATE[l.state], character: l.character }))
 
 /** Where a tap on an open node goes: completed lessons are replays. */
 export function lessonRoute(lesson: Pick<MapLesson, 'id' | 'state'>): string | null {

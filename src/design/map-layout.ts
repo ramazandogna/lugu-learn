@@ -12,6 +12,8 @@ export interface MapNode {
   title: string
   sequence: number
   state: MapNodeState
+  /** The lesson's character; paints its stop in that character's theme. */
+  character?: string | null
 }
 
 export interface MapPoint {

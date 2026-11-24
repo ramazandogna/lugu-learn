@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, useTemplateRef, watch } from 'vue'
 import { useMediaQuery } from 'rei-kit'
 
-import type { CharacterKey } from '@/domain/content'
+import { CHARACTER_KEYS, type CharacterKey } from '@/domain/content'
 
 import { characterThemeStyle } from '../characters'
 import { currentNodeId, mapPoints, orderNodes, pathThrough, walkedCount, type MapNode, type MapNodeState } from '../map-layout'
@@ -46,6 +46,8 @@ const height = computed(() => (points.value.at(-1)?.y ?? 0) + 112)
 const trail = computed(() => pathThrough(points.value))
 const walked = computed(() => pathThrough(points.value.slice(0, walkedCount(ordered.value))))
 const currentId = computed(() => currentNodeId(ordered.value))
+/** A stop wears its own lesson's character; unknown or missing = the map's character. */
+const keyOf = (n: MapNode): CharacterKey => CHARACTER_KEYS.find((k) => k === n.character) ?? character
 
 const root = useTemplateRef<HTMLElement>('root')
 
@@ -93,7 +95,8 @@ watch(currentId, revealCurrent)
           v-for="(node, i) in ordered"
           :key="node.id"
           class="absolute w-40 -translate-x-1/2 -translate-y-9"
-          :style="{ left: `${points[i]?.x}%`, top: `${points[i]?.y}px` }"
+          :data-character="keyOf(node)"
+          :style="{ ...characterThemeStyle(keyOf(node)), left: `${points[i]?.x}%`, top: `${points[i]?.y}px` }"
         >
           <MapNodeButton
             :node="node"

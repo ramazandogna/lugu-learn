@@ -1,20 +1,25 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { BaseButton, SegmentedControl, useTheme, useToast } from 'rei-kit'
 
-import { EmptyScene, LoadingScene } from '@/design'
+import { EmptyScene, LoadingScene, SoundToggle } from '@/design'
 import { friendlyMessage, getMyProfile } from '@/lib/api/student'
 import { auth, signOut } from '@/lib/auth'
 
 import ProfileForm from './components/ProfileForm.vue'
 import { toProfileValues, type ProfileValues } from './profile'
+import { levelOf } from './progress'
+import { useProgress } from './useProgress'
 import { useStudentHome } from './useStudentHome'
 
 const router = useRouter()
 const toast = useToast()
 const theme = useTheme()
-const { refresh } = useStudentHome()
+const { refresh, home } = useStudentHome()
+const { streak, ready: progressReady } = useProgress()
+const level = computed(() => levelOf(home.value?.xp ?? 0))
 
 const values = ref<ProfileValues | null>(null)
 const school = ref<{ id: string; name: string; city: string } | null>(null)
@@ -72,9 +77,21 @@ const THEMES = [
       <ProfileForm :key="formKey" :initial="values" :school="school" submit-label="Kaydet" @saved="saved" />
     </section>
 
+    <RouterLink to="/basarilar" class="surface surface-interactive rounded-card flex flex-wrap items-center justify-between gap-3 p-4 sm:p-6">
+      <span>
+        <span class="type-eyebrow text-ink-soft block">Yolculuğum</span>
+        <span class="type-task text-ink block">Seviye {{ level.level }}<template v-if="progressReady"> · zincir {{ streak.current }} gün · en uzun {{ streak.best }}</template></span>
+      </span>
+      <span class="type-small text-primary font-bold underline">Ayrıntılar</span>
+    </RouterLink>
+
     <section aria-labelledby="look-title" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <h2 id="look-title" class="type-section text-ink">Görünüm</h2>
       <SegmentedControl v-model="theme" :options="THEMES" aria-label="Tema" />
+      <div class="flex items-center justify-between gap-3">
+        <p class="type-body text-ink">Ses efektleri</p>
+        <SoundToggle />
+      </div>
     </section>
 
     <section aria-labelledby="account-title" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">

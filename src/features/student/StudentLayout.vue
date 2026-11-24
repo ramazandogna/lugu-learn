@@ -27,6 +27,8 @@ const ACTIVE: Record<string, Tab> = {
   'student-lesson': 'map',
   'student-replay': 'map',
   'student-achievements': 'achievements',
+  'student-inspire': 'home',
+  'student-imagine': 'map',
   'student-history': 'history',
   'student-profile': 'profile',
 }

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef } from 'vue'
-import { BaseButton, SkeletonList } from 'rei-kit'
-import { Lock, Trophy } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
+import { BaseButton, ProgressBar, SkeletonList } from 'rei-kit'
+import { Lock, Snowflake, Trophy } from 'lucide-vue-next'
 
-import { EmptyScene, WorldBackground, XpBadge } from '@/design'
+import { EmptyScene, LuguMascot, WorldBackground, XpBadge } from '@/design'
 import { friendlyMessage, getAchievements } from '@/lib/api/student'
 
+import StreakChain from './components/StreakChain.vue'
+import { MAX_LEVEL, levelOf } from './progress'
+import { useProgress } from './useProgress'
 import { useStudentHome } from './useStudentHome'
 
 /* The learner's own XP and badges. No ranking, no comparison with anyone else. */
@@ -13,6 +17,20 @@ type Data = Awaited<ReturnType<typeof getAchievements>>
 const data = shallowRef<Data | null>(null)
 const error = ref<string | null>(null)
 const { home } = useStudentHome()
+const { streak, weekly, ready: progressReady } = useProgress()
+
+const level = computed(() => levelOf(home.value?.xp ?? 0))
+const lessonsDone = computed(() => (home.value?.assignments ?? []).reduce((n, a) => n + a.lessons_completed, 0))
+/** The nearest badge that is earned by finishing lessons: "X to go". */
+const nextBadge = computed(() => {
+  const list = (data.value?.achievements ?? []).filter((a) => !a.awardedAt && a.kind === 'lessons_completed' && a.threshold && a.threshold > lessonsDone.value)
+  return list.sort((a, b) => (a.threshold ?? 0) - (b.threshold ?? 0))[0] ?? null
+})
+const harder = computed(() => weekly.value.enough && weekly.value.thisWeek.minutes < weekly.value.lastWeek.minutes)
+const JARS = computed(() => [
+  { key: 'last', title: 'Geçen haftaki sen', s: weekly.value.lastWeek },
+  { key: 'this', title: 'Bu haftaki sen', s: weekly.value.thisWeek },
+])
 
 async function load() {
   error.value = null
@@ -24,7 +42,7 @@ async function load() {
 }
 onMounted(load)
 
-const earned = computed(() => data.value?.achievements.filter((a) => a.awardedAt) ?? [])
+const earned = computed(() => (data.value?.achievements.filter((a) => a.awardedAt) ?? []).slice(0, 40))
 const ahead = computed(() => data.value?.achievements.filter((a) => !a.awardedAt) ?? [])
 const fmtDate = (d: string) => new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d))
 const REASON = { lesson_completed: 'Ders tamamlandı', achievement: 'Rozet kazandın', manual: 'Öğretmeninden' } as const
@@ -42,6 +60,69 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
         <XpBadge v-if="home" :xp="home.xp" :label="`Toplam ${fmt(home.xp)} XP`" />
       </div>
     </WorldBackground>
+
+    <section aria-labelledby="journey-title" class="grid gap-4 md:grid-cols-2">
+      <h2 id="journey-title" class="sr-only">Yolculuğum</h2>
+
+      <div class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
+        <p class="type-eyebrow text-ink-soft">Seviye</p>
+        <p class="type-display text-ink">{{ level.level }} <span class="type-small text-ink-soft">/ {{ MAX_LEVEL }}</span></p>
+        <ProgressBar
+          :value="level.into"
+          :max="level.need"
+          :label="level.max ? 'En üst seviyedesin!' : `Sonraki seviyeye ${level.need - level.into} XP kaldı`"
+        />
+      </div>
+
+      <div class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
+        <p class="type-eyebrow text-ink-soft">Günlük zincir</p>
+        <template v-if="progressReady">
+          <p class="type-display text-ink">{{ streak.current }} <span class="type-small text-ink-soft">gün · en uzun {{ streak.best }}</span></p>
+          <StreakChain :streak="streak" />
+          <p class="type-small text-ink-soft flex items-center gap-1">
+            <Snowflake :size="16" aria-hidden="true" /> {{ streak.freezes }} dondurma hakkın var.
+            <template v-if="streak.mood === 'back'"> Geri geldin! Zincir yeniden başlıyor, rekorun duruyor.</template>
+          </p>
+        </template>
+        <p v-else class="type-body text-ink-soft">Zincirin hazırlanıyor.</p>
+      </div>
+
+      <div class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6 md:col-span-2">
+        <div class="flex items-center gap-3">
+          <LuguMascot character="piko" :expression="harder ? 'encouraging' : 'happy'" :size="56" />
+          <div>
+            <p class="type-eyebrow text-ink-soft">Haftalık özet</p>
+            <p class="type-task text-ink">
+              {{
+                !weekly.enough
+                  ? 'İlk haftan, çizgi yeni başlıyor.'
+                  : harder
+                    ? 'Geçen hafta hızlı gittin. Bu hafta küçük bir adımla devam edelim.'
+                    : 'Geçen haftaki sen yolu açtı, bu hafta da devam ediyorsun!'
+              }}
+            </p>
+          </div>
+        </div>
+        <ul v-if="weekly.enough" class="grid grid-cols-2 gap-3">
+          <li v-for="j in JARS" :key="j.key" class="bg-wash rounded-tile flex flex-col gap-1 p-3" :class="j.key === 'this' ? 'border-primary border-2' : ''">
+            <p class="type-eyebrow text-ink-soft">{{ j.title }}</p>
+            <p class="type-display text-ink">{{ j.s.minutes }} <span class="type-small text-ink-soft">dk</span></p>
+            <p class="type-small text-ink">{{ j.s.days }} gün · {{ j.s.lessons }} ders bitti</p>
+          </li>
+        </ul>
+        <RouterLink v-if="harder" to="/" class="type-task text-primary focus-ring self-start font-bold underline">Küçük adımı at</RouterLink>
+      </div>
+
+      <div v-if="nextBadge" class="surface rounded-card flex flex-col gap-2 p-4 sm:p-6 md:col-span-2">
+        <p class="type-eyebrow text-ink-soft">Sıradaki rozet</p>
+        <p class="type-task text-ink">{{ nextBadge.title }}</p>
+        <ProgressBar
+          :value="Math.min(lessonsDone, nextBadge.threshold ?? 1)"
+          :max="nextBadge.threshold ?? 1"
+          :label="`Rozete ${(nextBadge.threshold ?? 0) - lessonsDone} ders kaldı`"
+        />
+      </div>
+    </section>
 
     <EmptyScene v-if="error" tone="danger" title="Başarıların açılamadı" :description="error">
       <BaseButton @click="load">Tekrar dene</BaseButton>
