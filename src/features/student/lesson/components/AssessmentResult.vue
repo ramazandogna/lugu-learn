@@ -4,6 +4,8 @@ import { BaseButton, ProgressBar } from 'rei-kit'
 import { CharacterBubble } from '@/design'
 import type { AssessmentScore } from '@/lib/database.types'
 
+import { stepsOf } from '../../play/tr'
+
 /* The server's score for the final check. Encouraging whatever the number. */
 const { score } = defineProps<{ score: AssessmentScore }>()
 const emit = defineEmits<{ continue: [] }>()
@@ -19,12 +21,12 @@ const line = (p: number) =>
     <dl class="grid gap-3 sm:grid-cols-2">
       <div>
         <dt class="text-ink-soft type-small">Test</dt>
-        <dd class="text-ink font-bold">{{ score.quiz_total }} sorudan {{ score.quiz_correct }} doğru</dd>
+        <dd class="text-ink font-bold">{{ stepsOf(score.quiz_total, score.quiz_correct, 'soru') }} doğru</dd>
         <ProgressBar :value="score.quiz_correct" :max="Math.max(1, score.quiz_total)" size="sm" :label="`Test: ${score.quiz_total} sorudan ${score.quiz_correct} doğru`" />
       </div>
       <div>
         <dt class="text-ink-soft type-small">Okuma</dt>
-        <dd class="text-ink font-bold">{{ score.reading_total }} sorudan {{ score.reading_correct }} doğru</dd>
+        <dd class="text-ink font-bold">{{ stepsOf(score.reading_total, score.reading_correct, 'soru') }} doğru</dd>
         <ProgressBar :value="score.reading_correct" :max="Math.max(1, score.reading_total)" size="sm" :label="`Okuma: ${score.reading_total} sorudan ${score.reading_correct} doğru`" />
       </div>
     </dl>

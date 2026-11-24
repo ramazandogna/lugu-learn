@@ -144,6 +144,7 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
     return {
       pkg: l.pkg,
       sessionId: l.session.id,
+      packageId: l.session.package_id,
       lessonId: l.session.lesson_id,
       kind: l.session.kind,
       preMastered: l.preMastered,

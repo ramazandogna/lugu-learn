@@ -2,14 +2,13 @@
 import { computed, ref } from 'vue'
 import { BaseButton } from 'rei-kit'
 
-import { CharacterBubble } from '@/design'
+import { CHARACTERS, CharacterBubble } from '@/design'
+import type { CharacterKey, ScrollStorySlots } from '@/domain/content'
 import {
   advanceScene,
   answerStoryQuestion,
   backScene,
-  canAdvanceScene,
   chooseInScene,
-  currentScene,
   currentStoryQuestion,
   isStoryComplete,
   nextStoryQuestion,
@@ -19,12 +18,20 @@ import {
   startStory,
   type StoryAnswer,
 } from '@/engine/story'
+import type { ResolvedPlay } from '@/play/resolve-play'
 
-import AnswerFeedback from '../components/AnswerFeedback.vue'
-import PracticeQuestion from '../components/PracticeQuestion.vue'
+import ScrollStory from '../../play/ScrollStory.vue'
+import StampQuiz from '../../play/StampQuiz.vue'
+import type { StoryStepView } from '../../play/types'
 import { toJson, useLesson } from '../context'
 
-const { snapshot, completed = false } = defineProps<{ snapshot?: unknown; completed?: boolean }>()
+/*
+ * The story is one pinned stage: every line is a step (words appear one by
+ * one, Piko beside it), the scene's decision is a gate before the next scene,
+ * then the comprehension questions are stamps. The engine still owns scenes,
+ * choices, questions and the resume snapshot; the stage just walks it.
+ */
+const { snapshot, completed = false, play } = defineProps<{ snapshot?: unknown; completed?: boolean; play?: ResolvedPlay }>()
 const emit = defineEmits<{ state: [s: unknown]; complete: [] }>()
 const ctx = useLesson()
 
@@ -33,14 +40,32 @@ const version = ref(0)
 const read = <T,>(f: () => T) => computed(() => (void version.value, f()))
 
 const story = ctx.pkg.story
-const scene = read(() => currentScene(run))
-const question = read(() => currentStoryQuestion(run))
+const authored = new Map(((play?.slots ?? undefined) as ScrollStorySlots | undefined)?.steps.map((s) => [s.id, s]) ?? [])
+
+const flat = story.scenes.flatMap((sc, si) => sc.lines.map((line, li) => ({ sc, si, li, line })))
+const steps: StoryStepView[] = flat.map(({ sc, si, li, line }) => {
+  const a = authored.get(`${sc.id}-${li}`)
+  return {
+    id: `${sc.id}-${li}`,
+    speaker: line.speaker,
+    en: line.en,
+    tr: line.tr ?? a?.line.tr,
+    title: line.speaker === 'narrator' ? `Anlatıcı · Sahne ${si + 1}` : `${CHARACTERS[line.speaker].name} · Sahne ${si + 1}`,
+    emphasis: a?.emphasis,
+    joke: a?.joke,
+    gate: sc.choice && li === sc.lines.length - 1 ? `choice:${sc.id}` : undefined,
+  }
+})
+const startAt = Math.max(0, flat.findIndex((f) => f.si === run.scene))
+const index = ref(startAt)
+const speaker = computed<CharacterKey>(() => {
+  const s = steps[index.value]?.speaker
+  return s && s !== 'narrator' ? s : story.character
+})
+const presolved = story.scenes.flatMap((sc) => (sc.choice && run.choices[sc.id] !== undefined ? [`choice:${sc.id}`] : []))
+
 const phase = read(() => run.phase)
-const canNext = read(() => canAdvanceScene(run))
-const chosen = read(() => (scene.value ? run.choices[scene.value.id] : undefined))
-const choiceFeedback = computed(() => (scene.value?.choice && chosen.value !== undefined ? scene.value.choice.options[chosen.value]?.feedback : null))
-const hint = ref<string | null>(null)
-const result = ref<StoryAnswer | null>(null)
+const question = read(() => currentStoryQuestion(run))
 const finished = read(() => completed || isStoryComplete(run))
 
 function bump() {
@@ -48,39 +73,57 @@ function bump() {
   emit('state', snapshotStory(run))
 }
 
-function choose(i: number) {
+/** The stage moved: bring the engine's scene to the step's scene. */
+function onStep(i: number) {
+  index.value = i
+  const target = flat[i]?.si ?? 0
+  let guard = 0
+  while (run.phase === 'scenes' && run.scene < target && guard++ < 50) if (!advanceScene(run)) break
+  while (run.phase === 'scenes' && run.scene > target && guard++ < 50) if (!backScene(run)) break
+  bump()
+}
+function finishScenes() {
+  let guard = 0
+  while (run.phase === 'scenes' && guard++ < 50) if (!advanceScene(run)) break
+  bump()
+}
+
+function choose(scene: string, i: number, pass: (ok: boolean) => unknown) {
+  const si = story.scenes.findIndex((s) => s.id === scene)
+  if (si < 0) return
+  while (run.phase === 'scenes' && run.scene < si && advanceScene(run)) {
+    /* the stage is ahead of the engine only on a fresh mount; catch up */
+  }
   chooseInScene(run, i)
+  pass(true)
   bump()
 }
-function forward() {
-  if (advanceScene(run)) bump()
-}
-function back() {
-  if (backScene(run)) bump()
-}
+const chosenOf = (scene: string) => run.choices[scene]
+const sceneOf = (gate: string) => story.scenes.find((s) => `choice:${s.id}` === gate)
 
-function showHint() {
-  hint.value = revealStoryHint(run)
-  bump()
-}
-
+/* questions */
+const picked = ref<number | null>(null)
+const graded = ref<{ correct: boolean } | null>(null)
+const lastAnswer = ref<StoryAnswer | null>(null)
 function answer(response: number | string | string[], ms: number) {
   const q = question.value
   const r = answerStoryQuestion(run, response)
   if (!q || !r) return
-  result.value = r
-  hint.value = null
+  lastAnswer.value = r
+  if (q.type === 'choice' && typeof response === 'number') picked.value = response
+  else graded.value = { correct: r.correct }
   void ctx.recordAnswer({ section: 'story', questionId: q.id, response: toJson(response), responseMs: ms, hintUsed: r.hintUsed })
   bump()
 }
-
 function nextQuestion() {
   if (!nextStoryQuestion(run)) return
-  result.value = null
+  picked.value = null
+  graded.value = null
+  lastAnswer.value = null
   bump()
 }
-
-const speakerName = (k: string) => (k === 'narrator' ? null : k)
+const answered = computed(() => picked.value !== null || graded.value !== null)
+const qProgress = computed(() => ({ done: run.question + (answered.value ? 1 : 0), total: story.questions.length }))
 </script>
 
 <template>
@@ -90,38 +133,58 @@ const speakerName = (k: string) => (k === 'narrator' ? null : k)
       <h3 class="type-section text-ink" lang="en">{{ story.title }}</h3>
     </header>
 
-    <template v-if="phase === 'scenes' && scene">
-      <p class="text-ink-soft type-small">Sahne {{ run.scene + 1 }} / {{ story.scenes.length }}</p>
-      <div class="flex flex-col gap-3">
-        <template v-for="(line, i) in scene.lines" :key="`${scene.id}-${i}`">
-          <CharacterBubble v-if="speakerName(line.speaker)" :character="line.speaker === 'narrator' ? story.character : line.speaker" :side="i % 2 ? 'end' : 'start'" size="sm">
-            <p class="text-ink" lang="en">{{ line.en }}</p>
-            <p v-if="line.tr" class="text-ink-soft type-small">{{ line.tr }}</p>
+    <ScrollStory
+      v-if="phase === 'scenes'"
+      :steps="steps"
+      :character="speaker"
+      :start-index="startAt"
+      :presolved="presolved"
+      last-label="Sorulara geç"
+      label="Hikâye"
+      @step="onStep"
+      @finish="finishScenes"
+    >
+      <template #gate="{ step, pass }">
+        <fieldset v-if="sceneOf(step.gate ?? '')?.choice" class="surface rounded-tile border-hair flex flex-col gap-2 border p-4">
+          <legend class="type-task text-ink px-1" lang="en">{{ sceneOf(step.gate ?? '')?.choice?.prompt }}</legend>
+          <BaseButton
+            v-for="(o, i) in sceneOf(step.gate ?? '')?.choice?.options"
+            :key="i"
+            variant="secondary"
+            size="lg"
+            :pressed="chosenOf(sceneOf(step.gate ?? '')!.id) === i"
+            lang="en"
+            @click="choose(sceneOf(step.gate ?? '')!.id, i, pass)"
+          >
+            {{ o.text }}
+          </BaseButton>
+          <CharacterBubble
+            v-if="chosenOf(sceneOf(step.gate ?? '')!.id) !== undefined"
+            :character="story.character"
+            size="sm"
+            live
+          >
+            {{ sceneOf(step.gate ?? '')?.choice?.options[chosenOf(sceneOf(step.gate ?? '')!.id)!]?.feedback }}
           </CharacterBubble>
-          <p v-else class="text-ink italic">
-            <span lang="en">{{ line.en }}</span>
-            <span v-if="line.tr" class="text-ink-soft block type-small not-italic">{{ line.tr }}</span>
-          </p>
-        </template>
-      </div>
-      <fieldset v-if="scene.choice" class="surface rounded-card flex flex-col gap-2 p-4">
-        <legend class="type-task text-ink px-1" lang="en">{{ scene.choice.prompt }}</legend>
-        <BaseButton v-for="(o, i) in scene.choice.options" :key="i" variant="secondary" :pressed="chosen === i" lang="en" @click="choose(i)">{{ o.text }}</BaseButton>
-        <CharacterBubble v-if="choiceFeedback" :character="story.character" size="sm" live>{{ choiceFeedback }}</CharacterBubble>
-      </fieldset>
-      <div class="flex flex-wrap justify-between gap-2">
-        <BaseButton variant="secondary" :disabled="run.scene === 0" @click="back">Önceki sahne</BaseButton>
-        <BaseButton :disabled="!canNext" @click="forward">{{ run.scene + 1 < story.scenes.length ? 'Sonraki sahne' : 'Sorulara geç' }}</BaseButton>
-      </div>
-      <p v-if="!canNext" class="text-ink-soft type-small">Devam etmek için bir seçim yap.</p>
-    </template>
+        </fieldset>
+      </template>
+    </ScrollStory>
 
-    <template v-else-if="phase === 'questions' && question">
-      <p class="text-ink-soft type-small">Soru {{ run.question + 1 }} / {{ story.questions.length }}</p>
-      <PracticeQuestion :question="question" :hint="hint" :hint-available="!!question.hint" @answer="answer" @hint="showHint" />
-      <AnswerFeedback v-if="result" :correct="result.correct" :character="story.character" :explain="result.explain" />
-      <BaseButton v-if="result" class="self-start" @click="nextQuestion">{{ run.question + 1 < story.questions.length ? 'Sonraki soru' : 'Hikâyeyi bitir' }}</BaseButton>
-    </template>
+    <StampQuiz
+      v-else-if="phase === 'questions' && question"
+      :question="question"
+      :picked="picked"
+      :graded="graded"
+      :progress="qProgress"
+      eyebrow="Hikâye soruları"
+      :character="story.character"
+      :hint-budget="play?.hintBudget ?? 2"
+      :show-streak="false"
+      :next-label="run.question + 1 < story.questions.length ? 'Sonraki soru' : 'Hikâyeyi bitir'"
+      @answer="answer"
+      @next="nextQuestion"
+      @hint="revealStoryHint(run)"
+    />
 
     <div v-if="phase === 'done' || (completed && phase !== 'scenes' && !question)" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Hikâyeyi tamamladın!</p>

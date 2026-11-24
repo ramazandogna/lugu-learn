@@ -3,11 +3,13 @@ import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, useTempla
 import { BaseButton } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 
-import { CompletionCelebration, SectionStepper, SECTION_CHARACTER, WorldBackground } from '@/design'
+import { AmbientLayer, CompletionCelebration, SectionStepper, SECTION_CHARACTER, SoundToggle, WorldBackground, useUnitTheme } from '@/design'
 import type { SectionKey } from '@/domain/content'
 import { canEnter, offersBreakAfter, type LessonFlow } from '@/engine/lesson-flow'
 import type { BreakMinutes } from '@/engine/break'
+import { resolvePlay, themeOf } from '@/play/resolve-play'
 
+import { PLAY_UI } from '../play/uiContext'
 import { useStudentHome } from '../useStudentHome'
 import BreakPanel from './components/BreakPanel.vue'
 import LessonHeader from './components/LessonHeader.vue'
@@ -22,6 +24,13 @@ const { session, loaded } = defineProps<{ session: ReturnType<typeof useLessonSe
 
 const ctx = session.context(loaded)
 provide(LESSON, ctx)
+
+/* The unit's colours, its one ambient object, and the play templates' link back to the player. */
+const unit = useUnitTheme(themeOf(loaded.pkg))
+const timed = ref(false)
+provide(PLAY_UI, { timed })
+const ambientKind = computed(() => (unit.ambient.value === 'piko' ? 'candy' : unit.ambient.value))
+const play = computed(() => (current.value ? resolvePlay(loaded.pkg, current.value) : undefined))
 const { refresh: refreshHome } = useStudentHome()
 
 const flow = computed<LessonFlow>(() => session.flow.value!)
@@ -111,8 +120,10 @@ onBeforeUnmount(() => window.removeEventListener('online', wake))
 </script>
 
 <template>
+  <div v-bind="unit.attrs" class="min-h-full">
   <WorldBackground :character="character" intensity="soft" class="min-h-full">
-    <div class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-4">
+    <AmbientLayer :kind="ambientKind" :count="ambientKind === 'candy' ? 3 : 4" :active="!timed && !done" />
+    <div class="relative mx-auto flex max-w-3xl flex-col gap-4 px-4 py-4 sm:max-w-4xl" style="z-index: var(--z-raised)">
       <LessonHeader :pkg="loaded.pkg" :replay="replay" :saving="session.saving.value" />
 
       <template v-if="done && session.completion.value">
@@ -148,9 +159,12 @@ onBeforeUnmount(() => window.removeEventListener('online', wake))
           <BaseButton size="sm" @click="activity.dismissReminder">Devam et</BaseButton>
         </div>
 
-        <h2 ref="heading" tabindex="-1" class="type-section text-ink outline-none">
-          {{ onBreak ? 'Mola' : current ? SECTION_LABEL[current] : '' }}
-        </h2>
+        <div class="flex items-center justify-between gap-3">
+          <h2 ref="heading" tabindex="-1" class="type-section text-ink outline-none">
+            {{ onBreak ? 'Mola' : current ? SECTION_LABEL[current] : '' }}
+          </h2>
+          <SoundToggle />
+        </div>
 
         <BreakPanel
           v-if="onBreak"
@@ -167,6 +181,7 @@ onBeforeUnmount(() => window.removeEventListener('online', wake))
             :key="current"
             :snapshot="session.snapshots.value[current]"
             :completed="flow.completed.has(current)"
+            :play="play"
             @state="(s: unknown) => ctx.saveState(current!, s)"
             @complete="onComplete(current!)"
           />
@@ -184,4 +199,5 @@ onBeforeUnmount(() => window.removeEventListener('online', wake))
       </template>
     </ResponsiveDialog>
   </WorldBackground>
+  </div>
 </template>

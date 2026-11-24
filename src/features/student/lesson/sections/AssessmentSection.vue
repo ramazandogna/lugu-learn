@@ -3,7 +3,8 @@ import { computed, ref } from 'vue'
 import { BaseButton, BaseInput } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 
-import { CharacterBubble } from '@/design'
+import { CharacterBubble, StampOption } from '@/design'
+import type { ResolvedPlay } from '@/play/resolve-play'
 import {
   chooseOption,
   currentView,
@@ -25,7 +26,7 @@ import OrderBoard from '../components/OrderBoard.vue'
 import { useLesson } from '../context'
 
 /* The final check: no hints, answers changeable until submit, the score comes from the server. */
-const { snapshot, completed = false } = defineProps<{ snapshot?: unknown; completed?: boolean }>()
+const { snapshot, completed = false } = defineProps<{ snapshot?: unknown; completed?: boolean; play?: ResolvedPlay }>()
 const emit = defineEmits<{ state: [s: unknown]; complete: [] }>()
 const ctx = useLesson()
 
@@ -96,9 +97,12 @@ async function send() {
       <div class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
         <p class="type-eyebrow text-ink-soft">{{ view.part === 'quiz' ? 'Test' : 'Okuma' }} · Soru {{ index + 1 }} / {{ total }}</p>
         <p class="type-task text-ink" lang="en">{{ view.prompt }}</p>
-        <div v-if="view.type === 'choice'" class="grid gap-2" role="group" :aria-label="view.prompt">
-          <BaseButton v-for="(o, i) in view.options" :key="i" variant="secondary" :pressed="choice === i" lang="en" @click="pick(i)">{{ o }}</BaseButton>
-        </div>
+        <fieldset v-if="view.type === 'choice'" class="m-0 flex min-w-0 flex-col gap-3 border-0 p-0">
+          <legend class="sr-only">{{ view.prompt }}</legend>
+          <StampOption v-for="(o, i) in view.options" :key="`${view.id}-${i}`" :model-value="choice ?? null" :name="view.id" :value="i" @update:model-value="(v: number | null) => v !== null && pick(v)">
+            <span lang="en">{{ o }}</span>
+          </StampOption>
+        </fieldset>
         <BaseInput v-else-if="view.type === 'text'" :model-value="text" label="Cevabın" autocomplete="off" spellcheck="false" @update:model-value="type" />
         <OrderBoard v-else-if="order" :state="order" label="Kelimeleri doğru sıraya koy" @update="arrange" />
       </div>

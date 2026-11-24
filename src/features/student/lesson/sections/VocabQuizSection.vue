@@ -1,96 +1,166 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { BaseButton, ProgressBar } from 'rei-kit'
+import { computed, ref, shallowRef } from 'vue'
+import { BaseButton } from 'rei-kit'
 
 import { CharacterBubble } from '@/design'
+import type { Question, StampQuizSlots, TimeEscapeSlots } from '@/domain/content'
 import { MASTERY } from '@/engine/mastery'
-import { answerVocab, currentDirection, isVocabQuizDone, nextVocabQuestion, restoreVocabQuiz, snapshotVocabQuiz, startVocabQuiz, vocabQuizProgress } from '@/engine/vocab-quiz'
+import { answerVocab, buildVocabQuestion, currentDirection, isVocabQuizDone, nextVocabQuestion, restoreVocabQuiz, snapshotVocabQuiz, startVocabQuiz, vocabQuizProgress } from '@/engine/vocab-quiz'
+import type { ResolvedPlay } from '@/play/resolve-play'
+import type { Run } from '@/play/attempts'
 
-import AnswerFeedback from '../components/AnswerFeedback.vue'
+import RunResults from '../../play/RunResults.vue'
+import StampQuiz from '../../play/StampQuiz.vue'
+import TimeEscape from '../../play/TimeEscape.vue'
+import { composeResults, loadHistory, type LocalRow } from '../../play/results'
+import type { TimedQ } from '../../play/types'
 import MasteryList from '../components/MasteryList.vue'
 import { useLesson } from '../context'
 
 /*
- * Vocabulary mastery quiz: two correct answers since the last miss per word
- * (engine). A missed word comes back; from its second miss with two options.
- * Accuracy is shown only as a side note — mastery decides.
+ * Vocabulary mastery quiz on the stamp-quiz template: two right answers since
+ * the last miss per word (engine), one screen per word, the learner's streak,
+ * and at the end the comparison with earlier tries. With the time-escape
+ * template the same quiz comes first (mastery is what the lesson needs); a
+ * quick timed round on the now-known words follows, never instead of it.
  */
-const { snapshot, completed = false } = defineProps<{ snapshot?: unknown; completed?: boolean }>()
+const { snapshot, completed = false, play } = defineProps<{ snapshot?: unknown; completed?: boolean; play?: ResolvedPlay }>()
 const emit = defineEmits<{ state: [s: unknown]; complete: [] }>()
 const ctx = useLesson()
 
-// The engine mutates in place; `version` is the reactive signal for it.
-const quiz = snapshot ? restoreVocabQuiz(snapshot, ctx.pkg, ctx.rng, ctx.preMastered) : startVocabQuiz(ctx.pkg, ctx.rng, ctx.preMastered)
+const make = (fresh: boolean) =>
+  snapshot && !fresh ? restoreVocabQuiz(snapshot, ctx.pkg, ctx.rng, ctx.preMastered) : startVocabQuiz(ctx.pkg, ctx.rng, fresh ? [] : ctx.preMastered)
+const quizRef = shallowRef(make(false))
 const version = ref(0)
+const shown = ref(0)
 const read = <T,>(f: () => T) => computed(() => (void version.value, f()))
 let shownAt = Date.now()
 
-const q = read(() => quiz.state.question)
-const picked = read(() => quiz.state.picked)
-const done = read(() => isVocabQuizDone(quiz))
-const progress = read(() => vocabQuizProgress(quiz))
-const direction = read(() => currentDirection(quiz))
-const options = computed(() => (q.value ? quiz.state.order.map((i) => ({ i, text: q.value!.options[i]! })) : []))
-const expected = computed(() => q.value?.options[q.value.answer] ?? '')
+const slots = computed(() => (play?.slots ?? {}) as Partial<StampQuizSlots>)
+const q = read(() => quizRef.value.state.question)
+const picked = read(() => quizRef.value.state.picked)
+const done = read(() => isVocabQuizDone(quizRef.value))
+const progress = read(() => vocabQuizProgress(quizRef.value))
+const direction = read(() => currentDirection(quizRef.value))
+const order = read(() => quizRef.value.state.order)
 const mastery = read(() => {
+  const quiz = quizRef.value
   const pre = new Set(quiz.preMastered)
   return ctx.pkg.vocabulary.map((v) => ({ id: v.id, en: v.en, tr: v.tr, count: pre.has(v.id) ? MASTERY : Math.min(MASTERY, quiz.state.counts.get(v.id) ?? 0) }))
 })
+const question = read<Question | null>(() => {
+  const cur = q.value
+  const quiz = quizRef.value
+  return cur && quiz.state.current ? { id: `${quiz.state.current}#${shown.value}`, type: 'choice', prompt: cur.prompt, options: cur.options, answer: cur.answer } : null
+})
+const lang = computed(() => (direction.value === 'en_tr' ? { prompt: 'en' as const, option: 'tr' as const } : { prompt: 'tr' as const, option: 'en' as const }))
+
+const rows = ref<LocalRow[]>([])
+const earlier = ref<Run[]>([])
+const phase = ref<'quiz' | 'results' | 'timed'>(done.value || completed ? 'results' : 'quiz')
+const data = computed(() => composeResults(rows.value, earlier.value))
+const wordOf = (id: string) => ctx.pkg.vocabulary.find((v) => v.id === id)?.en ?? id
+const timedOn = computed(() => play?.template === 'time-escape' && ctx.pkg.vocabulary.length >= 3)
 
 function bump() {
   version.value++
-  emit('state', snapshotVocabQuiz(quiz))
+  emit('state', snapshotVocabQuiz(quizRef.value))
 }
 
-function pick(i: number) {
-  const a = answerVocab(quiz, i, ctx.rng)
+function pick(response: number | string | string[]) {
+  if (typeof response !== 'number') return
+  const quiz = quizRef.value
+  const a = answerVocab(quiz, response, ctx.rng)
   if (!a) return
-  void ctx.recordVocab({ itemId: a.vocabId, direction: a.direction, chosen: a.chosenText, responseMs: Date.now() - shownAt })
+  const ms = Date.now() - shownAt
+  void ctx.recordVocab({ itemId: a.vocabId, direction: a.direction, chosen: a.chosenText, responseMs: ms })
+  rows.value.push({ sessionId: ctx.sessionId, packageId: ctx.packageId, section: 'vocab_quiz', questionId: a.vocabId, correct: a.outcome.correct, responseMs: ms, hintUsed: false })
   bump()
+}
+
+async function finishRun() {
+  phase.value = 'results'
+  earlier.value = await loadHistory(ctx.packageId, 'vocab_quiz', ctx.sessionId)
 }
 
 function next() {
-  nextVocabQuestion(quiz, ctx.rng)
+  const more = nextVocabQuestion(quizRef.value, ctx.rng)
+  shown.value++
   shownAt = Date.now()
   bump()
+  if (!more) void finishRun()
+}
+
+function again() {
+  quizRef.value = make(true)
+  rows.value = []
+  shown.value++
+  shownAt = Date.now()
+  phase.value = 'quiz'
+  bump()
+}
+
+/* optional timed round over the words the learner now knows */
+const timedSlots = computed(() => (play?.slots ?? undefined) as TimeEscapeSlots | undefined)
+const timedQs = computed<TimedQ[]>(() => {
+  const all = ctx.pkg.vocabulary
+  const ref = timedSlots.value?.pool
+  const items = ref ? all.filter((v) => ref.includes(v.id)) : all
+  return items.map((v) => {
+    const bq = buildVocabQuestion(v, all, 'en_tr', ctx.rng)
+    return { id: v.id, prompt: bq.prompt, options: bq.options, answer: bq.answer, lang: { prompt: 'en' as const, option: 'tr' as const } }
+  })
+})
+function timedAnswer(tq: TimedQ, i: number, ms: number) {
+  void ctx.recordVocab({ itemId: tq.id, direction: 'en_tr', chosen: tq.options[i] ?? '', responseMs: ms })
+}
+function afterResults() {
+  if (timedOn.value && timedQs.value.length >= 3) phase.value = 'timed'
+  else emit('complete')
 }
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
-    <CharacterBubble character="sasha" size="sm">Her kelimeyi art arda iki kez doğru bilince o kelimeyi öğrenmiş olursun. Yanlış yapmak sorun değil, kelime tekrar gelir!</CharacterBubble>
-    <ProgressBar :value="progress.mastered" :max="progress.total" :label="`${progress.total} kelimeden ${progress.mastered} tanesini öğrendin`" />
-    <p class="text-ink-soft type-small">
-      {{ progress.mastered }} / {{ progress.total }} kelime öğrenildi
-      <template v-if="progress.accuracyPercent !== null"> · Doğru cevap oranın %{{ progress.accuracyPercent }} (sadece bilgi için)</template>
-    </p>
+    <CharacterBubble character="sasha" size="sm">Her kelimeyi art arda iki kez doğru bilince o kelimeyi öğrenmiş olursun. Takılırsan sorun değil, kelime tekrar gelir!</CharacterBubble>
 
-    <div v-if="done || completed" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
-      <p class="type-section text-ink">Tüm kelimeleri öğrendin!</p>
-      <BaseButton class="self-start" @click="emit('complete')">Devam et</BaseButton>
-    </div>
+    <TimeEscape
+      v-if="phase === 'timed' && timedSlots?.chase"
+      :questions="timedQs"
+      :chase="timedSlots.chase"
+      :easy-default="timedSlots.easyDefault ?? false"
+      @answered="timedAnswer"
+      @finish="emit('complete')"
+    />
 
-    <div v-else-if="q" class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
-      <p class="type-eyebrow text-ink-soft">{{ direction === 'en_tr' ? 'Türkçesi ne?' : 'İngilizcesi ne?' }}</p>
-      <p class="type-title text-ink" :lang="direction === 'en_tr' ? 'en' : 'tr'">{{ q.prompt }}</p>
-      <div class="grid gap-2 sm:grid-cols-2" role="group" aria-label="Seçenekler">
-        <BaseButton
-          v-for="o in options"
-          :key="o.i"
-          variant="secondary"
-          size="lg"
-          :pressed="picked === o.i"
-          :disabled="picked !== null"
-          :lang="direction === 'en_tr' ? 'tr' : 'en'"
-          @click="pick(o.i)"
-        >
-          {{ o.text }}
-        </BaseButton>
+    <template v-else-if="phase === 'results'">
+      <RunResults v-if="data" :data="data" :label-of="wordOf" title="Kelime oyunu bitti" :character="ctx.character" :continue-label="timedOn ? 'Hızlı tura geç' : 'Devam et'" @again="again" @continue="afterResults" />
+      <div v-else class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
+        <p class="type-section text-ink">Tüm kelimeleri öğrendin!</p>
+        <div class="flex flex-wrap gap-2">
+          <BaseButton size="lg" @click="emit('complete')">Devam et</BaseButton>
+          <BaseButton variant="secondary" @click="again">Tekrar çöz</BaseButton>
+        </div>
       </div>
-      <AnswerFeedback v-if="picked !== null" :correct="picked === q.answer" character="sasha" :explain="picked === q.answer ? null : `Doğrusu: ${expected}`" />
-      <BaseButton v-if="picked !== null" class="self-start" @click="next">Sıradaki</BaseButton>
-    </div>
+      <MasteryList :items="mastery" :goal="MASTERY" />
+    </template>
 
-    <MasteryList :items="mastery" :goal="MASTERY" />
+    <StampQuiz
+      v-else
+      :question="question"
+      :order="order"
+      :picked="picked"
+      :progress="{ done: progress.mastered, total: progress.total }"
+      eyebrow="Kelime oyunu"
+      character="sasha"
+      :hint-budget="play?.hintBudget ?? 2"
+      :shield="slots.shield ?? true"
+      :show-streak="slots.showStreak ?? true"
+      :lang="lang"
+      @answer="pick"
+      @next="next"
+    >
+      <MasteryList :items="mastery" :goal="MASTERY" />
+    </StampQuiz>
   </div>
 </template>

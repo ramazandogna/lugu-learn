@@ -4,14 +4,17 @@ import { BaseButton, ProgressBar } from 'rei-kit'
 import { RotateCw } from 'lucide-vue-next'
 
 import { CharacterBubble } from '@/design'
+import type { ResolvedPlay } from '@/play/resolve-play'
+
+import SpeakButton from '../../play/SpeakButton.vue'
 
 import { useLesson } from '../context'
 
 /*
- * Flashcards: meet each word, not a quiz. Flip for the meaning, read the
- * example, go on. Done once every card has been seen (flipped).
+ * Candy flashcards ("şeker flip"): meet each word, not a quiz. Flip the wrapped
+ * candy for the meaning, hear it (when the browser can speak), go on. Done once every card has been seen (flipped).
  */
-const { snapshot, completed = false } = defineProps<{ snapshot?: unknown; completed?: boolean }>()
+const { snapshot, completed = false } = defineProps<{ snapshot?: unknown; completed?: boolean; play?: ResolvedPlay }>()
 const emit = defineEmits<{ state: [s: unknown]; complete: [] }>()
 const ctx = useLesson()
 const items = ctx.pkg.vocabulary
@@ -53,23 +56,33 @@ function goTo(i: number) {
     <CharacterBubble character="piko" size="sm">Yeni kelimelerle tanışalım! Kartı çevir, anlamına ve örnek cümleye bak.</CharacterBubble>
     <ProgressBar :value="seen.size" :max="items.length" :label="`${items.length} kelimeden ${seen.size} tanesini gördün`" />
 
-    <button
-      type="button"
-      class="surface surface-interactive rounded-card flex min-h-56 w-full flex-col items-center justify-center gap-3 p-6 text-center"
-      :aria-pressed="flipped"
-      :aria-label="flipped ? `${item.en}: ${item.tr}. Örnek: ${item.example.en}` : `${item.en}. Anlamını görmek için kartı çevir.`"
-      @click="flip"
-    >
-      <span class="type-eyebrow text-ink-soft">Kelime {{ index + 1 }} / {{ items.length }}</span>
-      <span class="type-title text-ink" lang="en">{{ item.en }}</span>
-      <template v-if="flipped">
-        <span class="type-task text-ink">{{ item.tr }}</span>
-        <span class="text-ink" lang="en">“{{ item.example.en }}”</span>
-        <span class="text-ink-soft type-small">{{ item.example.tr }}</span>
-        <span v-if="item.context" class="text-ink-soft type-small">{{ item.context }}</span>
-      </template>
-      <span v-else class="text-ink-soft flex items-center gap-1 type-small"><RotateCw :size="16" aria-hidden="true" /> Çevirmek için dokun</span>
-    </button>
+    <div class="flip-scene mx-auto w-full max-w-xl px-7">
+      <button
+        type="button"
+        class="flip focus-ring rounded-card block w-full text-center"
+        :aria-pressed="flipped"
+        :aria-label="flipped ? `${item.en}: ${item.tr}. Örnek: ${item.example.en}` : `${item.en}. Anlamını görmek için kartı çevir.`"
+        @click="flip"
+      >
+        <span class="flip-inner grid" :class="flipped ? 'is-flipped' : ''">
+          <span class="face candy surface rounded-card flex min-h-64 flex-col items-center justify-center gap-3 p-6" aria-hidden="true">
+            <span class="type-eyebrow text-ink-soft">Kelime {{ index + 1 }} / {{ items.length }}</span>
+            <span class="type-hero text-ink" lang="en">{{ item.en }}</span>
+            <span class="text-ink-soft type-small flex items-center gap-1"><RotateCw :size="16" aria-hidden="true" /> Çevirmek için dokun</span>
+          </span>
+          <span class="face back surface rounded-card border-primary flex min-h-64 flex-col items-center justify-center gap-3 border-2 p-6" aria-hidden="true">
+            <span class="type-title text-ink">{{ item.tr }}</span>
+            <span class="type-task text-ink" lang="en">“{{ item.example.en }}”</span>
+            <span class="text-ink-soft type-body">{{ item.example.tr }}</span>
+            <span v-if="item.context" class="text-ink-soft type-small">{{ item.context }}</span>
+          </span>
+        </span>
+      </button>
+    </div>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <SpeakButton :text="item.en" label="Kelimeyi dinle" />
+      <SpeakButton :text="item.example.en" label="Cümleyi dinle" />
+    </div>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
       <BaseButton variant="secondary" :disabled="index === 0" @click="goTo(index - 1)">Önceki</BaseButton>
@@ -79,3 +92,54 @@ function goTo(i: number) {
     <p v-if="index === items.length - 1 && !allSeen" class="text-ink-soft type-small">Bitirmeden önce her kartı bir kez çevirmelisin.</p>
   </div>
 </template>
+
+<style scoped>
+.flip-scene {
+  perspective: 1200px;
+}
+.flip-inner {
+  transform-style: preserve-3d;
+  transition: transform var(--duration-slow) var(--ease-sheet);
+}
+.flip-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+.face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.back {
+  transform: rotateY(180deg);
+}
+/* wrapped-candy twists on the front face */
+.candy {
+  position: relative;
+}
+.candy::before,
+.candy::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 28px;
+  height: 44px;
+  margin-top: -22px;
+  background: var(--color-accent);
+}
+.candy::before {
+  inset-inline-start: -26px;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+.candy::after {
+  inset-inline-end: -26px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+.flip:active .flip-inner:not(.is-flipped) {
+  transform: scale(var(--press-scale));
+}
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner {
+    transition: none;
+  }
+}
+</style>
