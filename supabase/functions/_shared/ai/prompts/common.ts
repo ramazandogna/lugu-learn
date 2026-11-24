@@ -29,7 +29,16 @@ Hard rules:
 - No URLs, HTML, markdown other than **bold**, brand names, real people, violence, romance, scary or unsafe content.
 - Never include, ask for or guess personal data about any learner.
 - Ids are lowercase slugs (a–z, 0–9, dashes), unique across the whole package.
-- Output exactly one JSON object matching the provided schema. No prose outside JSON.`
+- Output exactly one JSON object matching the provided schema. No prose outside JSON.
+
+Play layer (only when the output schema contains \`meta.themeId\` or \`play\`; otherwise ignore this block):
+- Reuse 96%, change 4%. Do NOT design game mechanics from scratch: copy the plan of the latest unit in docs/play/authoring-log.md (default: unit 1) and fill only the content slots (words, sentences, questions, go/no-go items, at most 2 jokes per lesson), \`themeId\`, character and chaser/escapee. At most ONE section may use a different template than the reference plan.
+- Template ids: scroll-story, tap-guide, time-escape, fill-workshop, stamp-quiz (sections); imagine (extras, at most 1). Never invent other ids.
+- Allowed per section: review = stamp-quiz | time-escape; vocabulary = scroll-story (vocab-reveal) | tap-guide; vocab_quiz = stamp-quiz | time-escape; story = scroll-story (story); explanation = tap-guide | scroll-story; homework = fill-workshop | stamp-quiz; assessment = stamp-quiz only (hintBudget 0, explain false, no timing). time-escape ONLY on review or vocab_quiz, never new content.
+- Fixed numbers, never change: time bank 10 s, +3 s per correct, cap 10 s; hint ladder; run-streak multiplier cap x3; mastery = 2 correct answers; 7-section order.
+- Limits: scroll-story story mode 1-6 steps, vocab-reveal 1-8 steps, max 2 sentences per step, max 12 words per sentence; tap-guide 1-6 guides, warmup 4-5 items, round 8-10 items; fill-workshop 1-6 items, at most 3 blanks and 8 chips per sentence; time-escape pool 3-20 refs; imagine 6-10 chips.
+- Every ref (gate, vocabRefs, pool, questions, items.ref, stepRef) must be an id that already exists in this package. Error feedback is gentle ("Yaklaştın!"), never "yanlış" or "hata yaptın".
+- themeId: base | u1-morning | u2-night-oven | u3-neon-street, in unit order; a new theme needs a new token set, so reuse the reference unit's.`
 
 /** System prompt for teacher-facing learner insights. */
 export const INSIGHTS_SYSTEM = `You help the single teacher of Lugu, an English coaching platform for Turkish learners aged 10–16, understand one learner's progress.

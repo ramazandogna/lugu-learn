@@ -55,6 +55,16 @@ export async function getMasteredItems(packageId: string): Promise<string[]> {
   return rows.filter((r) => r.mastered_at !== null).map((r) => r.item_id)
 }
 
+/** The learner's own attempt rows for one package (RLS-scoped), oldest first, for `play/attempts.ts` comparisons. */
+export async function getQuestionAttempts(packageId: string, section?: Exclude<SectionKey, 'vocabulary'>) {
+  let q = db
+    .from('question_attempts')
+    .select('session_id, package_id, section, question_id, attempt_no, correct, response_ms, hint_used, created_at')
+    .eq('package_id', packageId)
+  if (section) q = q.eq('section', section)
+  return unwrap(q.order('created_at', { ascending: true }).limit(2000))
+}
+
 /* ── session ────────────────────────────────────────────────────────── */
 
 export const startOrResumeSession = (lessonId: string, kind: SessionKind) =>
