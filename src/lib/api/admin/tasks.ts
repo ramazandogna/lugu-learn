@@ -29,7 +29,11 @@ export async function assignTask(studentId: string, t: TaskInput): Promise<Stude
   )
 }
 
-/** Omitted/undefined field = unchanged. */
+/**
+ * Omitted/undefined field = unchanged (the RPC treats null as "keep").
+ * A description is cleared by passing '' (stored as empty). due date, subject and lesson cannot be
+ * cleared through the RPC (coalesce); use status 'cancelled' or delete + reassign instead.
+ */
 export async function updateTask(taskId: string, t: Partial<TaskInput> & { status?: TaskStatus }): Promise<StudentTaskRow> {
   return must(
     await db.rpc('admin_update_task', {
@@ -46,4 +50,13 @@ export async function updateTask(taskId: string, t: Partial<TaskInput> & { statu
 
 export async function deleteTask(taskId: string): Promise<void> {
   ok(await db.rpc('admin_delete_task', { p_task_id: taskId }))
+}
+
+/** Lessons of the programs assigned to a student (for linking a task to a lesson). */
+export async function studentProgramLessons(studentId: string): Promise<{ id: string; sequence: number; title: string }[]> {
+  const assignments = must(await db.from('program_assignments').select('curriculum_version_id').eq('student_id', studentId))
+  const versionIds = [...new Set(assignments.map((a) => a.curriculum_version_id))]
+  if (!versionIds.length) return []
+  const rows = must(await db.from('curriculum_lessons').select('id, sequence, title').in('version_id', versionIds).neq('status', 'archived').order('sequence'))
+  return rows
 }

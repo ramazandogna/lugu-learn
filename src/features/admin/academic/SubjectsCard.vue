@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { BaseButton, BaseCard, BaseInput, BasePopconfirm, BaseSwitch } from 'rei-kit'
+import { BaseButton, BaseCard, BaseInput, BasePopconfirm, BaseSwitch, useToast } from 'rei-kit'
 import { deleteSubject, listSubjects, saveSubject } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
 import { useAction, useLoad } from '../lib/use-load'
 
 const state = useLoad(listSubjects)
 const { busy, run } = useAction()
+const toast = useToast()
 const newName = ref('')
 const editingId = ref<string | null>(null)
 const editName = ref('')
@@ -29,8 +30,14 @@ async function update(s: { id: string; name: string; sort: number; active: boole
 }
 
 async function remove(id: string) {
-  // Sonucu olan ders silinmez, pasife alınır (RPC karar verir).
-  if (await run(() => deleteSubject(id), 'Ders kaldırıldı')) await state.reload()
+  // Sonucu olan ders silinmez, pasife alınır (RPC karar verir); mesaj sonuca göre değişir.
+  let outcome: 'deleted' | 'archived' | null = null
+  const done = await run(async () => {
+    outcome = await deleteSubject(id)
+  })
+  if (!done) return
+  toast.success(outcome === 'archived' ? 'Ders silinmedi: sonuçları olduğu için pasife alındı' : 'Ders silindi')
+  await state.reload()
 }
 </script>
 

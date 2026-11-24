@@ -9,15 +9,17 @@ import StudentAcademicPanel from '../academic/StudentAcademicPanel.vue'
 import { ACCOUNT_STATUS, ACCOUNT_TONE } from '../lib/format'
 import { useLoad } from '../lib/use-load'
 import StudentAccountActions from './StudentAccountActions.vue'
+import ExpertTab from './expert/ExpertTab.vue'
 import StudentHistoryTab from './tabs/StudentHistoryTab.vue'
 import StudentInsightTab from './tabs/StudentInsightTab.vue'
 import StudentProfileTab from './tabs/StudentProfileTab.vue'
 import StudentProgramTab from './tabs/StudentProgramTab.vue'
 import StudentProgressTab from './tabs/StudentProgressTab.vue'
 import StudentSpeakingTab from './tabs/StudentSpeakingTab.vue'
+import StudentTasksTab from './tabs/StudentTasksTab.vue'
 import StudentTimelineTab from './tabs/StudentTimelineTab.vue'
 
-type TabKey = 'profil' | 'ilerleme' | 'gecmis' | 'akademik' | 'konusma' | 'ai' | 'program' | 'zaman'
+type TabKey = 'profil' | 'ilerleme' | 'gecmis' | 'akademik' | 'konusma' | 'ai' | 'program' | 'zaman' | 'uzman' | 'gorevler'
 const tabs: TabPanel<TabKey>[] = [
   { key: 'profil', label: 'Profil' },
   { key: 'ilerleme', label: 'Öğrenme ilerlemesi' },
@@ -27,6 +29,8 @@ const tabs: TabPanel<TabKey>[] = [
   { key: 'ai', label: 'AI öğrenme profili' },
   { key: 'program', label: 'Program yönetimi' },
   { key: 'zaman', label: 'Etkinlik zaman çizelgesi' },
+  { key: 'uzman', label: 'Uzman analiz' },
+  { key: 'gorevler', label: 'Görevler' },
 ]
 
 const route = useRoute()
@@ -79,6 +83,8 @@ const learning = useLoad(() => studentLearning(studentId.value), studentId)
           <template #default="{ active }">
             <div class="pt-4">
               <StudentProfileTab v-if="active === 'profil'" :student="student.data.value" @saved="student.reload" />
+              <ExpertTab v-else-if="active === 'uzman'" :student-id="studentId" />
+              <StudentTasksTab v-else-if="active === 'gorevler'" :student-id="studentId" />
               <StudentAcademicPanel v-else-if="active === 'akademik'" :student-id="studentId" />
               <StudentSpeakingTab v-else-if="active === 'konusma'" :student="student.data.value" />
               <StudentInsightTab v-else-if="active === 'ai'" :student-id="studentId" />

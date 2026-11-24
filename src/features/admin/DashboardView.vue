@@ -4,6 +4,7 @@ import { PageHeader, StatCard } from 'rei-kit'
 import { listSpeakingSessions, listStudents, recentActivity, recentExams } from '@/lib/api/admin'
 import LoadState from './components/LoadState.vue'
 import DashboardAttention from './components/DashboardAttention.vue'
+import DashboardDeclines from './components/DashboardDeclines.vue'
 import DashboardFeeds from './components/DashboardFeeds.vue'
 import { attentionReasons } from './lib/attention'
 import { useLoad } from './lib/use-load'
@@ -84,6 +85,7 @@ const attention = computed(() => {
           </div>
         </section>
         <DashboardAttention :items="attention" />
+        <DashboardDeclines :students="data.students" />
         <DashboardFeeds
           :students="data.students"
           :activity="data.activity"

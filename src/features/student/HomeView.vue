@@ -6,6 +6,7 @@ import { Clock, Sparkles, Star, Trophy } from 'lucide-vue-next'
 
 import { AvatarArt, CharacterBubble, EmptyScene, LoadingScene, WorldBackground } from '@/design'
 
+import MyTasks from './components/MyTasks.vue'
 import UpcomingLessons from './components/UpcomingLessons.vue'
 import { greetingName, isAvatarKey } from './profile'
 import { greeting, lineOfTheDay } from './motivation'
@@ -92,6 +93,8 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
         </RouterLink>
       </section>
     </template>
+
+    <MyTasks />
 
     <section aria-labelledby="peek-title" class="grid gap-4 sm:grid-cols-3">
       <h2 id="peek-title" class="sr-only">Özetim</h2>
