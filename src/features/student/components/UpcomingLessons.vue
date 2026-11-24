@@ -22,11 +22,11 @@ onMounted(async () => {
 <template>
   <section v-if="lessons.length" aria-labelledby="upcoming-title" class="flex flex-col gap-3">
     <h2 id="upcoming-title" class="type-section text-ink">Sıradaki dersler</h2>
-    <ol class="grid gap-3 sm:grid-cols-3">
-      <li v-for="l in lessons" :key="l.id" class="surface rounded-card flex flex-col gap-1 p-4">
+    <ol class="flex flex-wrap gap-3">
+      <li v-for="l in lessons" :key="l.id" class="surface rounded-card flex flex-1 basis-56 flex-col gap-1 p-4">
         <span class="type-eyebrow text-ink-soft flex items-center gap-1"><Lock :size="16" aria-hidden="true" /> Ders {{ l.sequence }} · kilitli</span>
         <span class="type-task text-ink">{{ l.title }}</span>
-        <span v-if="l.tagline" class="text-ink-soft type-small">{{ l.tagline }}</span>
+        <span class="text-ink-soft type-small">{{ l.tagline || 'Önceki dersi bitirince açılır.' }}</span>
       </li>
     </ol>
   </section>

@@ -40,9 +40,10 @@ const emit = defineEmits<{
 const wide = useMediaQuery('(min-width: 768px)')
 const reduced = useMediaQuery('(prefers-reduced-motion: reduce)')
 const ordered = computed(() => orderNodes(nodes))
-const rowHeight = computed(() => (wide.value ? 156 : 136))
+/* A stop is the jar (72) + number + 2-line title + state (~100): the next one starts below it. */
+const rowHeight = computed(() => (wide.value ? 200 : 192))
 const points = computed(() => mapPoints(ordered.value.length, { amplitude: wide.value ? 30 : 22, rowHeight: rowHeight.value }))
-const height = computed(() => (points.value.at(-1)?.y ?? 0) + 112)
+const height = computed(() => (points.value.at(-1)?.y ?? 0) + 168)
 const trail = computed(() => pathThrough(points.value))
 const walked = computed(() => pathThrough(points.value.slice(0, walkedCount(ordered.value))))
 const currentId = computed(() => currentNodeId(ordered.value))
@@ -94,7 +95,7 @@ watch(currentId, revealCurrent)
         <li
           v-for="(node, i) in ordered"
           :key="node.id"
-          class="absolute w-40 -translate-x-1/2 -translate-y-9"
+          class="absolute w-36 -translate-x-1/2 -translate-y-9 sm:w-40"
           :data-character="keyOf(node)"
           :style="{ ...characterThemeStyle(keyOf(node)), left: `${points[i]?.x}%`, top: `${points[i]?.y}px` }"
         >

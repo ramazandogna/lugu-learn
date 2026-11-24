@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef } from 'vue'
 import { RouterLink } from 'vue-router'
-import { BaseButton, ProgressBar, SkeletonList } from 'rei-kit'
-import { Lock, Snowflake, Trophy } from 'lucide-vue-next'
+import { BaseButton, SkeletonList } from 'rei-kit'
+import { Snowflake } from 'lucide-vue-next'
 
-import { EmptyScene, LuguMascot, WorldBackground, XpBadge } from '@/design'
+import { BadgeJar, EmptyScene, JarProgress, LuguMascot, WorldBackground, XpBadge } from '@/design'
 import { friendlyMessage, getAchievements } from '@/lib/api/student'
 
 import StreakChain from './components/StreakChain.vue'
@@ -64,17 +64,20 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
     <section aria-labelledby="journey-title" class="grid gap-4 md:grid-cols-2">
       <h2 id="journey-title" class="sr-only">Yolculuğum</h2>
 
-      <div class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
+      <div class="surface rounded-card animate-rise flex flex-col gap-3 p-4 sm:p-6">
         <p class="type-eyebrow text-ink-soft">Seviye</p>
-        <p class="type-display text-ink">{{ level.level }} <span class="type-small text-ink-soft">/ {{ MAX_LEVEL }}</span></p>
-        <ProgressBar
+        <JarProgress
           :value="level.into"
           :max="level.need"
+          size="lg"
           :label="level.max ? 'En üst seviyedesin!' : `Sonraki seviyeye ${level.need - level.into} XP kaldı`"
-        />
+        >
+          <p class="type-display text-ink">{{ level.level }} <span class="type-small text-ink-soft">/ {{ MAX_LEVEL }}</span></p>
+          <p class="type-small text-ink">{{ level.max ? 'En üst seviyedesin!' : `Sonraki seviyeye ${level.need - level.into} XP kaldı` }}</p>
+        </JarProgress>
       </div>
 
-      <div class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
+      <div class="surface rounded-card animate-rise flex flex-col gap-3 p-4 sm:p-6" style="animation-delay: 60ms">
         <p class="type-eyebrow text-ink-soft">Günlük zincir</p>
         <template v-if="progressReady">
           <p class="type-display text-ink">{{ streak.current }} <span class="type-small text-ink-soft">gün · en uzun {{ streak.best }}</span></p>
@@ -113,14 +116,16 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
         <RouterLink v-if="harder" to="/" class="type-task text-primary focus-ring self-start font-bold underline">Küçük adımı at</RouterLink>
       </div>
 
-      <div v-if="nextBadge" class="surface rounded-card flex flex-col gap-2 p-4 sm:p-6 md:col-span-2">
+      <div v-if="nextBadge" class="surface rounded-card animate-rise flex flex-col gap-2 p-4 sm:p-6 md:col-span-2" style="animation-delay: 120ms">
         <p class="type-eyebrow text-ink-soft">Sıradaki rozet</p>
-        <p class="type-task text-ink">{{ nextBadge.title }}</p>
-        <ProgressBar
+        <JarProgress
           :value="Math.min(lessonsDone, nextBadge.threshold ?? 1)"
           :max="nextBadge.threshold ?? 1"
           :label="`Rozete ${(nextBadge.threshold ?? 0) - lessonsDone} ders kaldı`"
-        />
+        >
+          <p class="type-task text-ink">{{ nextBadge.title }}</p>
+          <p class="type-small text-ink-soft">Rozete {{ (nextBadge.threshold ?? 0) - lessonsDone }} ders kaldı</p>
+        </JarProgress>
       </div>
     </section>
 
@@ -130,30 +135,26 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
     <SkeletonList v-else-if="!data" :rows="4" />
     <template v-else>
       <section aria-labelledby="earned-title" class="flex flex-col gap-3">
-        <h2 id="earned-title" class="type-section text-ink">Kazandığın rozetler ({{ earned.length }})</h2>
+        <h2 id="earned-title" class="type-section text-ink">Kütüphane rafım: kazandığın rozetler ({{ earned.length }})</h2>
         <EmptyScene v-if="!earned.length" compact title="İlk rozetin yolda!" description="Dersleri tamamladıkça rozetler burada birikecek." />
-        <ul v-else class="grid gap-3 sm:grid-cols-2">
-          <li v-for="a in earned" :key="a.id" class="surface rounded-card flex items-start gap-3 p-4">
-            <Trophy :size="24" class="text-accent-ink shrink-0" aria-hidden="true" />
-            <div>
-              <p class="type-task text-ink">{{ a.title }}</p>
-              <p v-if="a.description" class="text-ink-soft type-small">{{ a.description }}</p>
-              <p class="text-ink-soft type-small">{{ fmtDate(a.awardedAt!) }}<template v-if="a.xp"> · +{{ a.xp }} XP</template></p>
-            </div>
+        <ul v-else class="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4">
+          <li v-for="(a, i) in earned" :key="a.id" class="shelf animate-rise flex flex-col items-center gap-1 px-2 pb-3 text-center" :style="{ animationDelay: `${Math.min(i, 8) * 60}ms` }">
+            <BadgeJar earned />
+            <p class="type-task text-ink">{{ a.title }}</p>
+            <p v-if="a.description" class="text-ink-soft type-small">{{ a.description }}</p>
+            <p class="text-ink-soft type-small">{{ fmtDate(a.awardedAt!) }}<template v-if="a.xp"> · +{{ a.xp }} XP</template></p>
           </li>
         </ul>
       </section>
 
       <section v-if="ahead.length" aria-labelledby="ahead-title" class="flex flex-col gap-3">
-        <h2 id="ahead-title" class="type-section text-ink">Sıradaki rozetler</h2>
-        <ul class="grid gap-3 sm:grid-cols-2">
-          <li v-for="a in ahead" :key="a.id" class="surface rounded-card flex items-start gap-3 border-2 border-dashed border-hair p-4">
-            <Lock :size="24" class="text-ink-soft shrink-0" aria-hidden="true" />
-            <div>
-              <p class="type-task text-ink">{{ a.title }} <span class="sr-only">(henüz kazanılmadı)</span></p>
-              <p v-if="a.description" class="text-ink-soft type-small">{{ a.description }}</p>
-              <p v-else-if="a.kind === 'lessons_completed' && a.threshold" class="text-ink-soft type-small">{{ a.threshold }} ders tamamlayınca</p>
-            </div>
+        <h2 id="ahead-title" class="type-section text-ink">Rafta bekleyen boş kavanozlar</h2>
+        <ul class="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4">
+          <li v-for="(a, i) in ahead" :key="a.id" class="shelf animate-rise flex flex-col items-center gap-1 px-2 pb-3 text-center" :style="{ animationDelay: `${Math.min(i, 8) * 60}ms` }">
+            <BadgeJar :earned="false" />
+            <p class="type-task text-ink">{{ a.title }} <span class="sr-only">(henüz kazanılmadı)</span></p>
+            <p v-if="a.description" class="text-ink-soft type-small">{{ a.description }}</p>
+            <p v-else-if="a.kind === 'lessons_completed' && a.threshold" class="text-ink-soft type-small">{{ a.threshold }} ders tamamlayınca</p>
           </li>
         </ul>
       </section>
@@ -170,3 +171,11 @@ const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
     </template>
   </div>
 </template>
+
+<style scoped>
+/* The plank the jars stand on. */
+.shelf {
+  border-bottom: 6px solid var(--color-hair);
+  border-radius: 0 0 var(--radius-control) var(--radius-control);
+}
+</style>

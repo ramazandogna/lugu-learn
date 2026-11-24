@@ -3,6 +3,7 @@ import { computed, watch } from 'vue'
 import { Check, RotateCcw } from 'lucide-vue-next'
 
 import { playSound } from '../sound'
+import WaxSeal from './WaxSeal.vue'
 
 /*
  * One answer, as a wax-seal card (Balmumu Mühür). A real radio sits inside,
@@ -70,18 +71,15 @@ function onChange() {
       :disabled="disabled || !!result"
       @change="onChange"
     />
+    <span class="bead shrink-0" aria-hidden="true" />
     <span class="type-body text-ink min-w-0 flex-1"><slot /></span>
     <span
       v-if="result === 'correct' || result === 'wrong'"
-      class="animate-stamp type-small text-ink flex shrink-0 items-center gap-1.5 font-bold"
+      class="type-small text-ink flex shrink-0 items-center gap-1.5 font-bold" :class="result === 'wrong' ? 'animate-stamp' : ''"
     >
-      <span
-        class="grid size-7 place-items-center rounded-full"
-        :class="result === 'correct' ? 'bg-positive text-on-positive' : 'bg-primary text-on-primary'"
-        aria-hidden="true"
-      >
-        <Check v-if="result === 'correct'" :size="16" :stroke-width="2.4" />
-        <RotateCcw v-else :size="16" :stroke-width="2.4" />
+      <WaxSeal v-if="result === 'correct'" :size="36" />
+      <span v-else class="bg-primary text-on-primary grid size-7 place-items-center rounded-full" aria-hidden="true">
+        <RotateCcw :size="16" :stroke-width="2.4" />
       </span>
       {{ result === 'correct' ? correctLabel : pickedLabel }}
     </span>
@@ -92,6 +90,15 @@ function onChange() {
 </template>
 
 <style scoped>
+/* The wrapped-candy bead before each answer: the option is a sweet, not a box. */
+.bead {
+  width: 1.25rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  border: 1.5px solid var(--color-ink-soft);
+  clip-path: polygon(0 20%, 22% 38%, 78% 38%, 100% 20%, 100% 80%, 78% 62%, 22% 62%, 0 80%);
+}
 .stamp {
   transition:
     transform var(--duration-fast) var(--ease-pop),

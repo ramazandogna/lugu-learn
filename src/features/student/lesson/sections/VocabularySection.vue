@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BaseButton, ProgressBar } from 'rei-kit'
+import { BaseButton } from 'rei-kit'
 import { RotateCw } from 'lucide-vue-next'
 
-import { CharacterBubble } from '@/design'
+import { CharacterBubble, JarProgress } from '@/design'
 import type { ResolvedPlay } from '@/play/resolve-play'
 
 import SpeakButton from '../../play/SpeakButton.vue'
@@ -54,7 +54,7 @@ function goTo(i: number) {
 <template>
   <div class="flex flex-col gap-4">
     <CharacterBubble character="piko" size="sm">Yeni kelimelerle tanışalım! Kartı çevir, anlamına ve örnek cümleye bak.</CharacterBubble>
-    <ProgressBar :value="seen.size" :max="items.length" :label="`${items.length} kelimeden ${seen.size} tanesini gördün`" />
+    <JarProgress :value="seen.size" :max="items.length" size="sm" :label="`${items.length} kelimeden ${seen.size} tanesini gördün`"><p class="type-small text-ink font-bold">{{ items.length }} kelimeden {{ seen.size }} tanesini gördün</p></JarProgress>
 
     <div class="flip-scene mx-auto w-full max-w-xl px-7">
       <button

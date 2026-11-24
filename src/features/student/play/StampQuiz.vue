@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
-import { BaseButton, ProgressBar } from 'rei-kit'
+import { BaseButton } from 'rei-kit'
 import { CircleCheck, Lightbulb } from 'lucide-vue-next'
 
-import { LuguMascot, playSound } from '@/design'
+import { CandyRain, JarProgress, LuguMascot, playSound } from '@/design'
 import type { CharacterKey, Question } from '@/domain/content'
 import { nextDifficulty, wrongStage } from '@/play/ladder'
 import { createRunStreak } from '@/play/run-streak'
@@ -57,6 +57,7 @@ const emit = defineEmits<{ answer: [response: number | string | string[], ms: nu
 const streak = createRunStreak({ shield })
 const ss = streak.state
 const pop = ref(0)
+const rain = ref(0)
 const broke = ref(0)
 const wrongRow = ref(0)
 const wrongOnThis = ref(0)
@@ -97,6 +98,7 @@ watch(
     if (!question || now === null || now === undefined || before !== null && before !== undefined) return
     if (correct.value) {
       wrongRow.value = 0
+      rain.value++
       const ev = streak.correct()
       if (ev === 'milestone') {
         pop.value++
@@ -133,21 +135,20 @@ function useHint() {
   playSound('pop')
   emit('hint')
 }
-const pct = computed(() => (progress.total ? Math.round((progress.done / progress.total) * 100) : 0))
 </script>
 
 <template>
   <section class="flex flex-col gap-4" aria-label="Mühürlü test">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="min-w-0 flex-1">
+    <div class="flex items-center justify-between gap-3">
+      <JarProgress :value="progress.done" :max="Math.max(1, progress.total)" :label="`${stepsOf(progress.total, progress.done)} tamam`" size="sm">
         <p v-if="eyebrow" class="type-eyebrow text-ink-soft">{{ eyebrow }}</p>
         <p class="type-task text-ink">{{ stepsOf(progress.total, progress.done) }} tamam</p>
-      </div>
+      </JarProgress>
       <StreakMeter v-if="showStreak" :streak="ss.streak" :multiplier="ss.multiplier" :shield="ss.shield" :pop="pop" :broke="broke" />
     </div>
-    <ProgressBar :value="pct" :max="100" :label="`${stepsOf(progress.total, progress.done)} tamam`" />
 
-    <div v-if="question" class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
+    <div v-if="question" class="surface rounded-card relative flex flex-col gap-4 overflow-hidden p-4 sm:p-6">
+      <CandyRain :trigger="rain" />
       <QuestionCard
         :question="question"
         :order="order"

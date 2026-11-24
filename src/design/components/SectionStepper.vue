@@ -1,12 +1,14 @@
 <script setup lang="ts" generic="K extends string">
 import { computed } from 'vue'
-import { BaseStepper, ProgressBar, type StepperStep } from 'rei-kit'
+import { BaseStepper, type StepperStep } from 'rei-kit'
+
+import JarProgress from './JarProgress.vue'
 
 /*
  * Where the learner is inside a lesson. Wide screens get rei-kit's stepper
  * (every section named, earlier ones clickable when `interactive`). A phone
- * cannot fit seven labels, so it gets the current section's name, "3 / 7"
- * and a bar — the same facts, one line.
+ * cannot fit seven labels, so it gets "3 / 7" on a jar; the page's own heading
+ * names the section (never twice).
  */
 const model = defineModel<K>({ required: true })
 
@@ -29,17 +31,15 @@ const {
 }>()
 
 const index = computed(() => Math.max(0, steps.findIndex((s) => s.key === model.value)))
-const current = computed(() => steps[index.value])
 </script>
 
 <template>
   <div>
+    <!-- Phone: the page's own heading names the section, so only the count lives here. -->
     <div class="md:hidden">
-      <div class="flex items-baseline justify-between gap-3">
-        <p class="type-section text-ink truncate">{{ current?.label }}</p>
-        <p class="text-ink-soft shrink-0 type-small font-bold tabular-nums">{{ counter(index + 1, steps.length) }}</p>
-      </div>
-      <ProgressBar class="mt-2" :value="index + 1" :max="steps.length" size="md" :label="counter(index + 1, steps.length)" />
+      <JarProgress :value="index + 1" :max="steps.length" :label="counter(index + 1, steps.length)" size="sm">
+        <p class="text-ink type-small font-bold tabular-nums">{{ counter(index + 1, steps.length) }}</p>
+      </JarProgress>
     </div>
     <BaseStepper
       v-model="model"

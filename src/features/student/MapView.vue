@@ -2,10 +2,10 @@
 import { computed, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
-import { BaseButton, ProgressBar } from 'rei-kit'
+import { BaseButton } from 'rei-kit'
 import { Compass, WandSparkles } from 'lucide-vue-next'
 
-import { AmbientLayer, CharacterBubble, EmptyScene, LearningMap, LoadingScene, WorldBackground, useReducedMotion } from '@/design'
+import { AmbientLayer, CharacterBubble, EmptyScene, JarProgress, LearningMap, LoadingScene, WorldBackground, useReducedMotion } from '@/design'
 import { CHARACTER_KEYS, type CharacterKey } from '@/domain/content'
 import { friendlyMessage, getLearningMap } from '@/lib/api/student'
 import type { StudentLearningMap } from '@/lib/database.types'
@@ -53,7 +53,7 @@ const guide = computed(() =>
       ? `Şu an Ders ${here.value.sequence}: ${here.value.title}. Işıklı durağa dokun, yola devam edelim!`
       : 'Yolun burada. Açık bir durağa dokunabilirsin.',
 )
-const STATE_LABELS = { locked: 'Kilitli · sırası gelince açılır', available: 'Başla', in_progress: 'Devam et', completed: 'Tamamlandı · Tekrar oyna' } as const
+const STATE_LABELS = { locked: 'Kilitli', available: 'Başla', in_progress: 'Devam et', completed: 'Tamamlandı · Tekrar oyna' } as const
 
 function select(lessonId: string) {
   notice.value = null
@@ -84,8 +84,10 @@ function locked(lessonId: string) {
           <p class="type-eyebrow text-ink-soft">Öğrenme haritam</p>
           <h1 class="type-hero text-ink">Macera yolun</h1>
         </div>
-        <ProgressBar :value="done" :max="Math.max(1, total)" :label="`${total} dersten ${done} ders tamamlandı`" />
-        <p class="type-small text-ink-soft">Tamamladığın dersleri istediğin zaman tekrar oynayabilirsin.<template v-if="next"> Önünde {{ next }} kilitli durak var.</template></p>
+        <JarProgress :value="done" :max="Math.max(1, total)" :label="`${total} dersten ${done} ders tamamlandı`">
+          <p class="type-task text-ink">{{ total }} dersten {{ done }} tamam</p>
+          <p class="type-small text-ink-soft">Bitirdiklerini istediğin zaman tekrar oynayabilirsin.<template v-if="next"> Önünde {{ next }} kilitli durak var.</template></p>
+        </JarProgress>
       </header>
       <CharacterBubble :character="character" size="sm">{{ guide }}</CharacterBubble>
       <div aria-live="polite">

@@ -81,7 +81,7 @@ async function add() {
       hint="En az 2 harf yaz."
       @search="search"
     />
-    <BaseButton v-if="!adding" variant="link" class="self-start" @click="openAdd">Okulum listede yok, ekleyeyim</BaseButton>
+    <BaseButton v-if="!adding" variant="link" class="min-h-11 self-start" @click="openAdd">Okulum listede yok, ekleyeyim</BaseButton>
     <fieldset v-else class="surface rounded-card flex flex-col gap-3 p-4">
       <legend class="type-task text-ink px-1">Yeni okul ekle</legend>
       <BaseAlert v-if="addError" tone="danger">{{ addError }}</BaseAlert>

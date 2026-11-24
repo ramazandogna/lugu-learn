@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Mail } from 'lucide-vue-next'
+import { nextTick, ref, useTemplateRef } from 'vue'
+import { Mail, TriangleAlert } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import { BaseAlert, BaseButton, BaseCheckbox, BaseInput, PasswordInput, safeRedirect } from 'rei-kit'
+import { BaseButton, BaseCheckbox, BaseInput, PasswordInput, safeRedirect } from 'rei-kit'
 
 import { AmbientLayer, CharacterBubble, LuguLogo, SoundToggle, WorldBackground, playSound, useReducedMotion } from '@/design'
 import { signIn, type SignInError } from '@/lib/auth'
@@ -18,6 +18,7 @@ const sealing = ref(false)
 const shake = ref(false)
 const reduced = useReducedMotion()
 const error = ref<SignInError | 'empty' | null>(null)
+const form = useTemplateRef<HTMLFormElement>('form')
 
 const MESSAGES: Record<SignInError | 'empty', string> = {
   empty: 'Öğrenci kodunu (ya da e-postanı) ve şifreni yazmalısın.',
@@ -28,11 +29,18 @@ const MESSAGES: Record<SignInError | 'empty', string> = {
   network: 'Bağlantı kurulamadı. İnternetini kontrol edip tekrar dener misin?',
 }
 
+/** The field the message is about gets the focus, so the fix is one keystroke away. */
+async function focusField(which: 'username' | 'current-password') {
+  await nextTick()
+  form.value?.querySelector<HTMLInputElement>(`input[autocomplete="${which}"]`)?.focus()
+}
+
 async function submit() {
   error.value = null
   if (!identifier.value.trim() || !password.value) {
     error.value = 'empty'
     shake.value = true
+    void focusField(identifier.value.trim() ? 'current-password' : 'username')
     return
   }
   busy.value = true
@@ -43,7 +51,10 @@ async function submit() {
   } finally {
     busy.value = false
   }
-  if (error.value !== null) shake.value = true
+  if (error.value !== null) {
+    shake.value = true
+    void focusField(error.value === 'invalid_credentials' ? 'current-password' : 'username')
+  }
   if (error.value === null) {
     sealing.value = true
     playSound('muhur')
@@ -63,13 +74,14 @@ async function submit() {
         <h1 class="type-title text-ink">Tekrar hoş geldin!</h1>
       </div>
 
-      <!-- Piko and the card are one object: the bubble sits on the card's top edge. -->
-      <div class="flex flex-col">
-        <CharacterBubble character="piko" expression="happy" size="md" animated class="relative z-(--z-raised) -mb-2 px-2">
+      <!-- Piko speaks above the card, clear of its edge (no overlap at any width). -->
+      <div class="flex flex-col gap-4">
+        <CharacterBubble character="piko" expression="happy" size="md" animated>
           Öğrenci kodunu ve şifreni yaz, macerana kaldığın yerden devam edelim.
         </CharacterBubble>
 
         <form
+          ref="form"
           class="surface surface-raised rounded-card relative flex flex-col gap-4 overflow-hidden p-4 pt-6 sm:p-6 sm:pt-8"
           :class="shake ? 'animate-shake' : ''"
           novalidate
@@ -97,7 +109,14 @@ async function submit() {
             <PasswordInput v-model="password" label="Şifre" toggle-label="Şifreyi göster" autocomplete="current-password" />
             <BaseCheckbox v-model="remember" label="Beni hatırla" hint="Ortak bir bilgisayardaysan işaretleme." />
           </fieldset>
-          <BaseAlert v-if="error" tone="danger">{{ MESSAGES[error] }}</BaseAlert>
+          <div
+            v-if="error"
+            role="alert"
+            class="bg-retry-wash rounded-tile border-warning-ink text-ink flex items-start gap-2 border-2 p-3 type-body"
+          >
+            <TriangleAlert :size="20" class="text-warning-ink mt-0.5 shrink-0" :stroke-width="2.4" aria-hidden="true" />
+            <p class="min-w-0 font-bold">{{ MESSAGES[error] }}</p>
+          </div>
           <BaseButton type="submit" size="lg" block :loading="busy">Giriş yap</BaseButton>
           <p class="text-ink-soft type-small text-center">Şifreni unuttuysan öğretmenin sana yeni bir şifre verebilir.</p>
         </form>

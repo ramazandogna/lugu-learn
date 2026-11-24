@@ -67,7 +67,7 @@ useDocumentArea('student', () => scopeDocument)
     <SkipLink for="lugu-main" :label="skipLabel" />
     <header class="border-hair z-(--z-header) shrink-0 border-b bg-(--glass) backdrop-blur-md">
       <div class="mx-auto flex h-(--header-h) max-w-6xl items-center gap-4 px-4 md:px-6">
-        <RouterLink :to="homeTo" class="focus-ring rounded-control -m-1 p-1" :aria-label="homeLabel">
+        <RouterLink :to="homeTo" class="focus-ring rounded-control -mx-1 inline-flex min-h-11 items-center px-1" :aria-label="homeLabel">
           <LuguLogo size="sm" />
         </RouterLink>
         <NavLinks class="hidden md:block" :items="items" :active="active" :label="navLabel" />

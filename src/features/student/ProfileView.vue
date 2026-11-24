@@ -4,12 +4,12 @@ import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { BaseButton, SegmentedControl, useTheme, useToast } from 'rei-kit'
 
-import { EmptyScene, LoadingScene, SoundToggle } from '@/design'
+import { AvatarArt, EmptyScene, LoadingScene, SoundToggle, WorldBackground } from '@/design'
 import { friendlyMessage, getMyProfile } from '@/lib/api/student'
 import { auth, signOut } from '@/lib/auth'
 
 import ProfileForm from './components/ProfileForm.vue'
-import { toProfileValues, type ProfileValues } from './profile'
+import { isAvatarKey, toProfileValues, type ProfileValues } from './profile'
 import { levelOf } from './progress'
 import { useProgress } from './useProgress'
 import { useStudentHome } from './useStudentHome'
@@ -62,11 +62,16 @@ const THEMES = [
 
 <template>
   <div class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
-    <header>
-      <p class="type-eyebrow text-ink-soft">Profilim</p>
-      <h1 class="type-title text-ink">Bilgilerin</h1>
-      <p v-if="code" class="text-ink-soft type-small">Öğrenci kodun: <span class="text-ink font-bold">{{ code }}</span></p>
-    </header>
+    <WorldBackground character="momo" intensity="rich" class="rounded-card overflow-hidden">
+      <header class="flex items-center gap-4 p-4 sm:p-6">
+        <AvatarArt v-if="values && isAvatarKey(values.avatarKey)" :avatar="values.avatarKey" :size="72" />
+        <div class="min-w-0">
+          <p class="type-eyebrow text-ink-soft">Profilim</p>
+          <h1 class="type-title text-ink">Bilgilerin</h1>
+          <p v-if="code" class="text-ink type-small">Öğrenci kodun: <span class="font-bold">{{ code }}</span> · Seviye {{ level.level }}</p>
+        </div>
+      </header>
+    </WorldBackground>
 
     <EmptyScene v-if="error" tone="danger" title="Profilin açılamadı" :description="error">
       <BaseButton @click="load">Tekrar dene</BaseButton>

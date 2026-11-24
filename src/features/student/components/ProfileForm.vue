@@ -55,17 +55,29 @@ async function submit() {
 </script>
 
 <template>
-  <form class="flex flex-col gap-4" novalidate @submit.prevent="submit">
+  <form class="flex flex-col gap-6" novalidate @submit.prevent="submit">
     <BaseAlert v-if="error" tone="danger">{{ error }}</BaseAlert>
     <BaseAlert v-else-if="tried && !valid" tone="warning">Birkaç bilgi eksik kaldı. İşaretli alanlara bakar mısın?</BaseAlert>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <BaseInput v-model="v.firstName" label="Adın" autocomplete="given-name" :error="tried ? errors.firstName : undefined" />
-      <BaseInput v-model="v.lastName" label="Soyadın (isteğe bağlı)" autocomplete="family-name" />
-      <BaseInput v-model="v.displayName" label="Takma adın (isteğe bağlı)" hint="Lugu seni bu isimle selamlar." autocomplete="nickname" />
-      <BaseSelect v-model="v.grade" label="Sınıfın" :options="GRADES" placeholder="Seç" :error="tried ? errors.grade : undefined" />
-    </div>
-    <SchoolPicker v-model="v.schoolId" :initial="school" :error="tried ? errors.school : undefined" />
+    <!-- The face first: the avatar is the fun part, so it is not buried under six fields. -->
     <AvatarPicker v-model="v.avatarKey" legend="Avatarını seç" :hint="tried ? errors.avatar : 'Seni en iyi anlatan karakteri seç.'" />
-    <BaseButton type="submit" size="lg" block :loading="busy">{{ submitLabel }}</BaseButton>
+    <fieldset class="m-0 flex min-w-0 flex-col gap-4 border-0 p-0">
+      <legend class="type-section text-ink mb-3">Seni tanıyalım</legend>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <BaseInput v-model="v.firstName" label="Adın" autocomplete="given-name" :error="tried ? errors.firstName : undefined" />
+        <BaseInput v-model="v.lastName" label="Soyadın (isteğe bağlı)" autocomplete="family-name" />
+        <BaseInput v-model="v.displayName" label="Takma adın (isteğe bağlı)" hint="Lugu seni bu isimle selamlar." autocomplete="nickname" />
+      </div>
+    </fieldset>
+    <fieldset class="m-0 flex min-w-0 flex-col gap-4 border-0 p-0">
+      <legend class="type-section text-ink mb-3">Okulun</legend>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <BaseSelect v-model="v.grade" label="Sınıfın" :options="GRADES" placeholder="Seç" :error="tried ? errors.grade : undefined" />
+      </div>
+      <SchoolPicker v-model="v.schoolId" :initial="school" :error="tried ? errors.school : undefined" />
+    </fieldset>
+    <!-- Save stays in reach above the tab bar while the form scrolls. -->
+    <div class="bg-(--glass) sticky bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+var(--space-4))] z-(--z-raised) -mx-4 px-4 py-2 backdrop-blur-sm md:bottom-0 sm:-mx-6 sm:px-6">
+      <BaseButton type="submit" size="lg" block :loading="busy">{{ submitLabel }}</BaseButton>
+    </div>
   </form>
 </template>

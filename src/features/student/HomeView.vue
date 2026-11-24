@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { BaseButton, ProgressBar } from 'rei-kit'
-import { Clock, Compass, Snowflake, WandSparkles } from 'lucide-vue-next'
+import { BaseButton } from 'rei-kit'
+import { Clock, Compass, Map, Snowflake, WandSparkles } from 'lucide-vue-next'
 
-import { AmbientLayer, AvatarArt, EmptyScene, LoadingScene, LuguMark, LuguMascot, WorldBackground, useReducedMotion } from '@/design'
+import { AmbientLayer, AvatarArt, EmptyScene, JarProgress, LoadingScene, LuguMark, LuguMascot, WorldBackground, unitThemeAttrs, useReducedMotion } from '@/design'
 import type { Expression } from '@/design'
 
 import MyTasks from './components/MyTasks.vue'
@@ -12,6 +12,7 @@ import StreakChain from './components/StreakChain.vue'
 import UpcomingLessons from './components/UpcomingLessons.vue'
 import { greetingName, isAvatarKey } from './profile'
 import { greeting, lineOfTheDay } from './motivation'
+import { useLessonTheme } from './useLessonTheme'
 import { useProgress } from './useProgress'
 import { useStudentHome } from './useStudentHome'
 
@@ -27,6 +28,8 @@ const avatar = computed(() => {
 })
 const current = computed(() => mainAssignment.value?.current_lesson ?? null)
 const paused = computed(() => mainAssignment.value?.status === 'paused')
+/* The hero wears the unit of the lesson the learner is on (Ü1 pink, Ü2 night, Ü3 neon). */
+const unitTheme = useLessonTheme(() => current.value?.id)
 const others = computed(() => (home.value?.assignments ?? []).filter((a) => a.id !== mainAssignment.value?.id))
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n)
 
@@ -65,62 +68,75 @@ const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : n
   </EmptyScene>
   <LoadingScene v-else-if="!home" label="Ana sayfan hazırlanıyor" />
   <div v-else class="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
-    <WorldBackground character="piko" intensity="rich" class="rounded-card relative overflow-hidden">
-      <AmbientLayer kind="candy" :count="3" :active="!reduced" />
-      <div class="relative flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-6">
-        <div class="flex min-w-0 flex-1 items-center gap-4">
-          <AvatarArt v-if="avatar" :avatar="avatar" :size="72" />
-          <div class="min-w-0">
-            <p class="type-eyebrow text-ink-soft">{{ greeting() }}</p>
-            <h1 class="type-hero text-ink">{{ name ? `${name}!` : 'Hoş geldin!' }}</h1>
+    <WorldBackground
+      character="piko"
+      intensity="rich"
+      class="rounded-shell relative overflow-hidden"
+      v-bind="unitThemeAttrs(unitTheme)"
+      aria-labelledby="hero-title"
+      role="region"
+    >
+      <AmbientLayer kind="candy" :count="2" :active="!reduced" />
+      <div class="relative grid gap-6 p-4 sm:p-6 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:items-center md:gap-8 md:p-8">
+        <div class="flex min-w-0 flex-col gap-4">
+          <div class="flex items-center gap-4">
+            <AvatarArt v-if="avatar" :avatar="avatar" :size="64" />
+            <div class="min-w-0">
+              <p class="type-eyebrow text-ink-soft">{{ greeting() }}</p>
+              <h1 id="hero-title" class="type-hero text-ink">{{ name ? `${name}!` : 'Hoş geldin!' }}</h1>
+            </div>
           </div>
+
+          <template v-if="mainAssignment">
+            <div v-if="current && !paused" class="flex flex-col gap-1">
+              <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }} · Ders {{ current.sequence }}</p>
+              <h2 class="type-title text-ink">{{ current.title }}</h2>
+              <p v-if="current.tagline" class="type-body text-ink-soft">{{ current.tagline }}</p>
+              <p class="text-ink-soft type-small mt-1 flex items-center gap-1"><Clock :size="16" aria-hidden="true" /> Yaklaşık {{ current.estimated_minutes }} dakika</p>
+            </div>
+            <div v-else-if="paused" class="flex flex-col gap-1">
+              <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }}</p>
+              <h2 class="type-section text-ink">Programın şu an duraklatıldı</h2>
+              <p class="type-body text-ink-soft">Öğretmenin programı açınca kaldığın yerden devam edeceksin. Bitirdiklerini haritadan tekrar oynayabilirsin.</p>
+            </div>
+            <div v-else class="flex flex-col gap-1">
+              <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }}</p>
+              <h2 class="type-section text-ink">Programını tamamladın!</h2>
+              <p class="type-body text-ink-soft">Tüm dersleri bitirdin. İstediğin dersi haritadan tekrar oynayabilirsin.</p>
+            </div>
+            <JarProgress
+              :value="mainAssignment.lessons_completed"
+              :max="Math.max(1, mainAssignment.lessons_total)"
+              :label="`${mainAssignment.lessons_total} dersten ${mainAssignment.lessons_completed} ders tamamlandı`"
+            >
+              <p class="type-task text-ink">{{ mainAssignment.lessons_total }} dersten {{ mainAssignment.lessons_completed }} tamam</p>
+              <p class="type-small text-ink-soft">Her ders kavanozuna bir şeker ekler.</p>
+            </JarProgress>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <BaseButton v-if="current && !paused" as="router-link" :to="`/ders/${current.id}`" size="lg" class="sm:min-w-60">
+                {{ current.in_progress ? 'Devam et' : 'Derse başla' }}
+              </BaseButton>
+              <BaseButton as="router-link" :to="`/harita/${mainAssignment.id}`" :variant="current && !paused ? 'secondary' : 'primary'" :size="current && !paused ? 'md' : 'lg'">
+                <Map :size="20" aria-hidden="true" /> Haritamı aç
+              </BaseButton>
+            </div>
+          </template>
+          <p v-else class="type-body text-ink">Henüz bir programın yok. Öğretmenin sana bir program atadığında ilk dersin burada görünecek.</p>
         </div>
-        <div class="bg-surface rounded-card flex items-center gap-3 p-3 shadow-(--shadow-card) sm:max-w-md" data-character="piko">
-          <LuguMascot character="piko" :expression="look" :size="64" :animated="!reduced" />
-          <div class="min-w-0">
+
+        <!-- Piko on the stage: big, floating, with the bubble beside him. -->
+        <div class="flex items-center gap-3 md:flex-col md:items-center" data-character="piko">
+          <LuguMascot character="piko" :expression="look" :size="132" :animated="!reduced" class="shrink-0" />
+          <div class="bg-surface rounded-card min-w-0 p-3 shadow-(--shadow-card) sm:p-4">
             <p class="type-eyebrow text-ink-soft">Piko</p>
             <p class="type-body text-ink" aria-live="polite">{{ pikoLine }}</p>
-            <BaseButton as="router-link" :to="guideTo" size="sm" class="mt-2">{{ guideLabel }}</BaseButton>
+            <BaseButton as="router-link" :to="guideTo" variant="quiet" class="mt-1 -ms-3">{{ guideLabel }}</BaseButton>
           </div>
         </div>
       </div>
     </WorldBackground>
 
-    <EmptyScene v-if="!mainAssignment" title="Henüz bir programın yok" description="Öğretmenin sana bir program atadığında ilk dersin burada görünecek." />
-
-    <template v-else>
-      <section aria-labelledby="current-title" class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
-        <template v-if="current && !paused">
-          <div>
-            <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }} · Ders {{ current.sequence }}</p>
-            <h2 id="current-title" class="type-title text-ink">{{ current.title }}</h2>
-            <p v-if="current.tagline" class="type-body text-ink-soft mt-1">{{ current.tagline }}</p>
-            <p class="text-ink-soft mt-2 flex items-center gap-1 type-small">
-              <Clock :size="16" aria-hidden="true" /> Yaklaşık {{ current.estimated_minutes }} dakika
-            </p>
-          </div>
-          <BaseButton as="router-link" :to="`/ders/${current.id}`" size="lg" class="self-start">
-            {{ current.in_progress ? 'Kaldığın yerden devam et' : 'Derse başla' }}
-          </BaseButton>
-        </template>
-        <template v-else-if="paused">
-          <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }}</p>
-          <h2 id="current-title" class="type-section text-ink">Programın şu an duraklatıldı</h2>
-          <p class="type-body text-ink-soft">Öğretmenin programı yeniden açınca kaldığın yerden devam edeceksin. Bitirdiğin dersleri haritadan tekrar oynayabilirsin.</p>
-        </template>
-        <template v-else>
-          <p class="type-eyebrow text-ink-soft">{{ mainAssignment.curriculum.name }}</p>
-          <h2 id="current-title" class="type-section text-ink">Programını tamamladın!</h2>
-          <p class="type-body text-ink-soft">Tüm dersleri bitirdin. İstediğin dersi haritadan tekrar oynayabilirsin.</p>
-        </template>
-        <ProgressBar
-          :value="mainAssignment.lessons_completed"
-          :max="Math.max(1, mainAssignment.lessons_total)"
-          :label="`${mainAssignment.lessons_total} dersten ${mainAssignment.lessons_completed} ders tamamlandı`"
-        />
-      </section>
-      <BaseButton as="router-link" :to="`/harita/${mainAssignment.id}`" variant="secondary" class="self-start">Haritamı aç</BaseButton>
-
+    <template v-if="mainAssignment">
       <UpcomingLessons :key="mainAssignment.id" :assignment-id="mainAssignment.id" />
 
       <section v-if="others.length" aria-labelledby="other-title" class="flex flex-col gap-3">

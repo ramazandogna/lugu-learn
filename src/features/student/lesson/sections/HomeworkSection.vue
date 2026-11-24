@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BaseButton, ProgressBar } from 'rei-kit'
+import { BaseButton } from 'rei-kit'
 
-import { CharacterBubble } from '@/design'
+import { CharacterBubble, JarProgress } from '@/design'
 import { answerStage, currentQuestion, homeworkProgress, isHomeworkDone, restoreHomework, revealHint, snapshotHomework, startHomework, type StageResult } from '@/engine/homework'
 import type { FillWorkshopSlots } from '@/domain/content'
 import type { ResolvedPlay } from '@/play/resolve-play'
@@ -87,7 +87,7 @@ const stampRight = computed(() => held.value !== null)
 <template>
   <div class="flex flex-col gap-4">
     <CharacterBubble character="leo" size="sm">Her cümleyi üç adımda çalışacağız: tamamla, sırala, anlamını bul. Parçaya dokun, boşluğa dokun. Takılırsan ipucu alabilirsin.</CharacterBubble>
-    <ProgressBar :value="progress.groupsDone" :max="progress.groups" :label="`${progress.groups} gruptan ${progress.groupsDone} tanesi tamamlandı`" />
+    <JarProgress :value="progress.groupsDone" :max="progress.groups" size="sm" :label="`${progress.groups} gruptan ${progress.groupsDone} tanesi tamamlandı`"><p class="type-small text-ink font-bold">{{ progress.groups }} gruptan {{ progress.groupsDone }} tamam</p></JarProgress>
     <p v-if="result?.correct && result.groupDone" class="type-task text-ink" role="status">Bu cümleyi bitirdin!</p>
 
     <template v-if="!done && question && position">

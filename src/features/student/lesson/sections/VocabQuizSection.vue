@@ -122,7 +122,7 @@ function afterResults() {
 
 <template>
   <div class="flex flex-col gap-4">
-    <CharacterBubble character="sasha" size="sm">Her kelimeyi art arda iki kez doğru bilince o kelimeyi öğrenmiş olursun. Takılırsan sorun değil, kelime tekrar gelir!</CharacterBubble>
+    <CharacterBubble character="sasha" size="sm" :class="phase === 'quiz' ? 'max-sm:hidden' : ''">Her kelimeyi art arda iki kez doğru bilince o kelimeyi öğrenmiş olursun. Takılırsan sorun değil, kelime tekrar gelir!</CharacterBubble>
 
     <TimeEscape
       v-if="phase === 'timed' && timedSlots?.chase"

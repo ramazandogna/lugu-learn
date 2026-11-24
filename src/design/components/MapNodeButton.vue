@@ -21,66 +21,66 @@ const { node, current, numberLabel, stateLabel, currentLabel } = defineProps<{
 
 const emit = defineEmits<{ press: [] }>()
 
-const STONE = {
-  completed: 'bg-primary text-on-primary [--stone-lip:color-mix(in_oklab,var(--color-primary)_70%,black)]',
-  in_progress: 'bg-accent text-on-accent [--stone-lip:color-mix(in_oklab,var(--color-accent)_70%,black)]',
-  available: 'bg-surface text-primary border-4 border-primary [--stone-lip:var(--color-primary)]',
-  locked: 'bg-muted text-ink-soft [--stone-lip:var(--color-hair)]',
+/* The jar silhouette's colours per state: body fill, edge, and the icon's ink. */
+const JAR = {
+  completed: { fill: 'var(--color-primary-fill)', edge: 'var(--color-ink)', ink: 'text-on-primary' },
+  in_progress: { fill: 'var(--color-accent)', edge: 'var(--color-ink)', ink: 'text-on-accent' },
+  available: { fill: 'var(--color-surface)', edge: 'var(--color-primary)', ink: 'text-primary' },
+  locked: { fill: 'var(--color-muted)', edge: 'var(--color-ink-soft)', ink: 'text-ink-soft' },
 } as const
 
 const icon = computed(() => ({ completed: Check, in_progress: Play, available: Play, locked: Lock })[node.state])
+const BODY = 'M22 24h52c6 0 10 5 10 11v38c0 11-8 17-17 17H29c-9 0-17-6-17-17V35c0-6 4-11 10-11z'
 </script>
 
 <template>
   <BaseButton
     variant="unstyled"
-    class="lugu-stop group flex w-full flex-col items-center gap-1.5 rounded-card text-center"
+    class="lugu-stop group flex w-full flex-col items-center gap-1 rounded-card text-center"
     :aria-current="current ? 'step' : undefined"
     :data-state="node.state"
     @click="emit('press')"
   >
     <span class="relative">
       <span v-if="current" class="animate-pulse-ring bg-primary-fill/40 absolute inset-0 rounded-full" aria-hidden="true" />
-      <span
-        class="lugu-stone relative flex size-(--node-size) items-center justify-center rounded-full transition-[translate] duration-(--duration-fast) group-active:translate-y-1"
-        :class="STONE[node.state]"
-      >
-        <component :is="icon" class="size-8" :stroke-width="2.4" aria-hidden="true" />
+      <span class="lugu-stone relative grid size-(--node-size) place-items-center transition-[translate] duration-(--duration-fast) group-active:translate-y-1">
+        <svg viewBox="0 0 96 104" class="absolute inset-0 size-full overflow-visible" aria-hidden="true" focusable="false">
+          <path :d="BODY" :fill="JAR[node.state].fill" :stroke="JAR[node.state].edge" stroke-width="5" stroke-linejoin="round" />
+          <rect x="24" y="4" width="48" height="18" rx="7" :fill="node.state === 'locked' ? 'var(--color-hair)' : 'var(--color-star)'" :stroke="JAR[node.state].edge" stroke-width="5" />
+          <path d="M26 44v22" stroke="var(--color-surface)" stroke-width="5" stroke-linecap="round" opacity="0.55" />
+        </svg>
+        <component :is="icon" class="relative mt-3 size-8" :class="JAR[node.state].ink" :stroke-width="2.6" aria-hidden="true" />
       </span>
       <span
         v-if="node.state === 'completed'"
-        class="bg-surface text-ink absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full border-2 border-(--color-hair)"
+        class="bg-surface text-ink absolute -right-2 -bottom-1 flex size-8 items-center justify-center rounded-full border-2 border-(--color-hair)"
         aria-hidden="true"
       >
         <RotateCcw class="size-4" :stroke-width="2.6" />
       </span>
     </span>
-    <!-- A ground under the words, so the trail never runs through them. -->
-    <span class="rounded-control mt-1 flex flex-col items-center bg-[color-mix(in_oklab,var(--color-canvas)_90%,transparent)] px-2 py-0.5">
+    <!-- Title and state share one ground, so the trail never runs through them. -->
+    <span class="rounded-control mt-1 flex flex-col items-center gap-0.5 bg-[color-mix(in_oklab,var(--color-canvas)_94%,transparent)] px-2 py-1">
       <span class="type-eyebrow text-ink-soft">{{ numberLabel }}</span>
       <span class="text-ink line-clamp-2 type-small leading-tight font-extrabold">{{ node.title }}</span>
-    </span>
-    <span
-      class="bg-surface rounded-full px-2 py-0.5 type-small font-bold shadow-(--shadow-card)"
-      :class="node.state === 'locked' ? 'text-ink-soft' : 'text-ink'"
-    >
-      {{ stateLabel }}<span v-if="current" class="sr-only"> — {{ currentLabel }}</span>
+      <span class="type-small font-bold" :class="node.state === 'locked' ? 'text-ink-soft' : 'text-primary'">
+        {{ stateLabel }}<span v-if="current" class="sr-only"> — {{ currentLabel }}</span>
+      </span>
     </span>
   </BaseButton>
 </template>
 
 <style scoped>
 .lugu-stone {
-  box-shadow: 0 var(--lip-lg) 0 0 var(--stone-lip);
+  filter: drop-shadow(0 var(--lip-lg) 0 color-mix(in oklab, var(--color-ink) 22%, transparent));
 }
 
 .group:active .lugu-stone {
-  box-shadow: 0 1px 0 0 var(--stone-lip);
+  filter: drop-shadow(0 1px 0 color-mix(in oklab, var(--color-ink) 22%, transparent));
 }
 
 /* A locked stop does not sink: it opens nothing, so it should not feel pressed. */
 .lugu-stop[data-state='locked'] .lugu-stone {
   translate: none;
-  box-shadow: 0 var(--lip-lg) 0 0 var(--stone-lip);
 }
 </style>
