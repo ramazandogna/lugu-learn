@@ -24,7 +24,7 @@ Claude bulut oturumunun ağı Supabase/Vercel API'lerini engelliyor. Mobil uygul
 
 ### Yol B — Kendin çalıştır (kendi PC'nde, repo içinde)
 ```sh
-git pull
+git fetch origin && git checkout claude/vercel-deploy-setup-k14v56
 export SUPABASE_ACCESS_TOKEN=sbp_YENI
 export VERCEL_TOKEN=vcp_YENI
 export ADMIN_EMAIL=senin@epostan.com
