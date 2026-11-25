@@ -89,3 +89,40 @@ export async function setProgress(assignmentId: string, action: ProgressAction, 
     await db.rpc('admin_set_progress', { assignment_id: assignmentId, action, lesson_id: lessonId ?? null, note: note.trim() || null }),
   )
 }
+
+/** Version ids each student has open (active or paused). Pass ids to narrow; empty map entry = none. */
+export async function openVersionsByStudent(studentIds?: readonly string[]): Promise<Map<string, Set<string>>> {
+  let q = db.from('program_assignments').select('student_id, curriculum_version_id').in('status', ['active', 'paused'])
+  if (studentIds) q = q.in('student_id', [...studentIds])
+  const out = new Map<string, Set<string>>()
+  for (const r of must(await q)) {
+    const set = out.get(r.student_id) ?? new Set<string>()
+    set.add(r.curriculum_version_id)
+    out.set(r.student_id, set)
+  }
+  return out
+}
+
+export interface BulkAssignResult {
+  ok: string[]
+  failed: { studentId: string; error: unknown }[]
+}
+
+/** Assigns one version to many students, a few requests at a time; one failure never stops the rest. */
+export async function assignMany(studentIds: readonly string[], versionId: string, startLessonId: string | null, concurrency = 4): Promise<BulkAssignResult> {
+  const result: BulkAssignResult = { ok: [], failed: [] }
+  let next = 0
+  async function worker() {
+    while (next < studentIds.length) {
+      const studentId = studentIds[next++] as string
+      try {
+        await assignProgram(studentId, versionId, startLessonId)
+        result.ok.push(studentId)
+      } catch (error) {
+        result.failed.push({ studentId, error })
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, studentIds.length) }, worker))
+  return result
+}

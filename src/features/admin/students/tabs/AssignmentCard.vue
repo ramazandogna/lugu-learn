@@ -29,7 +29,7 @@ const COPY: Record<ProgressAction, { label: string; message: string; tone?: 'dan
   restart_lesson: { label: 'Dersi yeniden başlat', message: 'Şu anki dersin açık oturumu kapatılır; öğrenci dersi baştan başlar. Önceki yanıtlar korunur.' },
   pause: { label: 'Programı duraklat', message: 'Öğrenci bu programda ilerleyemez; kayıtlar korunur.' },
   resume: { label: 'Programı sürdür', message: 'Öğrenci kaldığı dersten devam eder.' },
-  archive: { label: 'Programı arşivle', message: 'Program kapatılır ve açık oturumlar sonlandırılır. Bu işlem geri alınamaz.', tone: 'danger' },
+  archive: { label: 'Programı kaldır', message: 'Program kapatılır ve açık oturumlar sonlandırılır. Bu işlem geri alınamaz.', tone: 'danger' },
 }
 const pending = ref<ProgressAction | null>(null)
 const confirmOpen = ref(false)
@@ -69,7 +69,7 @@ async function confirm(note: string) {
         <BaseButton size="sm" variant="secondary" :disabled="currentIdx < 0" @click="ask('restart_lesson')">Dersi yeniden başlat</BaseButton>
         <BaseButton v-if="a.status === 'active'" size="sm" variant="secondary" @click="ask('pause')">Duraklat</BaseButton>
         <BaseButton v-else size="sm" variant="secondary" @click="ask('resume')">Sürdür</BaseButton>
-        <BaseButton size="sm" variant="danger" @click="ask('archive')">Arşivle</BaseButton>
+        <BaseButton size="sm" variant="danger" @click="ask('archive')">Kaldır</BaseButton>
       </BaseToolbar>
       <form class="flex flex-wrap items-end gap-2" @submit.prevent="ask('set_lesson')">
         <BaseSelect v-model="target" class="min-w-64" size="sm" label="Belirli bir derse taşı" placeholder="Ders seçin" :options="lessonOptions" />

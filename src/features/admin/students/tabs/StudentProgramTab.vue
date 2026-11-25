@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { BaseButton, BaseCard, BaseSelect } from 'rei-kit'
-import { assignProgram, listAssignments, listPublishedVersions } from '@/lib/api/admin'
+import { computed, ref } from 'vue'
+import { BaseButton } from 'rei-kit'
+import { BaseDisclosure } from 'rei-kit/web'
+import { getStudent, listAssignments } from '@/lib/api/admin'
 import LoadState from '../../components/LoadState.vue'
-import { useAction, useLoad } from '../../lib/use-load'
+import { useLoad } from '../../lib/use-load'
+import AssignProgramDialog from '../AssignProgramDialog.vue'
 import AssignmentCard from './AssignmentCard.vue'
 import EmptyState from '../../components/AdminEmpty.vue'
 
@@ -11,31 +13,13 @@ const { studentId } = defineProps<{ studentId: string }>()
 const emit = defineEmits<{ changed: [] }>()
 
 const state = useLoad(async () => {
-  const [assignments, versions] = await Promise.all([listAssignments(studentId), listPublishedVersions()])
-  return { assignments, versions }
+  const [assignments, student] = await Promise.all([listAssignments(studentId), getStudent(studentId)])
+  return { assignments, name: student?.name ?? 'Öğrenci' }
 })
+const assigning = ref(false)
 
-const versionId = ref<string | undefined>()
-const startLessonId = ref<string | undefined>()
-const { busy, run } = useAction()
-
-const versionOptions = computed(() =>
-  (state.data.value?.versions ?? []).map((v) => ({ value: v.id, label: `${v.curriculumName} · sürüm ${v.version} (${v.lessons.length} ders)` })),
-)
-const lessonOptions = computed(() =>
-  (state.data.value?.versions.find((v) => v.id === versionId.value)?.lessons ?? []).map((l) => ({ value: l.id, label: `${l.sequence}. ${l.title}` })),
-)
-watch(versionId, () => (startLessonId.value = lessonOptions.value[0]?.value))
-
-async function assign() {
-  if (!versionId.value) return
-  const ok = await run(() => assignProgram(studentId, versionId.value as string, startLessonId.value ?? null), 'Program atandı')
-  if (ok) {
-    versionId.value = undefined
-    await state.reload()
-    emit('changed')
-  }
-}
+const active = computed(() => (state.data.value?.assignments ?? []).filter((a) => a.assignment.status === 'active' || a.assignment.status === 'paused'))
+const past = computed(() => (state.data.value?.assignments ?? []).filter((a) => a.assignment.status !== 'active' && a.assignment.status !== 'paused'))
 
 async function changed() {
   await state.reload()
@@ -46,22 +30,18 @@ async function changed() {
 <template>
   <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
     <div v-if="state.data.value" class="flex flex-col gap-4">
-      <BaseCard as="section" aria-labelledby="assign-title">
-        <template #head><h2 id="assign-title" class="type-body font-semibold">Program ata</h2></template>
-        <EmptyState
-          v-if="!versionOptions.length"
-          title="Yayınlanmış müfredat sürümü yok"
-          description="Atama yapabilmek için Müfredatlar bölümünde bir sürümü yayınlayın."
-        />
-        <form v-else class="grid items-end gap-3 md:grid-cols-[2fr_2fr_auto]" @submit.prevent="assign">
-          <BaseSelect v-model="versionId" label="Müfredat sürümü" placeholder="Seçin" :options="versionOptions" />
-          <BaseSelect v-model="startLessonId" label="Başlangıç dersi" placeholder="İlk ders" :options="lessonOptions" />
-          <BaseButton type="submit" :disabled="!versionId" :loading="busy">Ata</BaseButton>
-        </form>
-      </BaseCard>
-
-      <EmptyState v-if="!state.data.value.assignments.length" title="Öğrenciye henüz program atanmadı" />
-      <AssignmentCard v-for="a in state.data.value.assignments" :key="a.assignment.id" :detail="a" @changed="changed" />
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="type-body font-semibold">Aktif programlar</h2>
+        <BaseButton @click="assigning = true">Program ata</BaseButton>
+      </div>
+      <EmptyState v-if="!active.length" title="Açık program yok" description="Program ata düğmesiyle yayınlanmış bir müfredat seçin." />
+      <AssignmentCard v-for="a in active" :key="a.assignment.id" :detail="a" @changed="changed" />
+      <BaseDisclosure v-if="past.length" :title="`Geçmiş programlar (${past.length})`" :heading-level="2">
+        <div class="flex flex-col gap-3">
+          <AssignmentCard v-for="a in past" :key="a.assignment.id" :detail="a" @changed="changed" />
+        </div>
+      </BaseDisclosure>
     </div>
+    <AssignProgramDialog v-if="state.data.value" v-model="assigning" :students="[{ id: studentId, name: state.data.value.name }]" @assigned="changed" />
   </LoadState>
 </template>

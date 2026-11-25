@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ListFilter, Plus } from 'lucide-vue-next'
-import { BaseBadge, BaseButton, BaseInput, BaseSelect } from 'rei-kit'
+import { BaseBadge, BaseButton, BaseCheckbox, BaseInput, BaseSelect } from 'rei-kit'
 import { DataTable, type DataColumn, type TableSort } from 'rei-kit/web'
 import { listStudents, type StudentSummary } from '@/lib/api/admin'
 import type { AccountStatus } from '@/lib/database.types'
@@ -10,6 +10,7 @@ import LoadState from '../components/LoadState.vue'
 import { ACCOUNT_STATUS, ACCOUNT_TONE, formatDateTime } from '../lib/format'
 import { EMPTY_FILTERS, filterOptions, filterStudents, type StudentFilters } from '../lib/student-filters'
 import { useLoad } from '../lib/use-load'
+import AssignProgramDialog from './AssignProgramDialog.vue'
 import NewStudentDialog from './NewStudentDialog.vue'
 import StudentAccountActions from './StudentAccountActions.vue'
 import PageHeader from '../components/AdminPageHeader.vue'
@@ -18,6 +19,23 @@ const { data, loading, error, reload } = useLoad(listStudents)
 const filters = reactive<StudentFilters>({ ...EMPTY_FILTERS })
 const creating = ref(false)
 const showFilters = ref(false)
+const assignFor = ref<{ id: string; name: string }[]>([])
+const assigning = ref(false)
+const picked = ref(new Set<string>())
+function assign(list: { id: string; name: string }[]) {
+  assignFor.value = list
+  assigning.value = true
+}
+function toggle(id: string, on: boolean) {
+  const next = new Set(picked.value)
+  if (on) next.add(id)
+  else next.delete(id)
+  picked.value = next
+}
+function onAssigned() {
+  picked.value = new Set()
+  void reload()
+}
 
 const options = computed(() => filterOptions(data.value ?? []))
 const statusOptions = (Object.keys(ACCOUNT_STATUS) as AccountStatus[]).map((s) => ({ value: s, label: ACCOUNT_STATUS[s] }))
@@ -32,6 +50,7 @@ type Row = {
   status: AccountStatus
   lastActivity: number
   summary: StudentSummary
+  sel: string
 }
 
 const rows = computed<Row[]>(() =>
@@ -45,10 +64,12 @@ const rows = computed<Row[]>(() =>
     status: s.status,
     lastActivity: s.lastActivityAt ? Date.parse(s.lastActivityAt) : 0,
     summary: s,
+    sel: s.id,
   })),
 )
 
 const columns: DataColumn<Row>[] = [
+  { key: 'sel', label: 'Seç' },
   { key: 'name', label: 'Öğrenci', sortable: true },
   { key: 'grade', label: 'Sınıf', sortable: true, align: 'end' },
   { key: 'school', label: 'Okul', sortable: true },
@@ -59,6 +80,16 @@ const columns: DataColumn<Row>[] = [
 ]
 const sort = ref<TableSort<Row> | undefined>({ key: 'lastActivity', direction: 'desc' })
 const hasFilters = computed(() => JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS))
+const pickedList = computed(() => rows.value.filter((r) => picked.value.has(r.id)).map((r) => ({ id: r.id, name: r.name })))
+const allOn = computed(() => rows.value.length > 0 && rows.value.every((r) => picked.value.has(r.id)))
+function toggleAll(on: boolean) {
+  const next = new Set(picked.value)
+  for (const r of rows.value) {
+    if (on) next.add(r.id)
+    else next.delete(r.id)
+  }
+  picked.value = next
+}
 const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof StudentFilters)[]).filter((k) => k !== 'q' && filters[k] !== EMPTY_FILTERS[k]).length)
 </script>
 
@@ -95,6 +126,14 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
       </div>
     </section>
 
+    <div v-if="pickedList.length" class="surface rounded-card sticky top-2 z-10 flex flex-wrap items-center justify-between gap-2 p-3" role="region" aria-label="Toplu işlem">
+      <span class="type-small font-semibold">{{ pickedList.length }} öğrenci seçili</span>
+      <div class="flex gap-2">
+        <BaseButton variant="quiet" @click="picked = new Set()">Seçimi temizle</BaseButton>
+        <BaseButton @click="assign(pickedList)">Seçilenlere ata</BaseButton>
+      </div>
+    </div>
+
     <LoadState
       :loading="loading"
       :error="error"
@@ -104,10 +143,12 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
       @retry="reload"
     >
       <template #emptyAction><BaseButton @click="creating = true">Yeni öğrenci</BaseButton></template>
+      <BaseCheckbox v-if="rows.length" class="mb-3" :model-value="allOn" label="Listedekilerin hepsini seç" @update:model-value="(v: boolean) => toggleAll(v)" />
       <ul v-if="rows.length" class="flex flex-col gap-3 md:hidden" aria-label="Öğrenci listesi">
         <li v-for="r in rows" :key="r.id" class="surface rounded-card flex flex-col gap-2 p-4">
           <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
+            <BaseCheckbox class="shrink-0" :model-value="picked.has(r.id)" :label="`${r.name} seç`" label-hidden @update:model-value="(v: boolean) => toggle(r.id, v)" />
+            <div class="min-w-0 flex-1">
               <RouterLink :to="{ name: 'admin-student', params: { studentId: r.id } }" class="focus-ring rounded-cell inline-flex min-h-10 items-center font-semibold hover:underline">
                 {{ r.name }}
               </RouterLink>
@@ -121,13 +162,19 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
           </p>
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-ink-soft type-small">Son etkinlik: {{ r.lastActivity ? formatDateTime(r.summary.lastActivityAt) : 'Hiç' }}</span>
-            <StudentAccountActions :student-id="r.id" :code="r.code" :name="r.name" :status="r.status" @changed="reload" />
+            <div class="flex items-center gap-2">
+              <BaseButton size="sm" variant="secondary" @click="assign([{ id: r.id, name: r.name }])">Program ata</BaseButton>
+              <StudentAccountActions :student-id="r.id" :code="r.code" :name="r.name" :status="r.status" @changed="reload" />
+            </div>
           </div>
         </li>
       </ul>
       <p v-else class="text-ink-soft type-small md:hidden">Filtrelere uyan öğrenci yok.</p>
       <div class="hidden md:block">
       <DataTable v-model:sort="sort" :columns="columns" :rows="rows" caption="Öğrenci listesi" caption-hidden row-key="id">
+        <template #sel="{ row }">
+          <BaseCheckbox :model-value="picked.has(row.id)" :label="`${row.name} seç`" label-hidden @update:model-value="(v: boolean) => toggle(row.id, v)" />
+        </template>
         <template #name="{ row }">
           <RouterLink :to="{ name: 'admin-student', params: { studentId: row.id } }" class="focus-ring rounded-cell font-semibold hover:underline">
             {{ row.name }}
@@ -146,6 +193,7 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
         <template #status="{ row }"><BaseBadge :tone="ACCOUNT_TONE[row.status]">{{ ACCOUNT_STATUS[row.status] }}</BaseBadge></template>
         <template #lastActivity="{ row }">{{ row.lastActivity ? formatDateTime(row.summary.lastActivityAt) : 'Hiç' }}</template>
         <template #id="{ row }">
+          <BaseButton size="sm" variant="secondary" class="me-2" @click="assign([{ id: row.id, name: row.name }])">Program ata</BaseButton>
           <StudentAccountActions :student-id="row.id" :code="row.code" :name="row.name" :status="row.status" size="sm" @changed="reload" />
         </template>
         <template #empty>Filtrelere uyan öğrenci yok.</template>
@@ -154,5 +202,6 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
     </LoadState>
 
     <NewStudentDialog v-model="creating" @created="reload" />
+    <AssignProgramDialog v-model="assigning" :students="assignFor" @assigned="onAssigned" />
   </div>
 </template>

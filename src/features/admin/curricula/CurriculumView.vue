@@ -8,6 +8,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue'
 import LoadState from '../components/LoadState.vue'
 import { formatDate } from '../lib/format'
 import { useAction, useLoad } from '../lib/use-load'
+import AssignToStudentsDialog from './AssignToStudentsDialog.vue'
 import CurriculumDialog from './CurriculumDialog.vue'
 import LessonList from './LessonList.vue'
 import ObjectivesEditor from './ObjectivesEditor.vue'
@@ -46,6 +47,7 @@ const tabs: TabPanel<Tab>[] = [
 ]
 const tab = ref<Tab>('lessons')
 const editing = ref(false)
+const assigning = ref(false)
 const publishing = ref(false)
 const { busy, run } = useAction()
 
@@ -104,6 +106,7 @@ async function remove() {
           </BaseBadge>
           <div class="ms-auto flex gap-2">
             <BaseButton v-if="version?.status === 'draft'" @click="publishing = true">Sürümü yayınla</BaseButton>
+            <BaseButton v-if="version?.status === 'published'" @click="assigning = true">Öğrencilere ata</BaseButton>
             <BaseButton variant="secondary" :loading="busy" @click="createVersion">Yeni sürüm</BaseButton>
           </div>
         </section>
@@ -141,6 +144,7 @@ async function remove() {
         </BaseTabs>
       </template>
     </LoadState>
+    <AssignToStudentsDialog v-if="version?.status === 'published'" v-model="assigning" :version-id="version.id" />
     <CurriculumDialog v-if="state.data.value" v-model="editing" :curriculum="state.data.value.curriculum" @saved="state.reload" />
     <ConfirmDialog
       v-model="publishing"

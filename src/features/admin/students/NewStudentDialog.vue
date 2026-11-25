@@ -4,6 +4,7 @@ import { BaseButton, BaseInput, NumberInput } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 import { createStudent, type CreatedStudent } from '@/lib/api/admin'
 import { useAction } from '../lib/use-load'
+import AssignProgramDialog from './AssignProgramDialog.vue'
 import CredentialsDialog from './CredentialsDialog.vue'
 
 const open = defineModel<boolean>({ default: false })
@@ -12,7 +13,13 @@ const emit = defineEmits<{ created: [id: string] }>()
 const form = reactive({ first_name: '', last_name: '', display_name: '', grade: undefined as number | undefined })
 const created = ref<CreatedStudent | null>(null)
 const showCredentials = ref(false)
+const showAssign = ref(false)
 const { busy, run } = useAction()
+
+/* Credentials closed -> offer the optional "assign a program now" step. */
+watch(showCredentials, (v, was) => {
+  if (was && !v && created.value) showAssign.value = true
+})
 
 watch(open, (v) => {
   if (v) Object.assign(form, { first_name: '', last_name: '', display_name: '', grade: undefined })
@@ -48,4 +55,9 @@ async function submit() {
     </template>
   </ResponsiveDialog>
   <CredentialsDialog v-if="created" v-model="showCredentials" :code="created.student_code" :password="created.password" />
+  <AssignProgramDialog
+    v-if="created"
+    v-model="showAssign"
+    :students="[{ id: created.student_id, name: created.student_code }]"
+  />
 </template>
