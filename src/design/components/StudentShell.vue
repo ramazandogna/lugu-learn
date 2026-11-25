@@ -29,6 +29,7 @@ const {
   unit,
   fill = 'viewport',
   scopeDocument = true,
+  hideTabs = false,
 } = defineProps<{
   /** Same items for the bottom bar and the top links. */
   items: readonly TabItem<K>[]
@@ -50,6 +51,8 @@ const {
   fill?: 'viewport' | 'parent'
   /** Mirror `data-area` onto <html> so teleported overlays match. */
   scopeDocument?: boolean
+  /** A focused screen (a lesson): no bottom bar, so nothing sits over the page's last controls. */
+  hideTabs?: boolean
 }>()
 
 useDocumentArea('student', () => scopeDocument)
@@ -76,10 +79,14 @@ useDocumentArea('student', () => scopeDocument)
         </div>
       </div>
     </header>
-    <main id="lugu-main" class="min-h-0 flex-1 overflow-y-auto pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+var(--space-6))] md:pb-12">
+    <main
+      id="lugu-main"
+      class="min-h-0 flex-1 overflow-y-auto md:pb-12"
+      :class="hideTabs ? 'pb-[calc(env(safe-area-inset-bottom)+var(--space-6))]' : 'pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+var(--space-6))]'"
+    >
       <slot />
     </main>
-    <div class="md:hidden">
+    <div v-if="!hideTabs" class="md:hidden">
       <TabBar :items="items" :active="active" :label="navLabel" />
     </div>
     <ToastHost :close-label="toastCloseLabel" />

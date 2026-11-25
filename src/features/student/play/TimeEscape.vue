@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { BaseButton, ProgressBar } from 'rei-kit'
 import { Hourglass, Pause, Play } from 'lucide-vue-next'
 
-import { LuguMascot, StampOption, playSound } from '@/design'
+import { CandyButton, LuguMascot, StampOption, playSound } from '@/design'
 import type { CharacterKey } from '@/domain/content'
 import { shuffleWith } from '@/engine/mastery'
 import { TIME_BANK, createDailyRounds, createTimeBank, lastSecond, riverLevel, softPulse, vignetteAlpha, vignetteRadius } from '@/play/time-bank'
@@ -139,7 +139,7 @@ const done = () => emit('finish', { corrects: totalCorrect.value, rounds: rounds
           <p class="type-section text-ink">Bugün 3 tur oynadın, harika!</p>
           <p class="type-body text-ink-soft">Biraz mola ver, göz dinlendir. İstersen yine de bir tur oynayabilirsin.</p>
           <div class="flex flex-wrap justify-center gap-2">
-            <BaseButton size="lg" @click="done">Tamam, bitir</BaseButton>
+            <CandyButton @click="done">Tamam, bitir</CandyButton>
             <BaseButton variant="quiet" @click="start">Yine de bir tur</BaseButton>
           </div>
         </div>
@@ -155,7 +155,7 @@ const done = () => emit('finish', { corrects: totalCorrect.value, rounds: rounds
           </BaseButton>
           <p class="type-small text-ink-soft">Kolay modda süre akmaz ve ekran kızarmaz. Ödül aynı.</p>
           <p v-if="suggested && !easy" class="type-small text-ink" role="status">Son turlar zordu. İstersen kolay modu aç.</p>
-          <BaseButton size="lg" @click="start">Başla</BaseButton>
+          <CandyButton @click="start">Başla</CandyButton>
         </div>
       </template>
 
@@ -205,7 +205,7 @@ const done = () => emit('finish', { corrects: totalCorrect.value, rounds: rounds
           <div class="surface rounded-card flex flex-col items-center gap-3 p-6 text-center shadow-(--shadow-overlay)">
             <p class="type-section text-ink">Duraklatıldı</p>
             <p class="type-body text-ink-soft">Süre durdu. Hazır olunca devam et.</p>
-            <BaseButton size="lg" @click="bank.resume()">Devam et</BaseButton>
+            <CandyButton @click="bank.resume()">Devam et</CandyButton>
           </div>
         </div>
       </template>
@@ -217,7 +217,7 @@ const done = () => emit('finish', { corrects: totalCorrect.value, rounds: rounds
           <p class="type-display text-ink">{{ st.corrects }}</p>
           <p class="type-body text-ink">tane şekeri hızlıca hatırladın. Şekerlerin hepsi duruyor.</p>
           <div class="flex flex-wrap justify-center gap-2">
-            <BaseButton size="lg" @click="done">Bitir</BaseButton>
+            <CandyButton @click="done">Bitir</CandyButton>
             <BaseButton v-if="daily.canStart()" variant="secondary" @click="start">Bir tur daha</BaseButton>
             <p v-else class="type-small text-ink-soft">Bugünlük 3 tur tamam. Yarın yine bekleriz.</p>
           </div>

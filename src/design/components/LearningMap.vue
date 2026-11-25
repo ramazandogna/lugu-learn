@@ -18,6 +18,7 @@ const {
   stateLabels = { locked: 'Kilitli', available: 'Başla', in_progress: 'Devam et', completed: 'Tamamlandı · Tekrar oyna' },
   numberLabel = (n: number) => `Ders ${n}`,
   currentLabel = 'Şu an buradasın',
+  fresh = [],
 } = defineProps<{
   nodes: readonly MapNode[]
   /** Accessible name of the map, e.g. "Öğrenme haritam". */
@@ -28,6 +29,8 @@ const {
   numberLabel?: (sequence: number) => string
   /** Read with the current node, so "where am I" is not shown by the mascot alone. */
   currentLabel?: string
+  /** Stops that opened since the learner last looked: the caramel flows in, the seal breaks, the guide hops once. */
+  fresh?: readonly string[]
 }>()
 
 const emit = defineEmits<{
@@ -45,7 +48,11 @@ const rowHeight = computed(() => (wide.value ? 200 : 192))
 const points = computed(() => mapPoints(ordered.value.length, { amplitude: wide.value ? 30 : 22, rowHeight: rowHeight.value }))
 const height = computed(() => (points.value.at(-1)?.y ?? 0) + 168)
 const trail = computed(() => pathThrough(points.value))
-const walked = computed(() => pathThrough(points.value.slice(0, walkedCount(ordered.value))))
+const walkedN = computed(() => walkedCount(ordered.value))
+const flowing = computed(() => fresh.length > 0 && walkedN.value >= 2 && !reduced.value)
+/* With a fresh stop the last stretch of the walked trail is drawn apart, so it can flow in (D3). */
+const walked = computed(() => pathThrough(points.value.slice(0, flowing.value ? walkedN.value - 1 : walkedN.value)))
+const caramel = computed(() => (flowing.value ? pathThrough(points.value.slice(walkedN.value - 2, walkedN.value)) : ''))
 const currentId = computed(() => currentNodeId(ordered.value))
 /** A stop wears its own lesson's character; unknown or missing = the map's character. */
 const keyOf = (n: MapNode): CharacterKey => CHARACTER_KEYS.find((k) => k === n.character) ?? character
@@ -89,6 +96,7 @@ watch(currentId, revealCurrent)
           vector-effect="non-scaling-stroke"
         />
         <path :d="walked" fill="none" stroke="var(--color-primary)" stroke-width="8" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+        <path v-if="caramel" :d="caramel" class="caramel" fill="none" stroke="var(--color-primary)" stroke-width="8" stroke-linecap="round" vector-effect="non-scaling-stroke" />
       </svg>
 
       <ol class="absolute inset-0">
@@ -105,6 +113,7 @@ watch(currentId, revealCurrent)
             :number-label="numberLabel(node.sequence)"
             :state-label="stateLabels[node.state]"
             :current-label="currentLabel"
+            :fresh="fresh.includes(node.id)"
             @press="press(node)"
           />
           <LuguMascot
@@ -113,6 +122,7 @@ watch(currentId, revealCurrent)
             :class="(points[i]?.x ?? 50) > 50 ? '-left-12 sm:-left-16' : '-right-12 sm:-right-16'"
             :character="character"
             expression="encouraging"
+            :mood="fresh.includes(node.id) ? 'cheer' : 'idle'"
             :size="wide ? 76 : 60"
             animated
           />
@@ -130,3 +140,23 @@ watch(currentId, revealCurrent)
     </div>
   </nav>
 </template>
+
+<style scoped>
+/* D3: the new stretch of trail pours in top to bottom in 340 ms. */
+.caramel {
+  animation: caramel-flow var(--duration-slow) var(--ease-sheet) 200ms both;
+}
+@keyframes caramel-flow {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caramel {
+    animation: none;
+  }
+}
+</style>

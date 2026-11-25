@@ -3,12 +3,13 @@ import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import { BaseButton } from 'rei-kit'
 import { CircleCheck, Lightbulb } from 'lucide-vue-next'
 
-import { CandyRain, JarProgress, LuguMascot, playSound } from '@/design'
+import { CandyButton, CandyRain, JarProgress, LuguMascot, playSound } from '@/design'
 import type { CharacterKey, Question } from '@/domain/content'
 import { nextDifficulty, wrongStage } from '@/play/ladder'
 import { createRunStreak } from '@/play/run-streak'
 import { stepsOf } from './tr'
 
+import { useMoodBus } from './mood'
 import QuestionCard from './QuestionCard.vue'
 import StreakMeter from './StreakMeter.vue'
 
@@ -54,6 +55,7 @@ const {
 }>()
 const emit = defineEmits<{ answer: [response: number | string | string[], ms: number]; next: []; hint: [] }>()
 
+const mood = useMoodBus()
 const streak = createRunStreak({ shield })
 const ss = streak.state
 const pop = ref(0)
@@ -66,7 +68,7 @@ const hintStage = ref<0 | 1 | 2>(0)
 const lastQ = shallowRef<string | null>(null)
 const easier = ref(false)
 const cheer = ref('')
-const nextBtn = useTemplateRef<{ $el?: HTMLElement }>('nextBtn')
+const nextBtn = useTemplateRef<{ focus: () => void }>('nextBtn')
 
 const answered = computed(() => (question?.type === 'choice' ? picked !== null : graded !== null))
 const correct = computed(() => (question?.type === 'choice' ? picked === question.answer : graded?.correct === true))
@@ -96,6 +98,7 @@ watch(
   () => (question?.type === 'choice' ? picked : graded),
   (now, before) => {
     if (!question || now === null || now === undefined || before !== null && before !== undefined) return
+    mood.answered(correct.value)
     if (correct.value) {
       wrongRow.value = 0
       rain.value++
@@ -115,7 +118,7 @@ watch(
       }
       cheer.value = wrongRow.value >= 3 ? 'Hadi biraz daha rahat ısınalım, bir sonraki soru daha kolay.' : 'Yaklaştın!'
     }
-    void nextTick(() => nextBtn.value?.$el?.focus())
+    void nextTick(() => nextBtn.value?.focus())
   },
 )
 
@@ -133,6 +136,7 @@ function useHint() {
   hintsLeft.value--
   hintStage.value = (hintStage.value + 1) as 1 | 2
   playSound('pop')
+  mood.hinted()
   emit('hint')
 }
 </script>
@@ -176,7 +180,7 @@ function useHint() {
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <BaseButton ref="nextBtn" size="lg" :disabled="!answered" @click="emit('next')">{{ nextLabel }}</BaseButton>
+        <CandyButton ref="nextBtn" :disabled="!answered" :disabled-reason="question?.type === 'choice' ? 'Önce bir seçenek seç' : 'Önce cevabını kontrol et'" @click="emit('next')">{{ nextLabel }}</CandyButton>
         <BaseButton v-if="canHint" variant="quiet" @click="useHint"><Lightbulb :size="20" aria-hidden="true" /> İpucu ({{ hintsLeft }})</BaseButton>
       </div>
     </div>

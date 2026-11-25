@@ -94,6 +94,7 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
 
   /** Sends measured active time even when nothing else is being saved. */
   function flushActive() {
+    if (sessionClosed.value) return
     const s = current.value
     if (s && pendingActive >= 1) saveState(s, snapshots.value[s] ?? {})
   }

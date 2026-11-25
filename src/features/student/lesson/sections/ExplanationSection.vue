@@ -5,6 +5,7 @@ import { CharacterBubble } from '@/design'
 import type { TapGuideSlots } from '@/domain/content'
 import type { ResolvedPlay } from '@/play/resolve-play'
 
+import { useMoodBus } from '../../play/mood'
 import QuestionCard from '../../play/QuestionCard.vue'
 import ScrollStory from '../../play/ScrollStory.vue'
 import TapGuide from '../../play/TapGuide.vue'
@@ -21,6 +22,7 @@ import { allAttempted, attempt, boldSegments, restorePractice } from '../practic
 const { snapshot, completed = false, play } = defineProps<{ snapshot?: unknown; completed?: boolean; play?: ResolvedPlay }>()
 const emit = defineEmits<{ state: [s: unknown]; complete: [] }>()
 const ctx = useLesson()
+const mood = useMoodBus()
 const exSteps = ctx.pkg.explanation.steps
 const checkIds = exSteps.flatMap((s) => (s.check ? [s.check.id] : []))
 const slots = (play?.template === 'tap-guide' ? play.slots : undefined) as TapGuideSlots | undefined
@@ -65,6 +67,7 @@ function answer(gate: string, response: number | string | string[], ms: number, 
   const q = checkOf(gate)
   if (!q) return
   const r = attempt(st.value, q, response)
+  mood.answered(r.correct)
   void ctx.recordAnswer({ section: 'explanation', questionId: q.id, response: toJson(response), responseMs: ms, hintUsed: hintUsed.value[gate] === true })
   if (q.type === 'choice' && typeof response === 'number') {
     picked.value = { ...picked.value, [gate]: response }
@@ -80,6 +83,7 @@ function answer(gate: string, response: number | string | string[], ms: number, 
 function showHint(gate: string) {
   const q = checkOf(gate)
   if (!q?.hint) return
+  mood.hinted()
   hints.value = { ...hints.value, [gate]: q.hint }
   hintUsed.value = { ...hintUsed.value, [gate]: true }
 }

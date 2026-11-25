@@ -148,8 +148,11 @@ const attrs = computed(() =>
       @animationend="onBreathEnd"
       @click="onClick"
     >
-      <CandyTwist v-if="variant === 'wrapper'" side="start" :class="{ 'candy-gone': done }" />
-      <CandyTwist v-if="variant === 'wrapper'" side="end" :class="{ 'candy-gone': done }" />
+      <!-- The look lives on this inner layer: the breath moves it, never the clickable box. -->
+      <span class="candy-skin" aria-hidden="true">
+        <CandyTwist v-if="variant === 'wrapper'" side="start" :class="{ 'candy-gone': done }" />
+        <CandyTwist v-if="variant === 'wrapper'" side="end" :class="{ 'candy-gone': done }" />
+      </span>
       <span class="candy-body">
         <span v-if="loading" class="candy-spin" aria-hidden="true" />
         <span class="candy-label">
@@ -188,17 +191,15 @@ const attrs = computed(() =>
   padding-inline: 1.25rem;
   border: 0;
   border-radius: var(--radius-control);
-  background: var(--color-primary-fill);
+  background: transparent;
   color: var(--color-on-primary);
   font: inherit;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 var(--lip) 0 color-mix(in oklab, var(--color-primary-fill) 65%, black);
   transform: translateY(0);
   transition:
     transform 180ms var(--ease-pop),
-    box-shadow var(--duration-fast) var(--ease-standard),
     filter var(--duration-fast) var(--ease-standard);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -210,22 +211,31 @@ const attrs = computed(() =>
 .candy-wrap[data-block] .candy {
   width: 100%;
 }
-/* gloss on the upper 45%, shade below; both under the label */
-.candy::before,
-.candy::after {
+/* the skin: fill, lip, gloss on the upper 45%, shade below; all under the label */
+.candy-skin {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--color-primary-fill);
+  box-shadow: 0 var(--lip) 0 color-mix(in oklab, var(--color-primary-fill) 65%, black);
+  pointer-events: none;
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
+}
+.candy-skin::before,
+.candy-skin::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  z-index: -1;
 }
-.candy::before {
+.candy-skin::before {
   bottom: 55%;
   background: radial-gradient(ellipse 60% 40% at 30% 18%, rgb(255 255 255 / 0.28), transparent 70%);
   transition: translate var(--duration-fast) var(--ease-standard);
 }
-.candy::after {
+.candy-skin::after {
   background: linear-gradient(transparent 55%, rgb(0 0 0 / 0.1));
 }
 .candy-body {
@@ -246,8 +256,8 @@ const attrs = computed(() =>
   padding-inline: 1rem;
   font-size: 0.9375rem;
 }
-.candy[data-variant='drop']::before,
-.candy[data-variant='drop']::after {
+.candy[data-variant='drop'] .candy-skin::before,
+.candy[data-variant='drop'] .candy-skin::after {
   display: none;
 }
 /* wrapper: pill body + paper fringe */
@@ -260,7 +270,7 @@ const attrs = computed(() =>
   --lip: var(--lip-lg);
   --twist-rot: 0deg;
 }
-.candy[data-variant='wrapper'][data-breath] {
+.candy[data-variant='wrapper'][data-breath] .candy-skin {
   animation: candy-breathe 3600ms ease-in-out both;
   animation-iteration-count: var(--breath-n, 4);
 }
@@ -277,7 +287,7 @@ const attrs = computed(() =>
     filter: brightness(1.06);
     --twist-rot: 6deg;
   }
-  .candy:hover:not(:disabled, [aria-disabled='true'])::before {
+  .candy:hover:not(:disabled, [aria-disabled='true']) .candy-skin::before {
     translate: 12% 0;
   }
 }
@@ -311,13 +321,16 @@ const attrs = computed(() =>
   cursor: not-allowed;
   filter: saturate(0.5);
   color: var(--color-ink-soft);
-  background: color-mix(in oklab, var(--color-primary-fill) 30%, var(--color-muted));
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--color-primary-fill) 25%, var(--color-muted));
   transition-duration: var(--duration-base);
 }
-.candy:disabled::before,
-.candy:disabled::after,
-.candy[aria-disabled='true']:not([data-loading])::before {
+.candy:disabled .candy-skin,
+.candy[aria-disabled='true']:not([data-loading]) .candy-skin {
+  background: color-mix(in oklab, var(--color-primary-fill) 30%, var(--color-muted));
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--color-primary-fill) 25%, var(--color-muted));
+}
+.candy:disabled .candy-skin::before,
+.candy:disabled .candy-skin::after,
+.candy[aria-disabled='true']:not([data-loading]) .candy-skin::before {
   display: none;
 }
 .candy-gone {
@@ -377,7 +390,7 @@ const attrs = computed(() =>
 }
 @media (prefers-reduced-motion: reduce) {
   .candy,
-  .candy::before {
+  .candy-skin::before {
     transition: background-color var(--duration-fast) linear;
   }
   .candy[data-pressed],
@@ -388,14 +401,13 @@ const attrs = computed(() =>
   .candy:hover:not(:disabled, [aria-disabled='true']) {
     transform: none;
   }
-  .candy[data-breath],
+  .candy[data-breath] .candy-skin {
+    animation: none;
+  }
   .candy-gone,
   .candy-bits {
     animation: none;
     display: none;
-  }
-  .candy[data-breath] {
-    display: inline-flex;
   }
   .candy-spin {
     animation-duration: 1800ms;

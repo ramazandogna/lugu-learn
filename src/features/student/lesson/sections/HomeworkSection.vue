@@ -8,6 +8,7 @@ import type { FillWorkshopSlots } from '@/domain/content'
 import type { ResolvedPlay } from '@/play/resolve-play'
 
 import FillWorkshop from '../../play/FillWorkshop.vue'
+import { useMoodBus } from '../../play/mood'
 import QuestionCard from '../../play/QuestionCard.vue'
 import { toJson, useLesson } from '../context'
 
@@ -20,6 +21,7 @@ import { toJson, useLesson } from '../context'
 const { snapshot, completed = false, play } = defineProps<{ snapshot?: unknown; completed?: boolean; play?: ResolvedPlay }>()
 const emit = defineEmits<{ state: [s: unknown]; complete: [] }>()
 const ctx = useLesson()
+const mood = useMoodBus()
 
 const hw = snapshot ? restoreHomework(snapshot, ctx.pkg, ctx.rng) : startHomework(ctx.pkg, ctx.rng)
 const version = ref(0)
@@ -49,6 +51,7 @@ function showHint() {
   const h = revealHint(hw) ?? slotHint.value?.fine ?? null
   if (h === null) return
   hintsLeft.value--
+  mood.hinted()
   hint.value = h
   bump()
 }
@@ -58,6 +61,7 @@ function answer(response: number | string | string[], ms: number) {
   if (!q) return
   const r = answerStage(hw, response, ctx.rng, ms)
   if (!r) return
+  mood.answered(r.correct)
   result.value = r
   hint.value = null
   void ctx.recordAnswer({ section: 'homework', questionId: r.questionId, response: toJson(response), responseMs: ms, hintUsed: r.hintUsed })
@@ -96,8 +100,8 @@ const stampRight = computed(() => held.value !== null)
         <QuestionCard :question="question" :picked="picked" :reveal="stampRight" :reason="reason" :hint="hint" @answer="stampPick" />
         <p v-if="picked !== null && !stampRight" class="type-body text-ink" role="status"><span class="font-bold">Yaklaştın!</span> Bir daha bak, sen yaparsın.</p>
         <div class="flex flex-wrap gap-2">
-          <BaseButton v-if="stampRight" size="lg" @click="stampNext">Sonraki</BaseButton>
-          <BaseButton v-else-if="picked !== null" size="lg" @click="picked = null">Bir daha dene</BaseButton>
+          <CandyButton v-if="stampRight" @click="stampNext">Sonraki</CandyButton>
+          <CandyButton v-else-if="picked !== null" @click="picked = null">Bir daha dene</CandyButton>
           <BaseButton v-if="hintsLeft > 0 && !hint && !!question.hint && picked === null" variant="quiet" @click="showHint">İpucu göster</BaseButton>
         </div>
       </div>

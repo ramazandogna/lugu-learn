@@ -32,6 +32,8 @@ const ACTIVE: Record<string, Tab> = {
   'student-history': 'history',
   'student-profile': 'profile',
 }
+/* A lesson is a focused screen: the bottom tab bar steps aside. */
+const inLesson = computed(() => route.name === 'student-lesson' || route.name === 'student-replay')
 const active = computed<Tab | undefined>(() => ACTIVE[String(route.name ?? '')])
 const avatar = computed(() => {
   const k = home.value?.profile?.avatar_key
@@ -41,7 +43,7 @@ const xpLabel = computed(() => `Toplam ${new Intl.NumberFormat('tr-TR').format(h
 </script>
 
 <template>
-  <StudentShell :items="items" :active="active" nav-label="Ana menü" skip-label="İçeriğe geç" home-label="Lugu ana sayfa" toast-close-label="Kapat">
+  <StudentShell :items="items" :active="active" :hide-tabs="inLesson" nav-label="Ana menü" skip-label="İçeriğe geç" home-label="Lugu ana sayfa" toast-close-label="Kapat">
     <template #account>
       <RouterLink v-if="home" to="/basarilar" class="focus-ring rounded-control grid min-h-11 min-w-11 place-items-center" :aria-label="`${xpLabel}, başarılarım`">
         <XpBadge :xp="home.xp" size="sm" :label="xpLabel" />

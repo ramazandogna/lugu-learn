@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { BaseButton } from 'rei-kit'
 import { RotateCw } from 'lucide-vue-next'
 
-import { CharacterBubble, JarProgress } from '@/design'
+import { CandyButton, CharacterBubble, JarProgress } from '@/design'
 import type { ResolvedPlay } from '@/play/resolve-play'
 
 import SpeakButton from '../../play/SpeakButton.vue'
@@ -86,8 +86,8 @@ function goTo(i: number) {
 
     <div class="flex flex-wrap items-center justify-between gap-2">
       <BaseButton variant="secondary" :disabled="index === 0" @click="goTo(index - 1)">Önceki</BaseButton>
-      <BaseButton v-if="index < items.length - 1" @click="goTo(index + 1)">Sonraki kelime</BaseButton>
-      <BaseButton v-else :disabled="!allSeen" @click="emit('complete')">Kelimeleri bitirdim</BaseButton>
+      <CandyButton v-if="index < items.length - 1" @click="goTo(index + 1)">Sonraki kelime</CandyButton>
+      <CandyButton v-else :disabled="!allSeen" disabled-reason="Önce her kartı çevir" @click="emit('complete')">Kelimeleri bitirdim</CandyButton>
     </div>
     <p v-if="index === items.length - 1 && !allSeen" class="text-ink-soft type-small">Bitirmeden önce her kartı bir kez çevirmelisin.</p>
   </div>

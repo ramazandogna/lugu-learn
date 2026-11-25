@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { BaseButton, BaseInput } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 
-import { CandyButton, CharacterBubble, StampOption } from '@/design'
+import { CandyButton, CharacterBubble, JarProgress, StampOption } from '@/design'
 import type { ResolvedPlay } from '@/play/resolve-play'
 import {
   chooseOption,
@@ -95,7 +95,9 @@ async function send() {
         <p v-for="(p, i) in sitting.reading.paragraphs" :key="i" class="text-ink" lang="en">{{ p }}</p>
       </article>
       <div class="surface rounded-card flex flex-col gap-4 p-4 sm:p-6">
-        <p class="type-eyebrow text-ink-soft">{{ view.part === 'quiz' ? 'Test' : 'Okuma' }} · Soru {{ index + 1 }} / {{ total }}</p>
+        <JarProgress :value="total - unanswered.length" :max="total" size="sm" :label="`${total} sorudan ${total - unanswered.length} tanesi cevaplandı`">
+          <p class="type-eyebrow text-ink-soft">{{ view.part === 'quiz' ? 'Test' : 'Okuma' }} · Soru {{ index + 1 }} / {{ total }}</p>
+        </JarProgress>
         <p class="type-task text-ink" lang="en">{{ view.prompt }}</p>
         <fieldset v-if="view.type === 'choice'" class="m-0 flex min-w-0 flex-col gap-3 border-0 p-0">
           <legend class="sr-only">{{ view.prompt }}</legend>
@@ -108,8 +110,8 @@ async function send() {
       </div>
       <nav class="flex flex-wrap justify-between gap-2" aria-label="Sorular arasında geçiş">
         <BaseButton variant="secondary" :disabled="index === 0" @click="go(index - 1)">Önceki</BaseButton>
-        <BaseButton v-if="index < total - 1" @click="go(index + 1)">Sonraki</BaseButton>
-        <BaseButton v-else :loading="sending" @click="askSubmit">Cevaplarımı gönder</BaseButton>
+        <CandyButton v-if="index < total - 1" @click="go(index + 1)">Sonraki</CandyButton>
+        <CandyButton v-else :loading="sending" @click="askSubmit">Cevaplarımı gönder</CandyButton>
       </nav>
       <p class="text-ink-soft type-small">{{ total - unanswered.length }} / {{ total }} soru cevaplandı</p>
     </template>

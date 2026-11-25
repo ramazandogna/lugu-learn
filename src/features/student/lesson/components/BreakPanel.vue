@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { BaseButton } from 'rei-kit'
 
-import { BreakScene, CharacterBubble } from '@/design'
+import { BreakScene, CandyButton, CharacterBubble } from '@/design'
 import { BREAK_OPTIONS, type BreakMinutes, type BreakStatus } from '@/engine/break'
 
 /*
@@ -25,7 +25,10 @@ const spoken = (s: number) => `${Math.floor(s / 60)} dakika ${s % 60} saniye kal
     <h2 id="break-offer" class="type-section text-ink">Bölümü bitirdin! Mola ister misin?</h2>
     <CharacterBubble character="dora" size="sm">Biraz su içmek, gözlerini dinlendirmek iyi gelir. Sıradaki bölüm: {{ nextLabel }}.</CharacterBubble>
     <div class="grid gap-2 sm:grid-cols-3" role="group" aria-label="Mola süresi">
-      <BaseButton v-for="m in BREAK_OPTIONS" :key="m" :variant="m === 0 ? 'primary' : 'secondary'" size="lg" @click="emit('choose', m)">{{ label(m) }}</BaseButton>
+      <template v-for="m in BREAK_OPTIONS" :key="m">
+        <CandyButton v-if="m === 0" block @click="emit('choose', m)">{{ label(m) }}</CandyButton>
+        <BaseButton v-else variant="secondary" size="lg" @click="emit('choose', m)">{{ label(m) }}</BaseButton>
+      </template>
     </div>
   </section>
 
@@ -42,7 +45,7 @@ const spoken = (s: number) => `${Math.floor(s / 60)} dakika ${s % 60} saniye kal
     </template>
     <template #actions>
       <BaseButton v-if="status === 'running'" size="lg" variant="secondary" @click="emit('resume')">Erken dön</BaseButton>
-      <BaseButton v-else size="lg" @click="emit('resume')">Başla</BaseButton>
+      <CandyButton v-else @click="emit('resume')">Başla</CandyButton>
     </template>
   </BreakScene>
 </template>

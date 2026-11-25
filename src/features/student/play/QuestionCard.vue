@@ -44,9 +44,14 @@ const {
 const emit = defineEmits<{ answer: [response: number | string | string[], ms: number]; hint: [] }>()
 
 let shownAt = Date.now()
+const group = ref<number | null>(null)
+/* A new question starts with nothing chosen (a leftover choice would look picked and ignore the same tap). */
 watch(
   () => question.id,
-  () => (shownAt = Date.now()),
+  () => {
+    shownAt = Date.now()
+    group.value = null
+  },
 )
 
 const shown = computed<number[]>(() => {
@@ -55,7 +60,6 @@ const shown = computed<number[]>(() => {
   return base.filter((i) => (!visible || visible.includes(i)) || i === question.answer || i === picked)
 })
 const answered = computed(() => picked !== null)
-const group = ref<number | null>(null)
 
 function pick(v: number | null) {
   if (v === null || answered.value || locked) return

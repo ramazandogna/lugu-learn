@@ -3,7 +3,7 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import { BaseButton } from 'rei-kit'
 import { BedDouble, BookOpen, Clock, Moon, Sparkles, Star, Sun, type LucideIcon } from 'lucide-vue-next'
 
-import { HintBubble, LuguMascot, playSound } from '@/design'
+import { CandyButton, HintBubble, LuguMascot, playSound } from '@/design'
 import type { CharacterKey, FillWorkshopSlots, Question } from '@/domain/content'
 import { createFillWorkshop } from '@/play/fill-workshop'
 
@@ -168,8 +168,8 @@ function next() {
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <BaseButton v-if="!celebrating" size="lg" :disabled="!fw.isFull()" @click="check">Kontrol et</BaseButton>
-      <BaseButton v-else size="lg" @click="next">Sonraki</BaseButton>
+      <CandyButton v-if="!celebrating" :disabled="!fw.isFull()" disabled-reason="Önce boşlukları doldur" @click="check">Kontrol et</CandyButton>
+      <CandyButton v-else @click="next">Sonraki</CandyButton>
       <BaseButton v-if="hintAvailable && !hint && !celebrating" variant="quiet" @click="emit('hint')">İpucu göster</BaseButton>
     </div>
   </section>

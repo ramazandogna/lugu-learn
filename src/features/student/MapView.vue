@@ -37,6 +37,27 @@ async function load() {
 watch(id, load, { immediate: true })
 
 const nodes = computed(() => (map.value ? toMapNodes(map.value.lessons) : []))
+
+/* D3: which stops opened since the learner last saw this map (remembered per program; the first visit celebrates nothing). */
+const fresh = shallowRef<string[]>([])
+function seenKey() {
+  return `lugu.map.open:${id.value}`
+}
+watch(map, (m) => {
+  fresh.value = []
+  if (!m) return
+  const open = toMapNodes(m.lessons).filter((n) => n.state !== 'locked').map((n) => n.id)
+  try {
+    const raw = localStorage.getItem(seenKey())
+    if (raw !== null) {
+      const before = new Set(JSON.parse(raw) as string[])
+      fresh.value = open.filter((x) => !before.has(x)).slice(0, 1)
+    }
+    localStorage.setItem(seenKey(), JSON.stringify(open))
+  } catch {
+    /* no storage: no celebration, the map still works */
+  }
+})
 const character = computed<CharacterKey>(() => {
   const c = map.value?.lessons.find((l) => l.id === map.value?.assignment.current_lesson_id)?.character
   return CHARACTER_KEYS.find((k) => k === c) ?? 'momo'
@@ -82,7 +103,8 @@ function locked(lessonId: string) {
   <WorldBackground v-else :character="character" intensity="rich" class="relative min-h-full">
     <AmbientLayer kind="candy" :count="3" :active="!reduced" />
     <div class="relative mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
-      <header class="surface rounded-card flex flex-col gap-3 border-t-8 border-t-primary p-4 sm:p-6">
+      <header class="surface rounded-card relative flex flex-col gap-3 overflow-hidden p-4 pt-7 sm:p-6 sm:pt-9">
+        <div class="tent absolute inset-x-0 top-0" aria-hidden="true" />
         <div>
           <p class="type-eyebrow text-ink-soft">Öğrenme haritam</p>
           <h1 class="type-hero text-ink">Macera yolun</h1>
@@ -110,7 +132,7 @@ function locked(lessonId: string) {
           {{ notice }}
         </CharacterBubble>
       </div>
-      <LearningMap :nodes="nodes" label="Öğrenme haritam" :character="character" :state-labels="STATE_LABELS" @select="select" @locked="locked" />
+      <LearningMap :nodes="nodes" label="Öğrenme haritam" :character="character" :state-labels="STATE_LABELS" :fresh="fresh" @select="select" @locked="locked" />
       <div class="grid gap-3 sm:grid-cols-2">
         <RouterLink v-if="here" :to="`/hayal/${here.id}`" class="surface surface-interactive rounded-card flex items-center gap-3 p-4">
           <WandSparkles :size="32" class="text-primary shrink-0" aria-hidden="true" />
@@ -130,3 +152,12 @@ function locked(lessonId: string) {
     </div>
   </WorldBackground>
 </template>
+
+<style scoped>
+/* The unit's awning: a striped band in the unit's own colours (scalloped lower edge). */
+.tent {
+  height: 1rem;
+  background: repeating-linear-gradient(90deg, var(--color-primary-fill) 0 1.25rem, var(--color-surface) 1.25rem 2.5rem);
+  border-bottom: 2px solid var(--color-primary);
+}
+</style>

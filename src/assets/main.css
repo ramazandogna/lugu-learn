@@ -720,3 +720,16 @@ button.absolute.end-1.size-9[aria-pressed] {
   background-color: var(--color-canvas);
   transition: background-color var(--duration-slower) var(--ease-standard);
 }
+
+/* Home -> lesson: the page crossfades in 420 ms (D1); under reduced motion there is no transition. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-slower);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

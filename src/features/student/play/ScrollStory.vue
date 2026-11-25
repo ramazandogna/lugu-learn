@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
 import { BaseButton, ProgressBar } from 'rei-kit'
 import { ArrowLeft, ArrowRight, Smile } from 'lucide-vue-next'
 
-import { LuguMascot, playSound } from '@/design'
+import { CandyButton, LuguMascot, characterThemeStyle, playSound } from '@/design'
 import type { CharacterKey } from '@/domain/content'
 import { createScrollStory, createStepInput, type StepDir } from '@/play/scroll-story'
 
@@ -43,6 +43,9 @@ const norm = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '')
 const words = computed(() => cur.value.en.split(/\s+/).filter(Boolean))
 const stress = computed(() => new Set((cur.value.emphasis ?? []).flatMap((e) => e.split(/\s+/).map(norm)).filter(Boolean)))
 const after = computed(() => words.value.length + 1)
+/* The speaker's own colour and the side the bubble comes from (200 ms); the narrator rises from below. */
+const speaking = computed(() => (cur.value.speaker === 'narrator' ? null : cur.value.speaker))
+const side = computed(() => (speaking.value ? ([...speaking.value].reduce((n, c) => n + c.charCodeAt(0), 0) % 2 ? 'from-right' : 'from-left') : 'from-below'))
 
 function forward() {
   if (!open.value) return
@@ -99,7 +102,13 @@ defineExpose({ index: computed(() => st.index) })
       @touchend.passive="input.touchEnd($event.changedTouches[0]!.clientX, $event.changedTouches[0]!.clientY)"
     >
       <LuguMascot :character="character" :expression="gated && !solved ? 'thinking' : cur.joke ? 'celebrating' : 'happy'" :size="72" animated />
-      <div :key="cur.id" class="flex max-w-2xl flex-col items-center gap-3">
+      <div
+        :key="cur.id"
+        class="line flex max-w-2xl flex-col items-center gap-3"
+        :class="[side, speaking ? 'bubble rounded-card border-s-4 border-primary px-4 py-3' : '']"
+        :data-character="speaking ?? undefined"
+        :style="speaking ? characterThemeStyle(speaking) : undefined"
+      >
         <p v-if="cur.title" class="type-eyebrow text-ink-soft">{{ cur.title }}</p>
         <p :class="words.length > 14 ? 'type-title' : 'type-hero'" class="text-ink" :lang="cur.lang ?? 'en'" :aria-label="cur.en">
           <span
@@ -129,14 +138,40 @@ defineExpose({ index: computed(() => st.index) })
     <nav class="flex flex-wrap items-center justify-between gap-2" aria-label="Adımlar">
       <BaseButton variant="secondary" :disabled="st.index === 0 && st.phase === 'step'" @click="back"><ArrowLeft :size="20" aria-hidden="true" /> Önceki</BaseButton>
       <p v-if="!open" class="type-small text-ink-soft">Devam etmek için soruyu cevapla.</p>
-      <BaseButton size="lg" :disabled="!open" @click="forward">
+      <CandyButton :disabled="!open" @click="forward">
         {{ isLast ? lastLabel : 'İleri' }} <ArrowRight v-if="!isLast" :size="20" aria-hidden="true" />
-      </BaseButton>
+      </CandyButton>
     </nav>
   </section>
 </template>
 
 <style scoped>
+.bubble {
+  background: color-mix(in oklab, var(--color-wash) 70%, transparent);
+}
+.line {
+  animation: line-in var(--duration-base) var(--ease-sheet) both;
+}
+.line.from-left {
+  --from: -16px 0;
+}
+.line.from-right {
+  --from: 16px 0;
+}
+.line.from-below {
+  --from: 0 8px;
+}
+@keyframes line-in {
+  from {
+    opacity: 0;
+    translate: var(--from, 0 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    animation: none;
+  }
+}
 .stage {
   background-image: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--color-primary-fill) 9%, transparent), transparent 70%);
 }

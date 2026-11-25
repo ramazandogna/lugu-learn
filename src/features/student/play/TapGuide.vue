@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import { BaseButton, ProgressBar } from 'rei-kit'
 import { CircleCheck, Hand, Lightbulb, Star } from 'lucide-vue-next'
 
-import { HintBubble, LuguMascot, TapBeacon, playSound, useReducedMotion } from '@/design'
+import { CandyButton, HintBubble, LuguMascot, TapBeacon, playSound, useReducedMotion } from '@/design'
 import type { CharacterKey, TapGuideSlots } from '@/domain/content'
 import { createGoNoGo, createGuide, createHintBudget, type GoFeedback, type GoNoGoRound } from '@/play/tap-guide'
 import { dayKey, safeStorage } from '@/play/storage'
@@ -154,9 +154,9 @@ const sneeze = computed(() => fb.value?.kind === 'wrong-tap' && fb.value.anim)
         <p v-if="noHints" class="type-small text-ink-soft" role="status">İpucu hakkın bitti, ama sen yaparsın!</p>
         <p class="type-small text-ink-soft">Kalan ipucu hakkı: {{ budget.left() }}</p>
       </div>
-      <BaseButton class="self-end" size="lg" @click="understood">
+      <CandyButton class="self-end" @click="understood">
         {{ gi + 1 < guides.length ? 'Anladım, sıradaki' : goNoGo ? 'Anladım, tura geç' : 'Anladım' }}
-      </BaseButton>
+      </CandyButton>
       <p v-if="stars" class="type-small text-ink flex items-center gap-1"><Star :size="16" aria-hidden="true" /> İpucusuz çözdüğün: {{ stars }}</p>
     </template>
 
@@ -167,7 +167,7 @@ const sneeze = computed(() => fb.value?.kind === 'wrong-tap' && fb.value.anim)
         <p class="type-eyebrow text-ink-soft">Dokun / dokunma turu</p>
         <p class="type-hero text-ink">{{ goNoGo.rule.tr }}</p>
         <p class="type-body text-ink-soft max-w-xl">Önce süresiz bir ısınma var. Acele yok: kuralı gören şekere dokun, görmeyene dokunma. Yanlış dokunmanın cezası yok.</p>
-        <BaseButton size="lg" @click="startGo">Isınmaya başla</BaseButton>
+        <CandyButton @click="startGo">Isınmaya başla</CandyButton>
       </div>
     </template>
 
@@ -213,7 +213,7 @@ const sneeze = computed(() => fb.value?.kind === 'wrong-tap' && fb.value.anim)
         <p class="type-display text-ink">{{ summary.learned }} / {{ summary.total }}</p>
         <p class="type-task text-ink">Yeni öğrenilen: {{ summary.learned }} şeker tamam.</p>
         <p v-if="summary.wrongTaps + summary.missed" class="type-body text-ink-soft">Birlikte bakacağımız {{ summary.wrongTaps + summary.missed }} şeker var, bir dahaki turda onlar da senin olur.</p>
-        <BaseButton size="lg" @click="finish">Devam et</BaseButton>
+        <CandyButton @click="finish">Devam et</CandyButton>
       </div>
     </template>
   </section>

@@ -36,7 +36,7 @@ const index = computed(() => Math.max(0, steps.findIndex((s) => s.key === model.
 <template>
   <div>
     <!-- Phone: the page's own heading names the section, so only the count lives here. -->
-    <div class="md:hidden">
+    <div class="md:hidden" data-lesson-jar>
       <JarProgress :value="index + 1" :max="steps.length" :label="counter(index + 1, steps.length)" size="sm">
         <p class="text-ink type-small font-bold tabular-nums">{{ counter(index + 1, steps.length) }}</p>
       </JarProgress>

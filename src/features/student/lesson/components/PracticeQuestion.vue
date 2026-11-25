@@ -2,6 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { BaseButton, BaseInput } from 'rei-kit'
 
+import { CandyButton } from '@/design'
+
 import { HintBubble, StampOption } from '@/design'
 import type { Question } from '@/domain/content'
 import { isComplete, newOrderState, orderResponse, type OrderState } from '@/engine/order'
@@ -90,7 +92,7 @@ defineExpose({ retry })
     <HintBubble v-if="hint" :closable="false">{{ hint }}</HintBubble>
 
     <div class="flex flex-wrap gap-2">
-      <BaseButton type="submit" :disabled="!ready || locked">Kontrol et</BaseButton>
+      <CandyButton type="submit" :disabled="!ready || locked" :disabled-reason="!ready && !locked ? 'Önce cevabını hazırla' : undefined">Kontrol et</CandyButton>
       <BaseButton v-if="hintAvailable && !hint && !locked" variant="quiet" @click="emit('hint')">İpucu göster</BaseButton>
     </div>
   </form>

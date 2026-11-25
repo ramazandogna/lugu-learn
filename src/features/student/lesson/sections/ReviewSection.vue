@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef } from 'vue'
-import { BaseButton } from 'rei-kit'
 
-import { CharacterBubble } from '@/design'
+import { CandyButton, CharacterBubble } from '@/design'
 import type { Question, TimeEscapeSlots } from '@/domain/content'
 import * as api from '@/lib/api/student'
 import type { ReviewItem } from '@/lib/database.types'
@@ -147,7 +146,7 @@ const finished = computed(() => completed || allAttempted(st.value, ids.value))
     />
     <template v-else-if="phase === 'results'">
       <RunResults v-if="data" :data="data" :label-of="labelOf" title="Isınma bitti" character="momo" continue-label="Isınmayı bitir" @again="again" @continue="emit('complete')" />
-      <BaseButton v-else class="self-start" @click="emit('complete')">Isınmayı bitir</BaseButton>
+      <CandyButton v-else class="self-start" @click="emit('complete')">Isınmayı bitir</CandyButton>
     </template>
     <StampQuiz
       v-else-if="q"
@@ -164,6 +163,6 @@ const finished = computed(() => completed || allAttempted(st.value, ids.value))
       @next="next"
       @hint="hintUsed = true"
     />
-    <BaseButton v-if="finished && phase === 'quiz' && !q" class="self-start" @click="emit('complete')">Isınmayı bitir</BaseButton>
+    <CandyButton v-if="finished && phase === 'quiz' && !q" class="self-start" @click="emit('complete')">Isınmayı bitir</CandyButton>
   </div>
 </template>
