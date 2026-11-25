@@ -2,9 +2,9 @@
 import { nextTick, ref, useTemplateRef } from 'vue'
 import { Mail, TriangleAlert } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import { BaseButton, BaseCheckbox, BaseInput, PasswordInput, safeRedirect } from 'rei-kit'
+import { BaseCheckbox, BaseInput, PasswordInput, safeRedirect } from 'rei-kit'
 
-import { AmbientLayer, CharacterBubble, LuguLogo, SoundToggle, WorldBackground, playSound, useReducedMotion } from '@/design'
+import { AmbientLayer, CandyButton, CharacterBubble, LuguLogo, SoundToggle, WorldBackground, playSound, useReducedMotion } from '@/design'
 import { signIn, type SignInError } from '@/lib/auth'
 
 const router = useRouter()
@@ -117,7 +117,7 @@ async function submit() {
             <TriangleAlert :size="20" class="text-warning-ink mt-0.5 shrink-0" :stroke-width="2.4" aria-hidden="true" />
             <p class="min-w-0 font-bold">{{ MESSAGES[error] }}</p>
           </div>
-          <BaseButton type="submit" size="lg" block :loading="busy">Giriş yap</BaseButton>
+          <CandyButton type="submit" block :loading="busy">Giriş yap</CandyButton>
           <p class="text-ink-soft type-small text-center">Şifreni unuttuysan öğretmenin sana yeni bir şifre verebilir.</p>
         </form>
       </div>

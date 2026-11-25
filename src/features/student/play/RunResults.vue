@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { BaseButton } from 'rei-kit'
 import { Award, RotateCcw, Sparkles, Timer } from 'lucide-vue-next'
 
-import { LuguMascot, playSound } from '@/design'
+import { CandyButton, LuguMascot, playSound } from '@/design'
 import type { CharacterKey } from '@/domain/content'
 
 import type { ResultsData } from './results'
@@ -124,8 +123,8 @@ onMounted(() => playSound(cmp.value.isBestStreak ? 'kutlama-buyuk' : 'kutlama-ku
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <BaseButton size="lg" @click="emit('continue')">{{ continueLabel }}</BaseButton>
-      <BaseButton variant="secondary" @click="emit('again')"><RotateCcw :size="20" aria-hidden="true" /> Tekrar çöz</BaseButton>
+      <CandyButton @click="emit('continue')">{{ continueLabel }}</CandyButton>
+      <CandyButton variant="drop" @click="emit('again')"><RotateCcw :size="20" aria-hidden="true" /> Tekrar çöz</CandyButton>
     </div>
   </section>
 </template>

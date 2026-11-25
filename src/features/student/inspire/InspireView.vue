@@ -1,231 +1,165 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { BaseButton } from 'rei-kit'
-import { ArrowLeft, Check, Sparkles, Volume2 } from 'lucide-vue-next'
+import { Award, Check, Sticker } from 'lucide-vue-next'
 
-import { AmbientLayer, LuguMascot, SoundToggle, armSound, playSound, useReducedMotion } from '@/design'
+import { AmbientLayer, CandyButton, LuguMascot, SoundToggle, armSound, playSound, useReducedMotion } from '@/design'
 
 import { useStudentHome } from '../useStudentHome'
-import { canSpeak, speak, stopSpeaking } from './speech'
-import { WORLDS, fillLine, markOpened, openedWorlds, type World } from './worlds'
+import { GLYPHS } from './glyphs'
+import StoryPlayer from './StoryPlayer.vue'
+import { STORIES } from './stories'
+import { BADGE_NAME, useStories } from './useStories'
+import { WORLDS } from './worlds'
 
 /*
- * "İngilizce ile neler yapabilirsin?" - Dünya Kavanozları (design-bible F8).
- * 8 jars, one silhouette, no locks, no rewards. Open one and tap: each tap
- * reveals one line, word by word. Every scene is a simulation; nobody real is
- * on the other side.
+ * Hikâye Rafı (wow-pass B): 8 kavanoz = 8 hikâye. Çocuk İngilizce bilen bir
+ * karakterin yerine geçer, seçer, sonucu görür. Kilit yok, para/süre yok;
+ * hatıra şekeri hikâyeyi sonuna kadar oynamanın karşılığı, kaynağı hep görünür.
  */
 const route = useRoute()
 const reduced = useReducedMotion()
 const { mainAssignment } = useStudentHome()
+const { progress, restart, doneCount, resumable, badge } = useStories()
 
-const opened = ref<string[]>([])
-const world = ref<World | null>(null)
-const shown = ref(0)
-/** Chosen option per step index; any option is fine. */
-const picks = ref<Record<number, string>>({})
-const slow = ref(false)
+const openId = ref<string | null>(null)
+/** Where the player starts: resume the saved frame, or begin again if it was finished. */
+const start = ref<{ frame: number; picks: Record<string, string> }>({ frame: 0, picks: {} })
 
-const steps = computed(() => world.value?.steps ?? [])
-const current = computed(() => steps.value[shown.value - 1])
-const needsPick = computed(() => !!current.value?.pick && !picks.value[shown.value - 1])
-const finished = computed(() => !!world.value && shown.value >= steps.value.length && !needsPick.value)
+const items = computed(() =>
+  STORIES.map((s) => ({ story: s, world: WORLDS.find((w) => w.id === s.worldId)!, p: progress(s.id) })),
+)
+const suggested = computed(() => items.value.find((i) => !i.p?.done)?.story.id)
+const current = computed(() => items.value.find((i) => i.story.id === openId.value))
+const nextItem = computed(() => {
+  const i = items.value.findIndex((x) => x.story.id === openId.value)
+  if (i < 0) return undefined
+  const rest = [...items.value.slice(i + 1), ...items.value.slice(0, i)]
+  return rest.find((x) => !x.p?.done) ?? rest[0]
+})
 const lessonId = computed(() => mainAssignment.value?.current_lesson?.id ?? null)
-
-/** A darker mix of the jar colour, so white marks on it stay readable. */
 const shade = (t: string) => `color-mix(in oklab, ${t} 78%, var(--color-ink))`
-const lineAt = (i: number) => fillLine(steps.value[i]?.en ?? '', picks.value[i] ?? null)
-const trAt = (i: number) => (steps.value[i]?.tr ?? '').replace('___', '…')
-const words = (s: string) => s.split(' ')
 
-function open(w: World) {
-  world.value = w
-  shown.value = 0
-  picks.value = {}
-  opened.value = markOpened(w.id)
+function open(id: string) {
+  const p = progress(id)
+  if (p && !p.done && p.frame > 0) start.value = { frame: p.frame, picks: p.picks }
+  else {
+    if (p) restart(STORIES.find((s) => s.id === id)!)
+    start.value = { frame: 0, picks: {} }
+  }
+  openId.value = id
   playSound('pop')
-  next()
-}
-
-function next() {
-  if (!world.value || needsPick.value || shown.value >= steps.value.length) return
-  shown.value += 1
-  playSound('tik')
-  if (!steps.value[shown.value - 1]?.pick) say(shown.value - 1)
-}
-
-function pick(option: string) {
-  picks.value = { ...picks.value, [shown.value - 1]: option }
-  playSound('dogru')
-  say(shown.value - 1)
-  if (shown.value >= steps.value.length) playSound('kutlama-kucuk')
-}
-
-function say(i: number) {
-  speak(lineAt(i), slow.value)
-}
-
-function back() {
-  stopSpeaking()
-  world.value = null
-  playSound('whoosh')
 }
 
 onMounted(() => {
   armSound()
-  opened.value = openedWorlds()
-  const q = route.query.dunya
-  const w = WORLDS.find((x) => x.id === q)
-  if (w) open(w)
+  const w = typeof route.query.dunya === 'string' ? route.query.dunya : null
+  const s = STORIES.find((x) => x.worldId === w)
+  if (s) open(s.id)
 })
-onBeforeUnmount(stopSpeaking)
 </script>
 
 <template>
   <div class="relative mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
-    <AmbientLayer v-if="!world" kind="candy" :count="3" :active="!reduced" />
+    <AmbientLayer kind="candy" :count="3" :active="!reduced" />
 
     <header class="relative flex items-start justify-between gap-4">
       <div class="min-w-0">
         <p class="type-eyebrow text-ink-soft">Keşfet</p>
-        <h1 class="type-hero text-ink">İngilizce ile neler yapabilirsin?</h1>
-        <p v-if="!world" class="type-body text-ink-soft mt-1">Bir kavanoz seç, dokun, İngilizce senin için açılsın.</p>
+        <h1 class="type-hero text-ink">Piko ile Hikâyeler</h1>
+        <p class="type-body text-ink-soft mt-1">Bir kavanoz seç, hikâyeye gir. İngilizceyi sen kullan, sonucu gör.</p>
       </div>
       <SoundToggle />
     </header>
 
-    <!-- Hub: eight jars, none locked -->
-    <section v-if="!world" aria-labelledby="hub-title" class="relative flex flex-col gap-4">
+    <!-- Picks up where you left -->
+    <section v-if="resumable" class="surface rounded-card relative flex flex-col gap-3 p-4 sm:flex-row sm:items-center" aria-labelledby="resume-title">
+      <LuguMascot character="piko" expression="happy" :size="64" :animated="!reduced" />
+      <div class="min-w-0 flex-1">
+        <p class="type-eyebrow text-ink-soft">Kaldığın hikâye</p>
+        <h2 id="resume-title" class="type-title text-ink">{{ resumable.title.tr }}</h2>
+        <p class="type-small text-ink-soft">{{ progress(resumable.id)!.frame + 1 }}. kareden devam edeceksin.</p>
+      </div>
+      <CandyButton @click="open(resumable.id)">Devam et</CandyButton>
+    </section>
+
+    <section aria-labelledby="shelf-title" class="relative flex flex-col gap-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="hub-title" class="type-section text-ink">8 dünya seni bekliyor</h2>
-        <p class="type-small text-ink-soft" aria-live="polite">Açtığın dünyalar: {{ opened.length }} / {{ WORLDS.length }}</p>
+        <h2 id="shelf-title" class="type-section text-ink">8 hikâye seni bekliyor</h2>
+        <p class="type-small text-ink-soft" aria-live="polite">Hatıra şekerlerin: {{ doneCount }} / {{ STORIES.length }}</p>
       </div>
       <ul class="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <li v-for="w in WORLDS" :key="w.id">
+        <li v-for="{ story, world, p } in items" :key="story.id" class="relative">
           <button
             type="button"
             class="jar surface focus-ring rounded-card flex h-full w-full flex-col items-center gap-2 p-4 text-center"
-            @click="open(w)"
+            @click="open(story.id)"
           >
             <span class="relative grid size-24 place-items-center" aria-hidden="true">
               <svg viewBox="0 0 96 96" class="absolute inset-0 size-full" focusable="false">
-                <rect x="28" y="6" width="40" height="12" rx="6" fill="var(--color-ink-soft)" />
-                <path d="M30 18h36v8c14 4 22 14 22 30v20a14 14 0 0 1-14 14H22a14 14 0 0 1-14-14V56c0-16 8-26 22-30z" :fill="shade(w.tint)" />
+                <rect x="28" y="6" width="40" height="12" rx="6" :fill="p?.done ? 'var(--color-positive)' : 'var(--color-ink-soft)'" />
+                <path d="M30 18h36v8c14 4 22 14 22 30v20a14 14 0 0 1-14 14H22a14 14 0 0 1-14-14V56c0-16 8-26 22-30z" :fill="shade(world.tint)" />
                 <path d="M22 50q2-12 12-16" fill="none" stroke="var(--color-surface)" stroke-width="4" stroke-linecap="round" opacity="0.6" />
               </svg>
-              <component :is="w.icon" :size="32" :stroke-width="2.2" class="text-surface relative mt-4" />
+              <component :is="p?.done ? GLYPHS[story.souvenir.glyph] : world.icon" :size="32" :stroke-width="2.2" class="text-surface relative mt-4" />
             </span>
-            <span class="type-task text-ink">{{ w.title }}</span>
-            <span class="type-small text-ink-soft">{{ w.hook }}</span>
-            <span v-if="opened.includes(w.id)" class="type-small text-ink flex items-center gap-1 font-bold">
-              <Check :size="16" :stroke-width="2.4" aria-hidden="true" /> Açtın
+            <span class="type-task text-ink">{{ story.title.tr }}</span>
+            <span class="type-small text-ink-soft">{{ world.hook }}</span>
+            <span class="flex items-center gap-1.5" :aria-label="`${story.frames.length} karenin ${p?.done ? story.frames.length : (p?.frame ?? 0)} tanesi`">
+              <i
+                v-for="n in story.frames.length"
+                :key="n"
+                class="size-2.5 rounded-full border-2 border-ink"
+                :class="n <= (p?.done ? story.frames.length : (p?.frame ?? 0)) ? 'bg-primary-fill' : 'bg-transparent'"
+              />
+            </span>
+            <span v-if="p?.done" class="type-small text-ink flex items-center gap-1 font-bold">
+              <Check :size="16" :stroke-width="2.4" aria-hidden="true" /> Mühürlü
+              <template v-if="story.endings > 1 && p.endingsSeen.length < story.endings"> · Başka bir son var</template>
             </span>
           </button>
+          <span v-if="suggested === story.id && !p?.done" class="pointer-events-none absolute -top-3 end-3">
+            <span class="animate-pulse-ring bg-star/50 rounded-control absolute inset-0" aria-hidden="true" />
+            <span class="bg-star text-on-star type-small rounded-control relative block px-2 py-0.5 font-extrabold">Bunu dene</span>
+          </span>
         </li>
       </ul>
     </section>
 
-    <!-- A world -->
-    <section v-else class="surface rounded-shell relative flex flex-col gap-6 p-4 sm:p-6" :aria-labelledby="`w-${world.id}`">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <button type="button" class="focus-ring text-primary rounded-control flex min-h-11 items-center gap-2 font-bold" @click="back">
-          <ArrowLeft :size="20" :stroke-width="2.2" aria-hidden="true" /> Dünyalara dön
-        </button>
-        <label v-if="canSpeak()" class="type-small text-ink flex min-h-11 cursor-pointer items-center gap-2">
-          <input v-model="slow" type="checkbox" class="size-5" /> Yavaş oku
-        </label>
-      </div>
-
-      <div class="flex items-center gap-4">
-        <span class="animate-bob rounded-card text-surface grid size-20 shrink-0 place-items-center" :style="{ background: shade(world.tint) }" aria-hidden="true">
-          <component :is="world.icon" :size="40" :stroke-width="2" />
-        </span>
-        <div class="min-w-0">
-          <h2 :id="`w-${world.id}`" class="type-title text-ink">{{ world.title }}</h2>
-          <p class="type-body text-ink-soft">{{ world.hook }}</p>
-        </div>
-      </div>
-
-      <p v-if="world.note" class="type-body text-ink bg-wash rounded-tile p-3" role="note">
-        <Sparkles :size="16" class="mr-1 inline" aria-hidden="true" />{{ world.note }}
-      </p>
-
-      <ol class="flex flex-col gap-4" aria-live="polite">
-        <li v-for="(_, i) in shown" :key="i" class="flex flex-col gap-1">
-          <div class="flex items-start gap-2">
-            <p
-              :key="`${i}-${picks[i] ?? ''}`"
-              lang="en"
-              class="min-w-0 flex-1 text-wrap"
-              :class="i === shown - 1 ? 'type-hero text-ink' : 'type-task text-ink-soft'"
-            >
-              <span
-                v-for="(word, k) in words(lineAt(i))"
-                :key="k"
-                class="word inline-block pe-2"
-                :style="{ animationDelay: i === shown - 1 ? `calc(${k} * var(--stagger))` : '0ms' }"
-              >{{ word }}</span>
-            </p>
-            <button
-              v-if="canSpeak()"
-              type="button"
-              class="control focus-ring rounded-control btn-press grid size-11 shrink-0 place-items-center"
-              :aria-label="`Sesli oku: ${lineAt(i)}`"
-              @click="say(i)"
-            >
-              <Volume2 :size="20" :stroke-width="2" aria-hidden="true" />
-            </button>
-          </div>
-          <p class="type-body text-ink-soft">{{ trAt(i) }}</p>
-
-          <fieldset v-if="steps[i]?.pick && i === shown - 1" class="mt-2 flex flex-wrap gap-2">
-            <legend class="type-small text-ink-soft mb-2">Birini seç; hepsi güzel bir cümle olur.</legend>
-            <button
-              v-for="o in steps[i]?.pick"
-              :key="o"
-              type="button"
-              class="control focus-ring rounded-control btn-press type-task text-ink min-h-12 px-4"
-              :class="picks[i] === o ? 'bg-wash border-primary border-2' : ''"
-              :aria-pressed="picks[i] === o"
-              lang="en"
-              @click="pick(o)"
-            >
-              {{ o }}
-            </button>
-          </fieldset>
+    <!-- Collection -->
+    <section class="surface rounded-card relative flex flex-col gap-3 p-4" aria-labelledby="coll-title">
+      <h2 id="coll-title" class="type-section text-ink">Hatıra şekerlerin</h2>
+      <ul class="flex flex-wrap gap-3">
+        <li v-for="{ story, p } in items" :key="story.id" class="flex w-16 flex-col items-center gap-1 text-center">
+          <span
+            class="grid size-12 place-items-center rounded-full border-2"
+            :class="p?.done ? 'border-ink bg-primary-fill text-on-primary' : 'border-ink-soft border-dashed text-ink-soft'"
+          >
+            <component :is="p?.done ? GLYPHS[story.souvenir.glyph] : Sticker" :size="22" :stroke-width="2.2" aria-hidden="true" />
+          </span>
+          <span class="type-small text-ink-soft leading-tight">{{ p?.done ? story.souvenir.name.replace(' şekeri', '') : 'Boş' }}</span>
         </li>
-      </ol>
-
-      <BaseButton v-if="!finished" size="lg" class="self-stretch sm:self-start" :disabled="needsPick" @click="next">
-        <Sparkles :size="20" aria-hidden="true" />
-        {{ shown === 0 ? 'Dokun, başlayalım' : needsPick ? 'Önce bir seçenek seç' : 'Dokun: sıradaki' }}
-      </BaseButton>
-
-      <div v-else class="bg-wash rounded-card flex flex-col gap-3 p-4 sm:flex-row sm:items-center" role="status">
-        <LuguMascot character="piko" expression="happy" :size="72" :animated="!reduced" />
-        <div class="min-w-0 flex-1">
-          <p class="type-eyebrow text-ink-soft">Senin seviyen</p>
-          <p class="type-body text-ink">Bu cümleyi şimdiden anlarsın:</p>
-          <p lang="en" class="type-title text-ink">{{ world.youKnow.en }}</p>
-          <p class="type-body text-ink-soft">{{ world.youKnow.tr }}</p>
-        </div>
-        <button
-          v-if="canSpeak()"
-          type="button"
-          class="control focus-ring rounded-control btn-press grid size-11 place-items-center"
-          :aria-label="`Sesli oku: ${world.youKnow.en}`"
-          @click="speak(world.youKnow.en, slow)"
-        >
-          <Volume2 :size="20" aria-hidden="true" />
-        </button>
-      </div>
-
-      <div v-if="finished" class="flex flex-wrap gap-2">
-        <button type="button" class="control focus-ring rounded-control btn-press type-task text-ink min-h-12 px-4" @click="back">Başka dünya aç</button>
-        <BaseButton v-if="world.id === 'uretim' && lessonId" as="router-link" :to="`/hayal/${lessonId}`">Hayal kur'a geç</BaseButton>
-      </div>
+      </ul>
+      <p class="type-body flex items-center gap-2" :class="badge ? 'text-ink font-bold' : 'text-ink-soft'">
+        <Award :size="22" aria-hidden="true" />
+        <template v-if="badge">Rafı tamamladın = "{{ BADGE_NAME }}" rozeti.</template>
+        <template v-else>8 hikâyeyi sonuna kadar oyna = "{{ BADGE_NAME }}" rozeti. Şu an {{ doneCount }} / 8.</template>
+      </p>
     </section>
+
+    <StoryPlayer
+      v-if="current"
+      :key="current.story.id"
+      :story="current.story"
+      :world="current.world"
+      :start-frame="start.frame"
+      :start-picks="start.picks"
+      :next-world="nextItem?.world"
+      :next-story-id="nextItem?.story.id"
+      :imagine-to="current.story.id === 'zipi-tanit' && lessonId ? `/hayal/${lessonId}` : undefined"
+      @close="openId = null"
+      @open="open"
+    />
   </div>
 </template>
 
@@ -244,19 +178,7 @@ onBeforeUnmount(stopSpeaking)
 .jar:active {
   scale: var(--press-scale);
 }
-.word {
-  animation: word-in var(--duration-slow) var(--ease-sheet) both;
-}
-@keyframes word-in {
-  from {
-    opacity: 0;
-    translate: 0 8px;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .word {
-    animation: none;
-  }
   .jar {
     transition: none;
   }

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { BaseButton } from 'rei-kit'
 
+import CandyButton from '../components/CandyButton.vue'
 import AmbientLayer from '../components/AmbientLayer.vue'
 import HintBubble from '../components/HintBubble.vue'
 import SoundToggle from '../components/SoundToggle.vue'
@@ -16,6 +17,8 @@ const checked = ref(false)
 const ANSWER = 'b'
 const hint = ref(false)
 const beacon = ref(0)
+const candyRefs = ref<Record<string, InstanceType<typeof CandyButton> | null>>({})
+const CANDY = ['jelly', 'wrapper', 'drop'] as const
 const kind = ref<'candy' | 'gear' | 'steam' | 'tram'>('candy')
 
 function resultFor(v: string) {
@@ -37,6 +40,16 @@ function resultFor(v: string) {
       <BaseButton size="lg">Ana eylem (lg)</BaseButton>
       <SoundToggle />
     </div>
+  </GallerySection>
+
+  <GallerySection title="Şeker düğmeler" note="jelly = birincil, wrapper = ekran başına 1 hero (nefes 4 + 2 döngü, sonra durur), drop = mini. Her satır: normal, devre dışı (neden satırı), yükleniyor, başarı.">
+    <div v-for="v in CANDY" :key="v" class="mb-4 flex flex-wrap items-start gap-x-6 gap-y-4">
+      <CandyButton :variant="v">{{ v }}</CandyButton>
+      <CandyButton :variant="v" disabled disabled-reason="Önce bir seçenek seç">Devre dışı</CandyButton>
+      <CandyButton :variant="v" loading>Yükleniyor</CandyButton>
+      <CandyButton :ref="(r) => (candyRefs[v] = r as InstanceType<typeof CandyButton> | null)" :variant="v" @click="candyRefs[v]?.celebrate()">Başarı</CandyButton>
+    </div>
+    <CandyButton block class="max-w-sm">Tam genişlik (375)</CandyButton>
   </GallerySection>
 
   <GallerySection title="Balmumu mühür seçenekleri" note="Native radio gizli; ikon + metin. Yanlış seçim kırmızı değil, 'tekrar dene' tonu; doğru şık aynı anda mühürlenir.">
