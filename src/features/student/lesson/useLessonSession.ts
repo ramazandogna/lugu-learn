@@ -53,9 +53,11 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
     loadError.value = null
     loaded.value = null
     try {
-      const [content, payload] = await Promise.all([api.getLessonContent(lessonId()), api.startOrResumeSession(lessonId(), kind())])
+      const contentP = api.getLessonContent(lessonId())
+      const masteredP =
+        kind() === 'primary' ? contentP.then((c) => api.getMasteredItems(c.package_id)).catch((): string[] => []) : Promise.resolve<string[]>([])
+      const [content, payload, preMastered] = await Promise.all([contentP, api.startOrResumeSession(lessonId(), kind()), masteredP])
       const pkg = parseStudentPackage(content.content)
-      const preMastered = kind() === 'primary' ? await api.getMasteredItems(content.package_id).catch(() => []) : []
       const point = resumePoint(payload.sections)
       const f = createLessonFlow(pkg, { started: point.started, completed: point.completed })
       const first = initialSection(f, payload.session.current_section)

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { BaseButton, BaseInput } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 
-import { CharacterBubble, StampOption } from '@/design'
+import { CandyButton, CharacterBubble, StampOption } from '@/design'
 import type { ResolvedPlay } from '@/play/resolve-play'
 import {
   chooseOption,
@@ -85,7 +85,7 @@ async function send() {
     <div v-else-if="submitted" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Cevapların gönderildi.</p>
       <p v-if="sending" class="text-ink-soft">Puanın hesaplanıyor…</p>
-      <BaseButton v-else class="self-start" @click="emit('complete')">Devam et</BaseButton>
+      <CandyButton v-else class="self-start" @click="emit('complete')">Devam et</CandyButton>
     </div>
 
     <template v-else-if="view">

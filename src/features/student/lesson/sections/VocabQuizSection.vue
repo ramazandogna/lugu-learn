@@ -2,7 +2,7 @@
 import { computed, ref, shallowRef } from 'vue'
 import { BaseButton } from 'rei-kit'
 
-import { CharacterBubble } from '@/design'
+import { CandyButton, CharacterBubble } from '@/design'
 import type { Question, StampQuizSlots, TimeEscapeSlots } from '@/domain/content'
 import { MASTERY } from '@/engine/mastery'
 import { answerVocab, buildVocabQuestion, currentDirection, isVocabQuizDone, nextVocabQuestion, restoreVocabQuiz, snapshotVocabQuiz, startVocabQuiz, vocabQuizProgress } from '@/engine/vocab-quiz'
@@ -138,7 +138,7 @@ function afterResults() {
       <div v-else class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
         <p class="type-section text-ink">Tüm kelimeleri öğrendin!</p>
         <div class="flex flex-wrap gap-2">
-          <BaseButton size="lg" @click="emit('complete')">Devam et</BaseButton>
+          <CandyButton @click="emit('complete')">Devam et</CandyButton>
           <BaseButton variant="secondary" @click="again">Tekrar çöz</BaseButton>
         </div>
       </div>

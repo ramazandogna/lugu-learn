@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { BaseButton, ProgressBar } from 'rei-kit'
+import { ProgressBar } from 'rei-kit'
 
-import { CharacterBubble } from '@/design'
+import { CandyButton, CharacterBubble } from '@/design'
 import type { AssessmentScore } from '@/lib/database.types'
 
 import { stepsOf } from '../../play/tr'
@@ -31,6 +31,6 @@ const line = (p: number) =>
       </div>
     </dl>
     <CharacterBubble character="sasha" size="sm" live>{{ line(score.percent) }}</CharacterBubble>
-    <BaseButton class="self-start" size="lg" @click="emit('continue')">Devam et</BaseButton>
+    <CandyButton class="self-start" @click="emit('continue')">Devam et</CandyButton>
   </section>
 </template>

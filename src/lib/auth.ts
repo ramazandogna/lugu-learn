@@ -1,6 +1,7 @@
 import { computed, reactive, readonly } from 'vue'
 import type { Session } from '@supabase/supabase-js'
 import { setRememberMe } from 'rei-kit/supabase'
+import { clearCache } from './query-cache'
 import { db, supabase } from './supabase'
 
 export type Role = 'admin' | 'student'
@@ -36,9 +37,21 @@ const state = reactive<{ ready: boolean; session: Session | null; account: Accou
   account: null,
 })
 
-async function loadAccount(session: Session | null): Promise<Account | null> {
-  if (!session) return null
+/* sign-in and the auth listener both load the account for the same user within ms: share one read. */
+let accountLoad: { userId: string; promise: Promise<Account | null> } | null = null
+
+function loadAccount(session: Session | null): Promise<Account | null> {
+  if (!session) return Promise.resolve(null)
   const userId = session.user.id
+  if (accountLoad?.userId === userId) return accountLoad.promise
+  const promise = readAccount(userId).finally(() => {
+    if (accountLoad?.promise === promise) accountLoad = null
+  })
+  accountLoad = { userId, promise }
+  return promise
+}
+
+async function readAccount(userId: string): Promise<Account | null> {
   const { data: profile, error } = await db
     .from('profiles')
     .select('role, status, must_change_password')
@@ -66,6 +79,7 @@ async function loadAccount(session: Session | null): Promise<Account | null> {
 }
 
 async function apply(session: Session | null) {
+  if (session?.user.id !== state.session?.user.id) clearCache()
   const account = await loadAccount(session)
   // A paused/disabled account with a still-valid token would bounce between login and home.
   if (session && account && account.status !== 'active') {
@@ -119,6 +133,7 @@ export async function signIn(identifier: string, password: string, remember: boo
     await supabase.auth.signOut()
     return 'account_inactive'
   }
+  clearCache()
   state.session = data.session
   state.account = account
   return null
@@ -126,6 +141,7 @@ export async function signIn(identifier: string, password: string, remember: boo
 
 export async function signOut() {
   await supabase.auth.signOut()
+  clearCache()
   state.session = null
   state.account = null
 }

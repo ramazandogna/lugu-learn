@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { BaseButton } from 'rei-kit'
 
-import { CHARACTERS, CharacterBubble } from '@/design'
+import { CHARACTERS, CandyButton, CharacterBubble } from '@/design'
 import type { CharacterKey, ScrollStorySlots } from '@/domain/content'
 import {
   advanceScene,
@@ -188,7 +188,7 @@ const qProgress = computed(() => ({ done: run.question + (answered.value ? 1 : 0
 
     <div v-if="phase === 'done' || (completed && phase !== 'scenes' && !question)" class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Hikâyeyi tamamladın!</p>
-      <BaseButton class="self-start" :disabled="!finished" @click="emit('complete')">Devam et</BaseButton>
+      <CandyButton class="self-start" :disabled="!finished" @click="emit('complete')">Devam et</CandyButton>
     </div>
     <BaseButton v-else-if="completed" variant="quiet" class="self-start" @click="emit('complete')">Bu bölümden çık</BaseButton>
   </div>

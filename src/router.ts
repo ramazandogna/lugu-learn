@@ -103,5 +103,19 @@ router.beforeEach((to) => {
   return true
 })
 
+const STALE_CHUNK = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload CSS/i
+router.onError((err, to) => {
+  if (STALE_CHUNK.test(String((err as Error)?.message ?? err))) {
+    try {
+      const last = Number(sessionStorage.getItem('lugu:chunk-reload') ?? 0)
+      if (Date.now() - last < 30_000) return
+      sessionStorage.setItem('lugu:chunk-reload', String(Date.now()))
+    } catch {
+      /* no storage: reload once anyway */
+    }
+    window.location.assign(to.fullPath)
+  }
+})
+
 router.afterEach(createTitleGuard('Lugu'))
 router.afterEach(createRouteAnnouncer({ focus: 'main' }))

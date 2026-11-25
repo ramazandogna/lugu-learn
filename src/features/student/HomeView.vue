@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { BaseButton } from 'rei-kit'
 import { Clock, Compass, Map, Snowflake, WandSparkles } from 'lucide-vue-next'
 
-import { AmbientLayer, AvatarArt, EmptyScene, JarProgress, LoadingScene, LuguMark, LuguMascot, WorldBackground, unitThemeAttrs, useReducedMotion } from '@/design'
+import { AmbientLayer, AvatarArt, CandyButton, EmptyScene, JarProgress, LoadingScene, LuguMark, LuguMascot, WorldBackground, unitThemeAttrs, useReducedMotion } from '@/design'
 import type { Expression } from '@/design'
+
+import { prefetchLesson, prefetchMap } from '@/lib/api/student'
 
 import MyTasks from './components/MyTasks.vue'
 import StreakChain from './components/StreakChain.vue'
@@ -20,6 +22,24 @@ const { home, error, refresh, mainAssignment } = useStudentHome()
 const { streak, ready: progressReady } = useProgress()
 const reduced = useReducedMotion()
 onMounted(() => void refresh())
+
+/* Everything one tap away is warmed while the learner reads: lesson chunk, map chunk, lesson content, maps. */
+watch(
+  () => home.value?.assignments,
+  (list) => {
+    if (!list) return
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 200))
+    idle(() => {
+      void import('./lesson/LessonView.vue').catch(() => {})
+      void import('./MapView.vue').catch(() => {})
+    })
+    for (const a of list) {
+      if (a.current_lesson) prefetchLesson(a.current_lesson.id)
+      prefetchMap(a.id)
+    }
+  },
+  { immediate: true },
+)
 
 const name = computed(() => greetingName(home.value?.profile ?? null))
 const avatar = computed(() => {
@@ -113,9 +133,9 @@ const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : n
               <p class="type-small text-ink-soft">Her ders kavanozuna bir şeker ekler.</p>
             </JarProgress>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <BaseButton v-if="current && !paused" as="router-link" :to="`/ders/${current.id}`" size="lg" class="sm:min-w-60">
+              <CandyButton v-if="current && !paused" variant="wrapper" as="router-link" :to="`/ders/${current.id}`" class="sm:min-w-60">
                 {{ current.in_progress ? 'Devam et' : 'Derse başla' }}
-              </BaseButton>
+              </CandyButton>
               <BaseButton as="router-link" :to="`/harita/${mainAssignment.id}`" :variant="current && !paused ? 'secondary' : 'primary'" :size="current && !paused ? 'md' : 'lg'">
                 <Map :size="20" aria-hidden="true" /> Haritamı aç
               </BaseButton>
@@ -141,15 +161,23 @@ const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : n
 
       <section v-if="others.length" aria-labelledby="other-title" class="flex flex-col gap-3">
         <h2 id="other-title" class="type-section text-ink">Diğer programların</h2>
-        <RouterLink
-          v-for="a in others"
-          :key="a.id"
-          :to="`/harita/${a.id}`"
-          class="surface surface-interactive rounded-card flex min-h-11 items-center justify-between gap-3 p-4"
-        >
-          <span class="type-task text-ink">{{ a.curriculum.name }}</span>
-          <span class="text-ink-soft type-small">{{ a.lessons_completed }} / {{ a.lessons_total }}</span>
-        </RouterLink>
+        <ul class="flex flex-col gap-3">
+          <li v-for="a in others" :key="a.id" class="surface rounded-card flex flex-wrap items-center justify-between gap-3 p-4">
+            <div class="min-w-0">
+              <p class="type-task text-ink">{{ a.curriculum.name }}</p>
+              <p class="type-small text-ink-soft">
+                {{ a.lessons_completed }} / {{ a.lessons_total }} ders<template v-if="a.current_lesson && a.status !== 'paused'"> · Ders {{ a.current_lesson.sequence }}: {{ a.current_lesson.title }}</template
+                ><template v-else-if="a.status === 'paused'"> · duraklatıldı</template>
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <BaseButton v-if="a.current_lesson && a.status !== 'paused'" as="router-link" :to="`/ders/${a.current_lesson.id}`">
+                {{ a.current_lesson.in_progress ? 'Devam et' : 'Derse başla' }}
+              </BaseButton>
+              <BaseButton as="router-link" :to="`/harita/${a.id}`" variant="secondary"><Map :size="20" aria-hidden="true" /> Harita</BaseButton>
+            </div>
+          </li>
+        </ul>
       </section>
     </template>
 

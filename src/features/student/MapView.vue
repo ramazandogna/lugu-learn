@@ -11,8 +11,11 @@ import { friendlyMessage, getLearningMap } from '@/lib/api/student'
 import type { StudentLearningMap } from '@/lib/database.types'
 
 import { lessonRoute, lockedReason, toMapNodes } from './map'
+import { useStudentHome } from './useStudentHome'
 
 const router = useRouter()
+const { home } = useStudentHome()
+const programs = computed(() => (home.value?.assignments.length ?? 0) > 1 ? home.value!.assignments : [])
 const reduced = useReducedMotion()
 const route = useRoute()
 
@@ -89,6 +92,18 @@ function locked(lessonId: string) {
           <p class="type-small text-ink-soft">Bitirdiklerini istediğin zaman tekrar oynayabilirsin.<template v-if="next"> Önünde {{ next }} kilitli durak var.</template></p>
         </JarProgress>
       </header>
+      <nav v-if="programs.length" aria-label="Programların" class="flex flex-wrap gap-2">
+        <RouterLink
+          v-for="a in programs"
+          :key="a.id"
+          :to="`/harita/${a.id}`"
+          class="surface surface-interactive rounded-control focus-ring min-h-11 px-4 py-2"
+          :class="a.id === id ? 'border-primary border-2' : ''"
+          :aria-current="a.id === id ? 'page' : undefined"
+        >
+          <span class="type-task text-ink">{{ a.curriculum.name }}</span>
+        </RouterLink>
+      </nav>
       <CharacterBubble :character="character" size="sm">{{ guide }}</CharacterBubble>
       <div aria-live="polite">
         <CharacterBubble v-if="notice" :character="character" expression="thinking" size="sm">

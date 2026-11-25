@@ -12,6 +12,7 @@ import type {
   Tables,
   VocabDirection,
 } from '@/lib/database.types'
+import { cached, invalidate, prefetch } from '@/lib/query-cache'
 import { db } from '@/lib/supabase'
 
 import { ApiError, toApiError } from './errors'
@@ -46,8 +47,19 @@ async function run(p: PromiseLike<{ error: unknown }>): Promise<void> {
 /* ── home, map, content ─────────────────────────────────────────────── */
 
 export const getHome = () => unwrap(db.rpc('student_home'))
-export const getLearningMap = (assignmentId: string) => unwrap(db.rpc('student_learning_map', { assignment_id: assignmentId }))
-export const getLessonContent = (lessonId: string) => unwrap(db.rpc('student_lesson_content', { lesson_id: lessonId }))
+/* Read caches: the map is short-lived (a lesson start/finish invalidates it); a package's content is a published, immutable revision. */
+const MAP_TTL = 60_000
+const CONTENT_TTL = 10 * 60_000
+const mapKey = (assignmentId: string) => `map:${assignmentId}`
+const contentKey = (lessonId: string) => `content:${lessonId}`
+const fetchMap = (assignmentId: string) => unwrap(db.rpc('student_learning_map', { assignment_id: assignmentId }))
+const fetchContent = (lessonId: string) => unwrap(db.rpc('student_lesson_content', { lesson_id: lessonId }))
+
+export const getLearningMap = (assignmentId: string) => cached(mapKey(assignmentId), MAP_TTL, () => fetchMap(assignmentId))
+export const getLessonContent = (lessonId: string) => cached(contentKey(lessonId), CONTENT_TTL, () => fetchContent(lessonId))
+/** Warm the caches for the screens a learner is about to open. */
+export const prefetchMap = (assignmentId: string) => prefetch(mapKey(assignmentId), MAP_TTL, () => fetchMap(assignmentId))
+export const prefetchLesson = (lessonId: string) => prefetch(contentKey(lessonId), CONTENT_TTL, () => fetchContent(lessonId))
 
 /** Vocabulary ids of this package the learner has already mastered (primary sessions). */
 export async function getMasteredItems(packageId: string): Promise<string[]> {
@@ -68,7 +80,7 @@ export async function getQuestionAttempts(packageId: string, section?: Exclude<S
 /* ── session ────────────────────────────────────────────────────────── */
 
 export const startOrResumeSession = (lessonId: string, kind: SessionKind) =>
-  unwrap(db.rpc('start_or_resume_session', { lesson_id: lessonId, kind }))
+  unwrap(db.rpc('start_or_resume_session', { lesson_id: lessonId, kind })).finally(() => invalidate('map:'))
 
 export const saveSectionState = (sessionId: string, section: SectionKey, state: Json, activeSecondsDelta = 0) =>
   run(db.rpc('save_section_state', { session_id: sessionId, section, state, active_seconds_delta: Math.max(0, Math.min(600, Math.round(activeSecondsDelta))) }))
@@ -112,13 +124,20 @@ export const startBreak = (sessionId: string, afterSection: SectionKey, minutes:
 
 export const endBreak = (breakId: string) => unwrap(db.rpc('end_break', { break_id: breakId }))
 
-export const completeLesson = (sessionId: string) => unwrap(db.rpc('complete_lesson', { session_id: sessionId }))
+export const completeLesson = (sessionId: string) =>
+  unwrap(db.rpc('complete_lesson', { session_id: sessionId })).finally(() => {
+    invalidate('map:')
+    invalidate('history')
+    invalidate('tasks')
+  })
 
 /* ── profile & schools ──────────────────────────────────────────────── */
 
 export type School = Tables<'schools'>
 
-export async function getMyProfile(userId: string) {
+export const getMyProfile = (userId: string) => cached(`profile:${userId}`, 5 * 60_000, () => fetchMyProfile(userId))
+
+async function fetchMyProfile(userId: string) {
   const row = await unwrap(
     db
       .from('student_profiles')
@@ -152,7 +171,7 @@ export const updateMyProfile = (p: {
       school_id: p.schoolId ?? null,
       avatar_key: p.avatarKey ?? null,
     }),
-  )
+  ).finally(() => invalidate('profile:'))
 
 /* ── achievements & history ─────────────────────────────────────────── */
 
@@ -169,7 +188,9 @@ export async function getAchievements() {
   }
 }
 
-export async function getHistory() {
+export const getHistory = () => cached('history', 30_000, fetchHistory)
+
+async function fetchHistory() {
   // Lesson titles come from an RPC: students cannot read curriculum_lessons (it holds admin notes).
   const [rows, titles, completions, breaks] = await Promise.all([
     unwrap(
@@ -213,7 +234,7 @@ export const recordReviewAnswer = (sessionId: string, a: { packageId: string; it
 /* ── tasks ──────────────────────────────────────────────────────────── */
 
 /** The learner's tasks (cancelled ones are hidden), soonest due first. */
-export const getTasks = () => unwrap(db.rpc('student_tasks'))
+export const getTasks = () => cached('tasks', 30_000, () => unwrap(db.rpc('student_tasks')))
 
 export const setTaskStatus = (taskId: string, status: 'open' | 'in_progress' | 'done') =>
-  unwrap(db.rpc('student_set_task_status', { p_task_id: taskId, p_status: status }))
+  unwrap(db.rpc('student_set_task_status', { p_task_id: taskId, p_status: status })).finally(() => invalidate('tasks'))

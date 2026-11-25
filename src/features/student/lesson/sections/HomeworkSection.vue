@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { BaseButton } from 'rei-kit'
 
-import { CharacterBubble, JarProgress } from '@/design'
+import { CandyButton, CharacterBubble, JarProgress } from '@/design'
 import { answerStage, currentQuestion, homeworkProgress, isHomeworkDone, restoreHomework, revealHint, snapshotHomework, startHomework, type StageResult } from '@/engine/homework'
 import type { FillWorkshopSlots } from '@/domain/content'
 import type { ResolvedPlay } from '@/play/resolve-play'
@@ -116,7 +116,7 @@ const stampRight = computed(() => held.value !== null)
 
     <div v-else class="surface rounded-card flex flex-col gap-3 p-4 sm:p-6">
       <p class="type-section text-ink">Ödevini tamamladın!</p>
-      <BaseButton class="self-start" @click="emit('complete')">Devam et</BaseButton>
+      <CandyButton class="self-start" @click="emit('complete')">Devam et</CandyButton>
     </div>
   </div>
 </template>
