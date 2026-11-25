@@ -641,6 +641,21 @@ button.absolute.end-1.size-9[aria-pressed] {
   --unit-wash: #cdebfa;
 }
 
+[data-unit='u4-school-bell'] {
+  --unit-ink-soft: #44634c;
+  --unit-hair: #c5e0c0;
+  --unit-bg: #eef7ea;
+  --unit-surface: #ffffff;
+  --unit-ink: #17321f;
+  --unit-primary-fill: #2c7a3c;
+  --unit-primary-ink: #276b35;
+  --unit-on-primary: #ffffff;
+  --unit-accent: #ffd166;
+  --unit-extra1: #ff9f68;
+  --unit-extra2: #8fd3e8;
+  --unit-wash: #ddf0d6;
+}
+
 /* The user's `.dark` is its own axis: Ü2 is already dark and stays; Ü1/Ü3 keep
    the dark grounds and only lighten their primary. */
 .dark [data-unit='u1-morning'] {
@@ -669,6 +684,18 @@ button.absolute.end-1.size-9[aria-pressed] {
   --unit-wash: #241e44;
   --unit-ink-soft: #b4abc8;
   --unit-hair: #342d52;
+}
+
+.dark [data-unit='u4-school-bell'] {
+  --unit-ink-soft: #b4abc8;
+  --unit-hair: #342d52;
+  --unit-bg: #15112a;
+  --unit-surface: #1f1a38;
+  --unit-ink: #f3eefc;
+  --unit-primary-fill: #7fd08b;
+  --unit-primary-ink: #7fd08b;
+  --unit-on-primary: #15112a;
+  --unit-wash: #241e44;
 }
 
 [data-unit]:not([data-unit='base']),

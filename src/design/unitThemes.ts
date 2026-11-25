@@ -1,5 +1,5 @@
 /** Unit themes (design-bible B). Colour, texture and ambient only. */
-export const UNIT_THEME_IDS = ['base', 'u1-morning', 'u2-night-oven', 'u3-neon-street'] as const
+export const UNIT_THEME_IDS = ['base', 'u1-morning', 'u2-night-oven', 'u3-neon-street', 'u4-school-bell'] as const
 export type UnitThemeId = (typeof UNIT_THEME_IDS)[number]
 
 export const UNIT_THEMES: Record<UnitThemeId, { name: string; ambient: 'piko' | 'gear' | 'steam' | 'tram' }> = {
@@ -7,6 +7,7 @@ export const UNIT_THEMES: Record<UnitThemeId, { name: string; ambient: 'piko' | 
   'u1-morning': { name: 'Sabah Şekeri', ambient: 'gear' },
   'u2-night-oven': { name: 'Gece Fırını', ambient: 'steam' },
   'u3-neon-street': { name: 'Neon Şeker Sokağı', ambient: 'tram' },
+  'u4-school-bell': { name: 'Okul Zili', ambient: 'piko' },
 }
 
 export function isUnitThemeId(v: unknown): v is UnitThemeId {

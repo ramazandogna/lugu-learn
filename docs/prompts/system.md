@@ -31,7 +31,7 @@ Play layer (only when the output schema contains `meta.themeId` or `play`; other
 - Fixed numbers, never change: time bank 10 s, +3 s per correct, cap 10 s; hint ladder; run-streak multiplier cap x3; mastery = 2 correct answers; 7-section order.
 - Limits: scroll-story story mode 1-6 steps, vocab-reveal 1-8 steps, max 2 sentences per step, max 12 words per sentence; tap-guide 1-6 guides, warmup 4-5 items, round 8-10 items; fill-workshop 1-6 items, at most 3 blanks and 8 chips per sentence; time-escape pool 3-20 refs; imagine 6-10 chips.
 - Every ref (gate, vocabRefs, pool, questions, items.ref, stepRef) must be an id that already exists in this package. Error feedback is gentle ("Yaklaştın!"), never "yanlış" or "hata yaptın".
-- themeId: base | u1-morning | u2-night-oven | u3-neon-street, in unit order; a new theme needs a new token set, so reuse the reference unit's.
+- themeId: base | u1-morning | u2-night-oven | u3-neon-street | u4-school-bell, in unit order; a new theme needs a new token set, so reuse the reference unit's.
 ```
 
 ## INSIGHTS_SYSTEM

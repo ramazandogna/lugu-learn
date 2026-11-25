@@ -171,7 +171,7 @@ export type SectionKey = z.infer<typeof SectionKey>
 export const TEMPLATE_IDS = ['scroll-story', 'tap-guide', 'time-escape', 'fill-workshop', 'stamp-quiz', 'imagine', 'inspire-worlds'] as const
 export const TemplateId = z.enum(TEMPLATE_IDS)
 export type TemplateId = z.infer<typeof TemplateId>
-export const THEME_IDS = ['base', 'u1-morning', 'u2-night-oven', 'u3-neon-street'] as const
+export const THEME_IDS = ['base', 'u1-morning', 'u2-night-oven', 'u3-neon-street', 'u4-school-bell'] as const
 export const ThemeId = z.enum(THEME_IDS)
 export type ThemeId = z.infer<typeof ThemeId>
 

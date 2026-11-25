@@ -88,26 +88,27 @@ Her tema 3 primary rolü + zemin rolleri taşır; metin zemini yalnız `--bg/--s
 Eşleme: `--color-primary` := `--primary-ink` (metin/kenar kullanımları), `--color-primary-fill` yeni; BaseButton primary dolgusu `--primary-fill`, metni `--on-primary`. Durum renkleri (success/danger/warning/info/retry) üniteden bağımsız, temalanmaz.
 
 ### B2. Token setleri (hex; oranlar hesaplandı, uygulayıcı `checkStyling` ile bir kez daha doğrular)
-| token | Temel (kit varsayılan) | Ü1 "Sabah Şekeri" | Ü2 "Gece Fırını" | Ü3 "Neon Şeker Sokağı" |
-|---|---|---|---|---|
-| `--bg` (canvas) | #FDF7EE | #FFF1F5 | #1F1830 | #E4F4FF |
-| `--surface` | #FFFFFF | #FFFFFF | #2E2445 | #FFFFFF |
-| `--ink` | #251D3A | #4A1D35 | #FFF3E0 | #12344D |
-| `--primary-fill` | #43399E | #B8326A | #FFB347 | #177A86 |
-| `--primary-ink` | #43399E | #B8326A | #FFB347 | #136E79 |
-| `--on-primary` | #FFFFFF | #FFFFFF | #1F1830 | #FFFFFF |
-| `--accent` (dekor) | #F08159 | #FFB3CF | #F7D9A8 | #FF8FB1 |
-| `--extra1` | #F6B92B | #FFE27A | #6B3F2A | #FFD93D |
-| `--extra2` | #EFEBFB (wash) | #BFEBDD | #C9B8FF | #7A6CFF |
-| `--wash` | #EFEBFB | #FFE3EC | #3A2E58 | #CDEBFA |
-| doku (%6-8, metin altında yok) | yok | pudra noktası + soluk dişli | un tozu + ahşap damar | tente şerit + asfalt parıltısı |
-| ambient (tek) | Piko süzülme | dönen dişli | yükselen buhar | tramvay (60 sn) |
+| token | Temel (kit varsayılan) | Ü1 "Sabah Şekeri" | Ü2 "Gece Fırını" | Ü3 "Neon Şeker Sokağı" | Ü4 "Okul Zili" |
+|---|---|---|---|---|---|
+| `--bg` (canvas) | #FDF7EE | #FFF1F5 | #1F1830 | #E4F4FF | #EEF7EA |
+| `--surface` | #FFFFFF | #FFFFFF | #2E2445 | #FFFFFF | #FFFFFF |
+| `--ink` | #251D3A | #4A1D35 | #FFF3E0 | #12344D | #17321F |
+| `--primary-fill` | #43399E | #B8326A | #FFB347 | #177A86 | #2C7A3C |
+| `--primary-ink` | #43399E | #B8326A | #FFB347 | #136E79 | #276B35 |
+| `--on-primary` | #FFFFFF | #FFFFFF | #1F1830 | #FFFFFF | #FFFFFF |
+| `--accent` (dekor) | #F08159 | #FFB3CF | #F7D9A8 | #FF8FB1 | #FFD166 |
+| `--extra1` | #F6B92B | #FFE27A | #6B3F2A | #FFD93D | #FF9F68 |
+| `--extra2` | #EFEBFB (wash) | #BFEBDD | #C9B8FF | #7A6CFF | #8FD3E8 |
+| `--wash` | #EFEBFB | #FFE3EC | #3A2E58 | #CDEBFA | #DDF0D6 |
+| doku (%6-8, metin altında yok) | yok | pudra noktası + soluk dişli | un tozu + ahşap damar | tente şerit + asfalt parıltısı | tebeşir tozu + defter çizgisi |
+| ambient (tek) | Piko süzülme | dönen dişli | yükselen buhar | tramvay (60 sn) | Piko süzülme (mevcut, yeni animasyon yok) |
+Ü4 "Okul Zili" (okul hayatı): AA ink/bg 12.7, ink/surface 13.9, primary-ink/bg 5.9, beyaz/fill 5.3; accent/extra1/extra2 yalnız dekor. `.dark`: primary #7FD08B (zemin #15112A üstünde 9.9).
 AA notu: Ü1 ink/bg 12.6, primary-ink/bg 5.17, beyaz/fill 5.67; vurgu çizgisi #E8508A yalnız dekor (3.2). Ü2 ink/bg 15.6, ink/surface 13.2, primary/bg 9.57, on-primary/fill 9.57; accent üstüne metin YOK. Ü3 ink/bg 11.5, primary-ink/bg 5.29, beyaz/fill 5.04; #2BB3C0 yalnız dekor. Temel: ink/canvas 15.0. `--wash` oranları metin taşımadığı için serbest; wash üstüne metin gelirse `--ink`.
 `.dark` ekseni ayrı: ünite teması `data-unit`, `.dark` bağımsız. Ü2 zaten koyu; kullanıcı `.dark` seçmişse Ü2 değişmez (ek token yok). Ü1/Ü3 + `.dark`: temel `.dark` zeminleri kullanılır, yalnız `--primary-*` ünite rengine açık varyantla (Ü1 #FF8FBA, Ü3 #5FD0DC; oran >= 4.5 doğrula).
 Ünite teması yalnız renk + doku + ambient; radius/boşluk/tipografi DEĞİŞMEZ.
 
 ### B3. Seçim mekanizması
-- Veri: `LessonPackage.meta.themeId: 'base'|'u1-morning'|'u2-night-oven'|'u3-neon-street'` (opsiyonel; yoksa `meta.theme` serbest metninden DEĞİL, `base`). Ünite satırında `unit.theme_id` (varsa) paket temasını geçersiz kılar.
+- Veri: `LessonPackage.meta.themeId: 'base'|'u1-morning'|'u2-night-oven'|'u3-neon-street'|'u4-school-bell'` (opsiyonel; yoksa `meta.theme` serbest metninden DEĞİL, `base`). Ünite satırında `unit.theme_id` (varsa) paket temasını geçersiz kılar.
 - Uygulama: `<StudentShell>` ve ders oynatıcı kökü `data-unit="<id>"` yazar (`unitThemeAttrs(themeId)` yardımcısı `src/design/unitThemes.ts`). CSS: `[data-unit="u1-morning"]{--color-canvas:#FFF1F5; ...}` (B2 tablosu birebir) `main.css`'te `@layer theme`.
 - Karakter teması `[data-character]` renk rollerini ezmeye devam eder; öncelik: ünite teması > karakter teması yalnız `--char-*` rozetleri için (ünite zeminini karakter bozmaz). Uygulayıcı çakışmayı `characterThemeStyle` çıktısından `--color-primary*` kaldırarak çözer.
 - Harita ve ana sayfa ünite başlığı kendi `data-unit` alt ağacıdır; ekranlar arası geçişte `--duration-slower` ile zemin crossfade.
