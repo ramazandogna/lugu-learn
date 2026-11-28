@@ -1,75 +1,36 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import { Plus } from 'lucide-vue-next'
-import { BaseBadge, BaseButton } from 'rei-kit'
-import { DataTable, type DataColumn } from 'rei-kit/web'
-import { listCurricula, type CurriculumListItem } from '@/lib/api/admin'
+import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { BaseButton } from 'rei-kit'
 import LoadState from '../components/LoadState.vue'
-import { formatDate } from '../lib/format'
-import { useLoad } from '../lib/use-load'
-import CurriculumDialog from './CurriculumDialog.vue'
 import PageHeader from '../components/AdminPageHeader.vue'
+import { useLoad } from '../lib/use-load'
+import AssignToStudentsDialog from './AssignToStudentsDialog.vue'
+import { listCurriculumSummaries } from './data'
 
-const router = useRouter()
-const state = useLoad(listCurricula)
-const creating = ref(false)
-
-const STATUS: Record<CurriculumListItem['status'], string> = { draft: 'Taslak', active: 'Etkin', archived: 'Arşiv' }
-const KIND: Record<CurriculumListItem['kind'], string> = { standard: 'Standart', exam_prep: 'Sınava hazırlık', remedial: 'Telafi', custom: 'Özel' }
-
-type Row = { id: string; name: string; grade: number; kind: string; versions: string; status: CurriculumListItem['status']; updated: string; description: string }
-const rows = computed<Row[]>(() =>
-  (state.data.value ?? []).map((c) => ({
-    id: c.id,
-    name: c.name,
-    description: c.description ?? '',
-    grade: c.grade ?? 0,
-    kind: KIND[c.kind],
-    versions: c.publishedVersion ? `${c.versionCount} sürüm · yayında s${c.publishedVersion}` : `${c.versionCount} sürüm · yayında yok`,
-    status: c.status,
-    updated: formatDate(c.updated_at),
-  })),
-)
-const columns: DataColumn<Row>[] = [
-  { key: 'name', label: 'Müfredat', sortable: true },
-  { key: 'grade', label: 'Sınıf', sortable: true, align: 'end' },
-  { key: 'kind', label: 'Tür' },
-  { key: 'versions', label: 'Sürümler' },
-  { key: 'status', label: 'Durum' },
-  { key: 'updated', label: 'Güncelleme', nowrap: true },
-]
+const state = useLoad(listCurriculumSummaries)
+const assignId = ref<string | null>(null)
+const assigning = ref(false)
+function assign(versionId: string) {
+  assignId.value = versionId
+  assigning.value = true
+}
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <PageHeader title="Müfredatlar" as="h1">
-      <template #right>
-        <BaseButton class="whitespace-nowrap" @click="creating = true"><Plus class="size-4" aria-hidden="true" /> Yeni müfredat</BaseButton>
-      </template>
-    </PageHeader>
-    <LoadState
-      :loading="state.loading.value"
-      :error="state.error.value"
-      :empty="!rows.length"
-      empty-title="Henüz müfredat yok"
-      empty-description="Bir müfredat oluşturun, derslerini ve kaynaklarını ekleyin; AI her ders için içerik taslağı hazırlayabilir."
-      @retry="state.reload"
-    >
-      <template #emptyAction><BaseButton @click="creating = true">Yeni müfredat</BaseButton></template>
-      <DataTable :columns="columns" :rows="rows" caption="Müfredatlar" caption-hidden row-key="id">
-        <template #name="{ row }">
-          <RouterLink :to="{ name: 'admin-curriculum', params: { curriculumId: row.id } }" class="focus-ring rounded-cell font-semibold hover:underline">
-            {{ row.name }}
-          </RouterLink>
-          <p v-if="row.description" class="text-ink-soft line-clamp-1 type-small">{{ row.description }}</p>
-        </template>
-        <template #grade="{ row }">{{ row.grade || '—' }}</template>
-        <template #status="{ row }">
-          <BaseBadge :tone="row.status === 'active' ? 'success' : 'neutral'">{{ STATUS[row.status] }}</BaseBadge>
-        </template>
-      </DataTable>
+    <PageHeader title="Müfredat" as="h1" />
+    <LoadState :loading="state.loading.value" :error="state.error.value" :empty="!state.data.value?.length" empty-title="Henüz müfredat yok" @retry="state.reload">
+      <ul class="flex flex-col gap-2">
+        <li v-for="c in state.data.value" :key="c.id" class="surface rounded-card flex flex-wrap items-center gap-3 p-3">
+          <div class="min-w-48 flex-1">
+            <RouterLink :to="{ name: 'admin-curriculum', params: { curriculumId: c.id } }" class="focus-ring rounded-cell font-semibold hover:underline">{{ c.name }}</RouterLink>
+            <p class="text-ink-soft type-small">sürüm {{ c.version ?? '—' }} · {{ c.lessonCount }} ders</p>
+          </div>
+          <BaseButton v-if="c.publishedVersionId" size="sm" @click="assign(c.publishedVersionId)">Öğrencilere ata</BaseButton>
+        </li>
+      </ul>
     </LoadState>
-    <CurriculumDialog v-model="creating" @saved="(id: string) => router.push({ name: 'admin-curriculum', params: { curriculumId: id } })" />
+    <AssignToStudentsDialog v-if="assigning && assignId" v-model="assigning" :version-id="assignId" />
   </div>
 </template>

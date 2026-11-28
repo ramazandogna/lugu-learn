@@ -5,6 +5,7 @@ import { listSpeakingSessions, type StudentSummary } from '@/lib/api/admin'
 import LoadState from '../../components/LoadState.vue'
 import ScheduleSpeakingDialog from '../../coaching/ScheduleSpeakingDialog.vue'
 import SpeakingSessionList from '../../coaching/SpeakingSessionList.vue'
+import StudentTasksTab from './StudentTasksTab.vue'
 import { useLoad } from '../../lib/use-load'
 
 const { student } = defineProps<{ student: StudentSummary }>()
@@ -13,6 +14,7 @@ const scheduling = ref(false)
 </script>
 
 <template>
+  <div class="flex flex-col gap-6">
   <BaseCard as="section" aria-labelledby="sp-title">
     <template #head>
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -25,4 +27,9 @@ const scheduling = ref(false)
     </LoadState>
     <ScheduleSpeakingDialog v-model="scheduling" :students="[student]" :fixed-student-id="student.id" @scheduled="sessions.reload" />
   </BaseCard>
+  <section aria-labelledby="sp-tasks" class="flex flex-col gap-3">
+    <h2 id="sp-tasks" class="type-body font-semibold">Görevler</h2>
+    <StudentTasksTab :student-id="student.id" />
+  </section>
+  </div>
 </template>

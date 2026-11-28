@@ -5,13 +5,24 @@
  * targets were reached, what was talked about). Answers "what have we covered, and what did it bring?".
  */
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { Check, Lock, MessagesSquare, Play, Star } from 'lucide-vue-next'
+import { Check, Lock, Play } from 'lucide-vue-next'
 import { BaseBadge, BaseCard, BaseSwitch } from 'rei-kit'
-import { BaseDisclosure } from 'rei-kit/web'
 import { listAssignments, listSpeakingSessions, noteTargets, speakingNotesFor, type LearningData } from '@/lib/api/admin'
 import LoadState from '../../components/LoadState.vue'
-import { formatDate, formatPercent } from '../../lib/format'
+import { formatDate, sectionLabel } from '../../lib/format'
+import {
+  LEVEL_ICON,
+  LEVEL_TONE,
+  accuracyLevel,
+  compareAttempts,
+  hintLevel,
+  learned,
+  scoreLevel,
+  struggles,
+  teacherSentence,
+  timeLevel,
+} from '../../lib/insights'
+import { mergedLabels } from '../../lib/package-labels'
 import { useLoad } from '../../lib/use-load'
 
 const { studentId, data } = defineProps<{ studentId: string; data: LearningData }>()
@@ -32,7 +43,8 @@ const MARK = {
   locked: { label: 'Kilitli', tone: 'neutral' },
 } as const
 
-const minutes = (s: number) => (s >= 60 ? `${Math.round(s / 60)} dk` : s > 0 ? '<1 dk' : '—')
+const labels = computed(() => mergedLabels([...data.packages.values()].map((p) => p.content)))
+const sessionById = computed(() => new Map(data.sessions.map((s) => [s.id, s])))
 
 const programs = computed(() => {
   const d = state.data.value
@@ -46,44 +58,68 @@ const programs = computed(() => {
         const isOpen = a.assignment.open_lesson_ids === null || a.assignment.open_lesson_ids.includes(l.id)
         const mark: Mark = done ? 'done' : l.id === a.assignment.current_lesson_id && isOpen ? 'current' : isOpen ? 'open' : 'locked'
         const completion = data.completions.filter((c) => c.lesson_id === l.id).at(-1)
-        const summary = (completion?.summary ?? {}) as { stars?: number; assessment_percent?: number | null }
-        const seconds = data.sessions.filter((s) => s.lesson_id === l.id).reduce((n, s) => n + s.active_seconds, 0)
-        const attempts = data.attempts.filter((x) => lessonOfSession.get(x.session_id) === l.id)
+        const summary = (completion?.summary ?? {}) as { assessment_percent?: number | null }
         const pkgIds = new Set([...data.packages].filter(([, p]) => p.lessonId === l.id).map(([id]) => id))
         const words = data.mastery.filter((m) => pkgIds.has(m.package_id))
         const content = [...data.packages.values()].find((p) => p.lessonId === l.id)?.content as { meta?: { objectives?: { text: string }[] } } | undefined
         const talks = d.speaking.filter((s) => s.lesson_id === l.id)
         const talkNotes = d.notes.filter((n) => talks.some((s) => s.id === n.speaking_session_id))
         const targets = talkNotes.flatMap((n) => noteTargets(n))
+
+        const results = data.assessments
+          .filter((a) => lessonOfSession.get(a.session_id) === l.id)
+          .sort((x, y) => x.submitted_at.localeCompare(y.submitted_at))
+        const last = results.at(-1)
+        const prev = results.at(-2)
+        const snap = (r: typeof last) => ({ percent: r ? r.percent : null, activeSec: r ? (sessionById.value.get(r.session_id)?.active_seconds ?? null) : null })
+        const lessonAttempts = data.attempts.filter((x) => lessonOfSession.get(x.session_id) === l.id)
+        const used = (last ? lessonAttempts.filter((x) => x.session_id === last.session_id) : lessonAttempts).map((x) => ({
+          section: x.section,
+          attemptNo: x.attempt_no,
+          correct: x.correct,
+          hintUsed: x.hint_used,
+        }))
+        const percent = last ? last.percent : (summary.assessment_percent ?? null)
+        const score = scoreLevel(percent)
+        const accuracy = accuracyLevel(used)
+        const time = timeLevel(last ? snap(last).activeSec : null, data.lessons.get(l.id)?.estimatedMinutes)
+        const hint = hintLevel(used)
+        const comparison = compareAttempts(prev ? snap(prev) : null, snap(last))
+        const hard = struggles({
+          attempts: used,
+          vocab: words.map((m) => ({ label: labels.value.vocab.get(m.item_id) ?? m.item_id, incorrectCount: m.incorrect_count, mastered: !!m.mastered_at })),
+        })
+        const got = learned({
+          masteredWords: words.filter((m) => m.mastered_at).map((m) => labels.value.vocab.get(m.item_id) ?? m.item_id),
+          metTargets: targets.filter((t) => t.result === 'met').map((t) => t.text),
+          objectives: content?.meta?.objectives?.map((o) => o.text) ?? [],
+        })
+        const sectionName = hard.section ? sectionLabel(hard.section as never) : null
+        const sentence = last || used.length ? teacherSentence({ percent, hint, time, comparison, sectionName, words: hard.words }) : null
+        const indicators = [
+          { key: 'score', title: 'Puan', ind: score },
+          { key: 'acc', title: 'İlk deneme', ind: accuracy },
+          { key: 'time', title: 'Süre', ind: time },
+          { key: 'hint', title: 'İpucu', ind: hint },
+        ]
         return {
           lesson: l,
           mark,
-          stars: summary.stars ?? null,
-          percent: summary.assessment_percent ?? null,
           completedAt: completion?.completed_at ?? null,
-          time: minutes(seconds),
-          accuracy: attempts.length ? attempts.filter((x) => x.correct).length / attempts.length : null,
-          words: { total: words.length, mastered: words.filter((m) => m.mastered_at).length },
-          objectives: content?.meta?.objectives?.map((o) => o.text) ?? [],
-          talks: talks.map((s) => ({ id: s.id, at: s.started_at ?? s.planned_at, topics: talkNotes.find((n) => n.speaking_session_id === s.id)?.topics ?? null })),
-          targets: { total: targets.length, met: targets.filter((t) => t.result === 'met').length, partly: targets.filter((t) => t.result === 'partly').length, list: targets },
-          touched: done || mark === 'current' || seconds > 0 || talks.length > 0,
+          indicators,
+          comparison: last ? comparison : null,
+          sentence,
+          hard: { section: sectionName, percent: hard.sectionPercent, words: hard.words },
+          got,
+          talks: talks.length,
+          touched: done || mark === 'current' || used.length > 0 || talks.length > 0,
         }
       })
     return { id: a.assignment.id, name: a.curriculumName, lessons }
   })
 })
 const visible = (rows: (typeof programs.value)[number]['lessons']) => (showAll.value ? rows : rows.filter((r) => r.touched))
-const totals = computed(() => {
-  const rows = programs.value.flatMap((p) => p.lessons)
-  const targets = rows.reduce((n, r) => n + r.targets.total, 0)
-  return {
-    talks: state.data.value?.speaking.filter((s) => s.status === 'ended').length ?? 0,
-    targets,
-    met: rows.reduce((n, r) => n + r.targets.met, 0),
-  }
-})
-const TARGET_LABEL = { met: 'Kazanıldı', partly: 'Kısmen', not: 'Henüz değil' } as const
+const talksTotal = computed(() => state.data.value?.speaking.filter((s) => s.status === 'ended').length ?? 0)
 </script>
 
 <template>
@@ -91,11 +127,8 @@ const TARGET_LABEL = { met: 'Kazanıldı', partly: 'Kısmen', not: 'Henüz deği
     <template #head>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 id="journey-title" class="type-body font-semibold">Ders ders yolculuk</h2>
-          <p class="text-ink-soft type-small">
-            Her ders: ne öğretiyor, nasıl geçti, üzerine kaç konuşma yaptık.
-            <template v-if="totals.talks"> Toplam {{ totals.talks }} konuşma oturumu<template v-if="totals.targets"> · {{ totals.targets }} hedefin {{ totals.met }}'i kazanıldı</template>.</template>
-          </p>
+          <h2 id="journey-title" class="type-body font-semibold">Ders geçmişi</h2>
+          <p v-if="talksTotal" class="text-ink-soft type-small">{{ talksTotal }} konuşma oturumu yapıldı.</p>
         </div>
         <BaseSwitch v-model="showAll" label="Başlanmamış dersleri de göster" />
       </div>
@@ -114,45 +147,28 @@ const TARGET_LABEL = { met: 'Kazanıldı', partly: 'Kısmen', not: 'Henüz deği
               <span class="type-body text-ink min-w-0 flex-1 font-semibold">{{ r.lesson.sequence }}. {{ r.lesson.title }}</span>
               <BaseBadge :tone="MARK[r.mark].tone">{{ MARK[r.mark].label }}</BaseBadge>
             </div>
-            <dl class="type-small text-ink-soft mt-2 grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-5">
-              <div><dt class="sr-only">Yıldız</dt><dd class="flex items-center gap-1"><Star :size="14" aria-hidden="true" /> {{ r.stars !== null ? `${r.stars}/3` : '—' }}</dd></div>
-              <div><dt class="inline">Puan </dt><dd class="text-ink inline font-semibold">{{ r.percent !== null ? `%${Math.round(r.percent)}` : '—' }}</dd></div>
-              <div><dt class="inline">Süre </dt><dd class="text-ink inline font-semibold">{{ r.time }}</dd></div>
-              <div><dt class="inline">Doğruluk </dt><dd class="text-ink inline font-semibold">{{ formatPercent(r.accuracy) }}</dd></div>
-              <div><dt class="inline">Kelime </dt><dd class="text-ink inline font-semibold">{{ r.words.total ? `${r.words.mastered}/${r.words.total}` : '—' }}</dd></div>
-            </dl>
-            <p v-if="r.completedAt" class="type-small text-ink-soft mt-1">Bitirdiği gün: {{ formatDate(r.completedAt) }}</p>
-            <BaseDisclosure v-if="r.objectives.length || r.talks.length" class="mt-2" :heading-level="4"
-              :title="`Ne öğrendik${r.talks.length ? ` · ${r.talks.length} konuşma${r.targets.total ? `, ${r.targets.total} hedefin ${r.targets.met}'i kazanıldı` : ''}` : ''}`">
-              <div class="flex flex-col gap-3">
-                <div v-if="r.objectives.length">
-                  <p class="type-small text-ink font-semibold">Dersin kazanımları</p>
-                  <ul class="type-small text-ink-soft list-disc ps-5">
-                    <li v-for="o in r.objectives" :key="o">{{ o }}</li>
-                  </ul>
-                </div>
-                <div v-if="r.targets.total">
-                  <p class="type-small text-ink font-semibold">Konuşma hedefleri</p>
-                  <ul class="type-small flex flex-col gap-1">
-                    <li v-for="(t, i) in r.targets.list" :key="i" class="flex flex-wrap items-center gap-2">
-                      <BaseBadge :tone="t.result === 'met' ? 'success' : t.result === 'partly' ? 'warning' : 'neutral'">{{ t.result ? TARGET_LABEL[t.result] : 'Değerlendirilmedi' }}</BaseBadge>
-                      <span class="text-ink">{{ t.text }}</span>
-                    </li>
-                  </ul>
-                </div>
-                <div v-if="r.talks.length">
-                  <p class="type-small text-ink font-semibold">Konuşma oturumları</p>
-                  <ul class="type-small flex flex-col gap-1">
-                    <li v-for="s in r.talks" :key="s.id">
-                      <RouterLink class="focus-ring rounded-cell text-primary inline-flex min-h-10 items-center gap-1 hover:underline" :to="{ name: 'admin-speaking-session', params: { sessionId: s.id } }">
-                        <MessagesSquare :size="14" aria-hidden="true" /> {{ s.at ? formatDate(s.at) : 'Tarihsiz' }}
-                      </RouterLink>
-                      <p v-if="s.topics" class="text-ink-soft line-clamp-2">{{ s.topics }}</p>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </BaseDisclosure>
+            <ul v-if="r.indicators.some((i) => i.ind.level !== 'yok')" class="mt-2 flex flex-wrap gap-2">
+              <li v-for="i in r.indicators" :key="i.key">
+                <BaseBadge :tone="LEVEL_TONE[i.ind.level]">
+                  <component :is="LEVEL_ICON[i.ind.level]" :size="12" class="me-1 inline" aria-hidden="true" />{{ i.title }} {{ i.ind.value }} · {{ i.ind.label }}
+                </BaseBadge>
+              </li>
+            </ul>
+            <p v-else class="type-small text-ink-soft mt-2">Henüz ölçülecek veri yok.</p>
+            <p v-if="r.comparison" class="type-small text-ink-soft mt-1">{{ r.comparison.text }}<template v-if="r.completedAt"> · {{ formatDate(r.completedAt) }}</template></p>
+            <p v-if="r.sentence" class="type-small text-ink mt-2"><span class="font-semibold">Öğretmen notu:</span> {{ r.sentence }}</p>
+            <p v-if="r.hard.section || r.hard.words.length" class="type-small mt-1">
+              <span class="text-warning-ink font-semibold">Zorlandığı yerler:</span>
+              <span class="text-ink-soft">
+                <template v-if="r.hard.section"> {{ r.hard.section }} (ilk deneme %{{ r.hard.percent }})</template><template v-if="r.hard.section && r.hard.words.length"> · </template><template v-if="r.hard.words.length"> kelimeler: {{ r.hard.words.join(', ') }}</template>
+              </span>
+            </p>
+            <p v-if="r.got.words.length || r.got.targets.length || r.got.objectives.length" class="type-small mt-1">
+              <span class="text-positive font-semibold">Öğrendikleri:</span>
+              <span class="text-ink-soft">
+                {{ [r.got.words.length ? `${r.got.words.length} kelime (${r.got.words.slice(0, 5).join(', ')}${r.got.words.length > 5 ? '…' : ''})` : null, r.got.targets.length ? `konuşma hedefi: ${r.got.targets.join('; ')}` : null, r.got.objectives.length ? `kazanım: ${r.got.objectives.join('; ')}` : null].filter(Boolean).join(' · ') }}
+              </span>
+            </p>
           </li>
         </ol>
       </div>

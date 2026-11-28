@@ -27,16 +27,16 @@ const student: RouteRecordRaw[] = [
 ]
 
 const admin: RouteRecordRaw[] = [
-  { path: '', name: 'admin-dashboard', component: () => import('./features/admin/DashboardView.vue'), meta: { title: 'Panel' } },
+  { path: '', name: 'admin-dashboard', component: () => import('./features/admin/DashboardView.vue'), meta: { title: 'Bugün' } },
   { path: 'ogrenciler', name: 'admin-students', component: () => import('./features/admin/students/StudentsView.vue'), meta: { title: 'Öğrenciler' } },
   { path: 'ogrenciler/:studentId', name: 'admin-student', component: () => import('./features/admin/students/StudentProfileView.vue'), meta: { title: 'Öğrenci profili' } },
-  { path: 'mufredatlar', name: 'admin-curricula', component: () => import('./features/admin/curricula/CurriculaView.vue'), meta: { title: 'Müfredatlar' } },
+  { path: 'mufredatlar', name: 'admin-curricula', component: () => import('./features/admin/curricula/CurriculaView.vue'), meta: { title: 'Müfredat' } },
   { path: 'mufredatlar/:curriculumId', name: 'admin-curriculum', component: () => import('./features/admin/curricula/CurriculumView.vue'), meta: { title: 'Müfredat' } },
-  { path: 'dersler/:lessonId/test', name: 'admin-lesson-preview', component: () => import('./features/admin/content/LessonPreviewView.vue'), meta: { title: 'Dersi test et' } },
+  { path: 'dersler/:lessonId/test', name: 'admin-lesson-preview', component: () => import('./features/admin/content/LessonPreviewView.vue'), meta: { title: 'Dersi dene' } },
   { path: 'dersler/:lessonId', name: 'admin-lesson', component: () => import('./features/admin/content/LessonContentView.vue'), meta: { title: 'Ders içeriği' } },
-  { path: 'analitik', name: 'admin-analytics', component: () => import('./features/admin/analytics/AnalyticsView.vue'), meta: { title: 'Öğrenme analitiği' } },
-  { path: 'akademik', name: 'admin-academic', component: () => import('./features/admin/academic/AcademicView.vue'), meta: { title: 'Akademik takip' } },
-  { path: 'konusma', name: 'admin-speaking', component: () => import('./features/admin/coaching/SpeakingView.vue'), meta: { title: 'Konuşma & koçluk' } },
+  { path: 'analitik', name: 'admin-analytics', redirect: { name: 'admin-students' } },
+  { path: 'akademik', name: 'admin-academic', redirect: { name: 'admin-students' } },
+  { path: 'konusma', name: 'admin-speaking', component: () => import('./features/admin/coaching/SpeakingView.vue'), meta: { title: 'Oturumlar' } },
   { path: 'konusma/:sessionId', name: 'admin-speaking-session', component: () => import('./features/admin/coaching/SpeakingSessionView.vue'), meta: { title: 'Konuşma oturumu' } },
   { path: 'ayarlar', name: 'admin-settings', component: () => import('./features/admin/settings/SettingsView.vue'), meta: { title: 'Ayarlar' } },
 ]

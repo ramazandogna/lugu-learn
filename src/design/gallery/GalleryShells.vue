@@ -20,7 +20,7 @@ const adminItems = [
   { key: 'curricula', to: `${here}#c`, label: 'Müfredatlar', icon: BookOpen },
   { key: 'analytics', to: `${here}#an`, label: 'Öğrenme Analitiği', icon: ChartLine },
   { key: 'academic', to: `${here}#ac`, label: 'Akademik Takip', icon: GraduationCap },
-  { key: 'coaching', to: `${here}#co`, label: 'Konuşma & Koçluk', icon: MessagesSquare },
+  { key: 'coaching', to: `${here}#co`, label: 'Oturumlar', icon: MessagesSquare },
   { key: 'settings', to: `${here}#se`, label: 'Ayarlar', icon: Settings },
 ] as const
 </script>

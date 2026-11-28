@@ -34,12 +34,12 @@ const items = computed(() => {
   <BaseCard as="section" aria-labelledby="dash-declines">
     <template #head>
       <h2 id="dash-declines" class="type-body flex items-center gap-2 font-semibold"><TrendingDown :size="18" class="text-negative" aria-hidden="true" /> Düşüş yaşayan öğrenciler</h2>
-      <p class="text-ink-soft type-small">Son denemelerde düşüş kuralına takılan dersler. Ayrıntı öğrencinin Uzman analiz sekmesinde.</p>
+      <p class="text-ink-soft type-small">Son denemelerde düşüş kuralına takılan dersler. Ayrıntı öğrencinin İlerleme sekmesinde, Uzman analizi bölümünde.</p>
     </template>
     <LoadState :loading="state.loading.value" :error="state.error.value" :empty="!items.length" empty-title="Denemelerde belirgin bir düşüş görünmüyor" :rows="2" @retry="state.reload">
       <ul class="divide-hair divide-y">
         <li v-for="i in items" :key="i.student.id" class="py-3">
-          <RouterLink :to="{ name: 'admin-student', params: { studentId: i.student.id }, query: { sekme: 'uzman' } }" class="focus-ring rounded-cell font-semibold hover:underline">
+          <RouterLink :to="{ name: 'admin-student', params: { studentId: i.student.id }, query: { sekme: 'ilerleme' } }" class="focus-ring rounded-cell font-semibold hover:underline">
             {{ i.student.name }}
           </RouterLink>
           <span class="type-small ms-2" :class="i.worst >= 2 ? 'text-negative font-semibold' : 'text-warning-ink'">{{ i.worst >= 2 ? 'Belirgin düşüş' : 'Uyarı' }}</span>

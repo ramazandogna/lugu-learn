@@ -7,7 +7,6 @@ import { listSubjects, studentExams, wrongPenalty, type Exam } from '@/lib/api/a
 import LoadState from '../components/LoadState.vue'
 import { formatNumber } from '../lib/format'
 import { useLoad } from '../lib/use-load'
-import AcademicInsightCard from './AcademicInsightCard.vue'
 import ExamDialog from './ExamDialog.vue'
 import ExamList from './ExamList.vue'
 import EmptyState from '../components/AdminEmpty.vue'
@@ -76,7 +75,6 @@ const TREND: Record<string, { label: string; tone: 'success' | 'danger' | 'neutr
         </div>
       </BaseCard>
 
-      <AcademicInsightCard :student-id="studentId" :has-exams="state.data.value.exams.length > 0" />
 
       <ExamDialog
         v-model="dialog"

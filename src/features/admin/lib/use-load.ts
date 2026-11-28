@@ -1,6 +1,6 @@
-import { onBeforeUnmount, ref, shallowRef, watch, type Ref, type WatchSource } from 'vue'
+import { ref, shallowRef, watch, type Ref, type WatchSource } from 'vue'
 import { useToast } from 'rei-kit'
-import { errorMessage, getJob, type AiJob } from '@/lib/api/admin'
+import { errorMessage } from '@/lib/api/admin'
 
 /** Loads data with loading/error state; reloads when `source` changes. Stale responses are dropped. */
 export function useLoad<T>(fn: () => Promise<T>, source?: WatchSource) {
@@ -55,36 +55,4 @@ export function useAction() {
     }
   }
   return { busy, run }
-}
-
-/** Polls an `ai_jobs` row every 4 s until it succeeds or fails. */
-export function useJobPoll(onFinished: (job: AiJob) => void) {
-  const job = shallowRef<AiJob | null>(null)
-  const error = ref<string | null>(null)
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const stop = () => {
-    if (timer) clearTimeout(timer)
-    timer = undefined
-  }
-  async function tick(id: string) {
-    try {
-      const j = await getJob(id)
-      job.value = j
-      error.value = null
-      if (j.status === 'succeeded' || j.status === 'failed') {
-        stop()
-        onFinished(j)
-        return
-      }
-    } catch (e) {
-      error.value = errorMessage(e)
-    }
-    timer = setTimeout(() => void tick(id), 4000)
-  }
-  function track(id: string) {
-    stop()
-    void tick(id)
-  }
-  onBeforeUnmount(stop)
-  return { job, error, track, stop }
 }

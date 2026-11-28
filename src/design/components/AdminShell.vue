@@ -26,7 +26,7 @@ const {
   fill = 'viewport',
   scopeDocument = true,
 } = defineProps<{
-  /** Panel, Öğrenciler, Müfredatlar, Öğrenme Analitiği, Akademik Takip, Konuşma & Koçluk, Ayarlar. */
+  /** Panel, Öğrenciler, Müfredatlar, Öğrenme Analitiği, Akademik Takip, Oturumlar, Ayarlar. */
   items: readonly TabItem<K>[]
   active?: K
   /** e.g. "Yönetim menüsü"; also the drawer title. */

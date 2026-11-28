@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Trophy } from 'lucide-vue-next'
 import { BaseButton, BaseCard, BaseCombobox, BaseInput, BaseSelect, DescriptionList, NumberInput, type ComboboxOption } from 'rei-kit'
 import { createDeletionRequest, searchSchools, updateStudentProfile, type StudentSummary } from '@/lib/api/admin'
+import StudentAcademicPanel from '../../academic/StudentAcademicPanel.vue'
 import ConfirmDialog from '../../components/ConfirmDialog.vue'
 import { formatDate } from '../../lib/format'
 import { useAction } from '../../lib/use-load'
@@ -115,17 +116,16 @@ async function requestDeletion(reason: string) {
     <BaseCard class="lg:col-span-2" as="section" aria-labelledby="profile-title">
       <template #head>
         <h2 id="profile-title" class="type-body flex items-center gap-2 font-semibold"><Trophy :size="18" class="text-accent-ink" aria-hidden="true" /> Ünvan</h2>
-        <p class="text-ink-soft type-small">
-          Öğrencinin ana sayfasında ve profilinde adının altında görünür.
-          <template v-if="titleActive">Şu an: <strong class="text-ink">{{ student.honorTitle }}</strong><template v-if="student.honorTitleUntil"> · {{ formatDate(student.honorTitleUntil) }} tarihine kadar</template></template>
+        <p v-if="titleActive" class="text-ink-soft type-small">
+          Şu an: <strong class="text-ink">{{ student.honorTitle }}</strong><template v-if="student.honorTitleUntil"> · {{ formatDate(student.honorTitleUntil) }} tarihine kadar</template>
         </p>
       </template>
-      <form class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]" @submit.prevent="saveTitle()">
+      <form class="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_11rem_auto]" @submit.prevent="saveTitle()">
         <BaseInput v-model="title.text" label="Ünvan" placeholder="Ör. Küçük Kızlar Tenis İl Birincisi" :maxlength="160" autocomplete="off" />
         <BaseSelect v-model="title.days" label="Ne kadar görünsün?" :options="DURATIONS" />
-        <div class="flex flex-wrap gap-2 sm:col-span-2">
-          <BaseButton type="submit" :loading="busy" :disabled="!title.text.trim()">{{ titleActive ? 'Ünvanı güncelle' : 'Ünvanı ver' }}</BaseButton>
-          <BaseButton v-if="titleActive" variant="secondary" :disabled="busy" @click="saveTitle(true)">Ünvanı kaldır</BaseButton>
+        <div class="flex flex-wrap gap-2">
+          <BaseButton type="submit" :loading="busy" :disabled="!title.text.trim()">{{ titleActive ? 'Güncelle' : 'Ver' }}</BaseButton>
+          <BaseButton v-if="titleActive" variant="secondary" :disabled="busy" @click="saveTitle(true)">Kaldır</BaseButton>
         </div>
       </form>
     </BaseCard>
@@ -154,5 +154,9 @@ async function requestDeletion(reason: string) {
       :busy="busy"
       @confirm="requestDeletion"
     />
+    <section class="flex flex-col gap-3 lg:col-span-3" aria-labelledby="profile-academic">
+      <h2 id="profile-academic" class="type-body font-semibold">Okul ve akademik</h2>
+      <StudentAcademicPanel :student-id="student.id" />
+    </section>
   </div>
 </template>

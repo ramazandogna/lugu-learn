@@ -6,16 +6,14 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { BaseCard, BaseSelect } from 'rei-kit'
-import { BaseDisclosure } from 'rei-kit/web'
 import { TeacherGuide } from '@/domain/content'
-import { getSpeakingSession, getStudent, latestJob, lessonTeacherMaterial, updateSpeakingSession } from '@/lib/api/admin'
+import { getSpeakingSession, getStudent, lessonTeacherMaterial, updateSpeakingSession } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
 import LessonSpeakingPanel from '../content/LessonSpeakingPanel.vue'
 import { formatDateTime } from '../lib/format'
 import { useAction, useLoad } from '../lib/use-load'
 import { speakingLessonOptions } from './lesson-options'
 import SpeakingNotesForm from './SpeakingNotesForm.vue'
-import SpeakingPlanCard from './SpeakingPlanCard.vue'
 import SpeakingTimer from './SpeakingTimer.vue'
 import PageHeader from '../components/AdminPageHeader.vue'
 
@@ -24,13 +22,12 @@ const sessionId = computed(() => String(route.params.sessionId))
 
 const state = useLoad(async () => {
   const { session, note } = await getSpeakingSession(sessionId.value)
-  const [student, material, job, lessons] = await Promise.all([
+  const [student, material, lessons] = await Promise.all([
     getStudent(session.student_id),
     session.lesson_id ? lessonTeacherMaterial(session.lesson_id) : null,
-    latestJob({ kind: 'speaking_plan', studentId: session.student_id }),
     speakingLessonOptions(session.student_id),
   ])
-  return { session, note, student, material, lessons, job: job && (job.input as { speakingSessionId?: string } | null)?.speakingSessionId === session.id ? job : null }
+  return { session, note, student, material, lessons }
 }, sessionId)
 
 /** Suggested targets for the session record: the lesson's objective and speaking prompts. */
@@ -51,7 +48,7 @@ async function changeLesson(v: string | undefined) {
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink :to="{ name: 'admin-speaking' }" class="focus-ring rounded-cell text-ink-soft -my-2 inline-flex min-h-10 w-fit items-center type-small hover:underline">‹ Konuşma & Koçluk</RouterLink>
+    <RouterLink :to="{ name: 'admin-speaking' }" class="focus-ring rounded-cell text-ink-soft -my-2 inline-flex min-h-10 w-fit items-center type-small hover:underline">‹ Oturumlar</RouterLink>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <template v-if="state.data.value">
         <PageHeader :title="`Konuşma oturumu · ${state.data.value.student?.name ?? 'Öğrenci'}`" as="h1" />
@@ -92,9 +89,6 @@ async function changeLesson(v: string | undefined) {
               <LessonSpeakingPanel v-if="state.data.value.session.lesson_id" :lesson-id="state.data.value.session.lesson_id" />
               <p v-else class="text-ink-soft type-small">Önce soldan bir ders seçin.</p>
             </BaseCard>
-            <BaseDisclosure title="Yapay zekâ planı (isteğe bağlı)" :heading-level="2">
-              <SpeakingPlanCard :session="state.data.value.session" :job="state.data.value.job" @changed="state.reload" />
-            </BaseDisclosure>
           </div>
         </div>
       </template>

@@ -12,7 +12,7 @@ export interface LearningData {
   assessments: Tables<'assessment_results'>[]
   completions: Tables<'lesson_completion_records'>[]
   /** Lesson id → title / sequence, for every lesson referenced above. */
-  lessons: Map<string, { title: string; sequence: number }>
+  lessons: Map<string, { title: string; sequence: number; estimatedMinutes: number | null }>
   /** Package id → content (a `LessonPackage` document, unparsed). */
   packages: Map<string, { lessonId: string; revision: number; content: unknown }>
 }
@@ -25,12 +25,12 @@ async function enrich(base: Omit<LearningData, 'lessons' | 'packages'>): Promise
     ...new Set([...base.sessions.map((s) => s.package_id), ...base.mastery.map((m) => m.package_id), ...base.attempts.map((a) => a.package_id)]),
   ]
   const [lessons, packages] = await Promise.all([
-    lessonIds.length ? db.from('curriculum_lessons').select('id, title, sequence').in('id', lessonIds).then(must) : [],
+    lessonIds.length ? db.from('curriculum_lessons').select('id, title, sequence, estimated_minutes').in('id', lessonIds).then(must) : [],
     packageIds.length ? db.from('lesson_content_packages').select('id, lesson_id, revision, content').in('id', packageIds).then(must) : [],
   ])
   return {
     ...base,
-    lessons: new Map(lessons.map((l) => [l.id, { title: l.title, sequence: l.sequence }])),
+    lessons: new Map(lessons.map((l) => [l.id, { title: l.title, sequence: l.sequence, estimatedMinutes: l.estimated_minutes ?? null }])),
     packages: new Map(packages.map((p) => [p.id, { lessonId: p.lesson_id, revision: p.revision, content: p.content }])),
   }
 }

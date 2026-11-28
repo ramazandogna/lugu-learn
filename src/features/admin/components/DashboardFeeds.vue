@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { recentExams } from '@/lib/api/admin'
+import { useLoad } from '../lib/use-load'
 import { RouterLink } from 'vue-router'
 import { BaseCard } from 'rei-kit'
-import type { Exam, ExamResult, RecentActivity, SpeakingSession, StudentSummary } from '@/lib/api/admin'
+import type { RecentActivity, SpeakingSession, StudentSummary } from '@/lib/api/admin'
 import { SESSION_STATUS, formatDate, formatDateTime, formatNumber } from '../lib/format'
 import EmptyState from './/AdminEmpty.vue'
 
@@ -10,8 +12,10 @@ const props = defineProps<{
   students: readonly StudentSummary[]
   activity: RecentActivity
   speaking: readonly SpeakingSession[]
-  exams: { exams: Exam[]; results: ExamResult[] }
 }>()
+
+/* Loaded after the counters and attention list are on screen (this component mounts then). */
+const examState = useLoad(() => recentExams(12))
 
 const name = (id: string) => props.students.find((s) => s.id === id)?.name ?? 'Öğrenci'
 const lesson = (id: string | null) => (id ? (props.activity.lessons.get(id)?.title ?? 'Ders') : '—')
@@ -35,8 +39,8 @@ const upcoming = computed(() =>
 const sessionLesson = computed(() => new Map(props.activity.sessions.map((s) => [s.id, s.lesson_id])))
 
 const academic = computed(() =>
-  props.exams.exams.map((e) => {
-    const rs = props.exams.results.filter((r) => r.exam_id === e.id)
+  (examState.data.value?.exams ?? []).map((e) => {
+    const rs = (examState.data.value?.results ?? []).filter((r) => r.exam_id === e.id)
     return { exam: e, net: rs.reduce((sum, r) => sum + r.net, 0), subjects: rs.length }
   }),
 )
@@ -95,7 +99,7 @@ const academic = computed(() =>
       <ul v-else class="divide-hair divide-y type-small">
         <li v-for="x in academic" :key="x.exam.id" class="flex flex-wrap items-baseline justify-between gap-2 py-2">
           <span>
-            <RouterLink :to="{ name: 'admin-student', params: { studentId: x.exam.student_id }, query: { sekme: 'akademik' } }" class="focus-ring rounded-cell font-semibold hover:underline">
+            <RouterLink :to="{ name: 'admin-student', params: { studentId: x.exam.student_id }, query: { sekme: 'profil' } }" class="focus-ring rounded-cell font-semibold hover:underline">
               {{ name(x.exam.student_id) }}
             </RouterLink>
             <span class="text-ink-soft"> · {{ x.exam.title }} · {{ formatDate(x.exam.exam_date) }}</span>

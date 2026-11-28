@@ -1,29 +1,55 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { BaseCard } from 'rei-kit'
+import { BaseButton, BaseCard } from 'rei-kit'
+import { AlertTriangle } from 'lucide-vue-next'
 import type { StudentSummary } from '@/lib/api/admin'
-import type { AttentionReason } from '../lib/attention'
+import type { AttentionKind, AttentionReason } from '../lib/insights'
 import EmptyState from './/AdminEmpty.vue'
 
-defineProps<{ items: readonly { student: StudentSummary; reasons: AttentionReason[] }[] }>()
+const MAX_GROUPS = 5
+const MAX_NAMES = 3
+
+const props = defineProps<{ items: readonly { student: StudentSummary; reasons: AttentionReason[] }[] }>()
+const all = ref(false)
+
+/** Same reason -> one row with a count and the students' names; biggest group first. */
+const groups = computed(() => {
+  const map = new Map<AttentionKind, { kind: AttentionKind; label: string; students: StudentSummary[] }>()
+  for (const item of props.items)
+    for (const r of item.reasons) {
+      const g = map.get(r.kind) ?? { kind: r.kind, label: r.label, students: [] }
+      g.students.push(item.student)
+      map.set(r.kind, g)
+    }
+  return [...map.values()].sort((a, b) => b.students.length - a.students.length)
+})
+const shown = computed(() => (all.value ? groups.value : groups.value.slice(0, MAX_GROUPS)))
+const expandable = computed(() => groups.value.length > MAX_GROUPS || groups.value.some((g) => g.students.length > MAX_NAMES))
 </script>
 
 <template>
   <BaseCard as="section" aria-labelledby="dash-attention">
     <template #head>
-      <h2 id="dash-attention" class="type-body font-semibold">İlgi bekleyen öğrenciler</h2>
-      <p class="text-ink-soft type-small">Son 30 günün verilerinden çıkan gözlemler; yargı değil, bakılacak yer.</p>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="dash-attention" class="type-body font-semibold">Dikkat gerektirenler</h2>
+        <BaseButton v-if="expandable" variant="link" :aria-expanded="all" @click="all = !all">{{ all ? 'Daha az göster' : 'Tümünü gör' }}</BaseButton>
+      </div>
     </template>
-    <EmptyState v-if="!items.length" title="Şu an dikkat gerektiren bir durum görünmüyor" />
+    <EmptyState v-if="!groups.length" title="Şu an dikkat gerektiren bir durum görünmüyor" />
     <ul v-else class="divide-hair divide-y">
-      <li v-for="item in items" :key="item.student.id" class="py-3">
-        <RouterLink :to="{ name: 'admin-student', params: { studentId: item.student.id } }" class="focus-ring rounded-cell font-semibold hover:underline">
-          {{ item.student.name }}
-          <span class="text-ink-soft type-small font-normal">· {{ item.student.code }}</span>
-        </RouterLink>
-        <ul class="text-ink-soft mt-1 list-disc ps-6 type-small">
-          <li v-for="r in item.reasons" :key="r.kind">{{ r.text }}</li>
-        </ul>
+      <li v-for="g in shown" :key="g.kind" class="py-3">
+        <p class="type-body flex items-center gap-2 font-semibold">
+          <AlertTriangle :size="16" class="text-warning-ink shrink-0" aria-hidden="true" />
+          {{ g.label }} ({{ g.students.length }})
+        </p>
+        <p class="type-small text-ink-soft mt-1">
+          <template v-for="(s, i) in all ? g.students : g.students.slice(0, MAX_NAMES)" :key="s.id">
+            <template v-if="i">, </template>
+            <RouterLink :to="{ name: 'admin-student', params: { studentId: s.id } }" class="focus-ring rounded-cell text-ink hover:underline">{{ s.name }}</RouterLink>
+          </template>
+          <template v-if="!all && g.students.length > MAX_NAMES"> +{{ g.students.length - MAX_NAMES }}</template>
+        </p>
       </li>
     </ul>
   </BaseCard>

@@ -21,7 +21,7 @@ const past = computed(() => (state.data.value?.sessions ?? []).filter((s) => s.s
 
 <template>
   <div class="flex flex-col gap-6">
-    <PageHeader title="Konuşma & Koçluk" as="h1">
+    <PageHeader title="Oturumlar" as="h1">
       <template #right>
         <BaseButton :disabled="!state.data.value" @click="scheduling = true">Oturum planla</BaseButton>
       </template>

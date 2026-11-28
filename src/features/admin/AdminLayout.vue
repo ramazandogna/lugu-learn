@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
-import { BookOpen, ChartColumn, GraduationCap, LayoutDashboard, LogOut, MessagesSquare, Settings, Users } from 'lucide-vue-next'
+import { BookOpen, LayoutDashboard, LogOut, MessagesSquare, Settings, Users } from 'lucide-vue-next'
 import { BaseButton, type TabItem } from 'rei-kit'
 import { AdminShell } from '@/design'
 import { signOut } from '@/lib/auth'
 
-type NavKey = 'dashboard' | 'students' | 'curricula' | 'analytics' | 'academic' | 'speaking' | 'settings'
+type NavKey = 'dashboard' | 'students' | 'curricula' | 'speaking' | 'settings'
 
 const items: TabItem<NavKey>[] = [
-  { key: 'dashboard', to: '/admin', label: 'Panel', icon: LayoutDashboard },
+  { key: 'dashboard', to: '/admin', label: 'Bugün', icon: LayoutDashboard },
   { key: 'students', to: '/admin/ogrenciler', label: 'Öğrenciler', icon: Users },
-  { key: 'curricula', to: '/admin/mufredatlar', label: 'Müfredatlar', icon: BookOpen },
-  { key: 'analytics', to: '/admin/analitik', label: 'Öğrenme Analitiği', icon: ChartColumn },
-  { key: 'academic', to: '/admin/akademik', label: 'Akademik Takip', icon: GraduationCap },
-  { key: 'speaking', to: '/admin/konusma', label: 'Konuşma & Koçluk', icon: MessagesSquare },
+  { key: 'speaking', to: '/admin/konusma', label: 'Oturumlar', icon: MessagesSquare },
+  { key: 'curricula', to: '/admin/mufredatlar', label: 'Müfredat', icon: BookOpen },
   { key: 'settings', to: '/admin/ayarlar', label: 'Ayarlar', icon: Settings },
 ]
 
@@ -25,8 +23,7 @@ const ROUTE_KEY: Record<string, NavKey> = {
   'admin-curricula': 'curricula',
   'admin-curriculum': 'curricula',
   'admin-lesson': 'curricula',
-  'admin-analytics': 'analytics',
-  'admin-academic': 'academic',
+  'admin-lesson-preview': 'curricula',
   'admin-speaking': 'speaking',
   'admin-speaking-session': 'speaking',
   'admin-settings': 'settings',
@@ -54,9 +51,12 @@ async function logout() {
     brand-suffix="Yönetim"
   >
     <template #account>
-      <BaseButton variant="quiet" @click="logout">
+      <BaseButton variant="quiet" class="max-sm:hidden" @click="logout">
         <LogOut class="size-4" aria-hidden="true" />
         Çıkış yap
+      </BaseButton>
+      <BaseButton variant="quiet" icon class="sm:hidden" aria-label="Çıkış yap" @click="logout">
+        <LogOut class="size-4" aria-hidden="true" />
       </BaseButton>
     </template>
     <RouterView />

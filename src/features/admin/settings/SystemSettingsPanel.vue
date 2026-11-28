@@ -18,7 +18,7 @@ const { busy, run } = useAction()
 const drafts = reactive<Record<string, string | boolean>>({})
 
 const rows = computed(() => {
-  const stored = state.data.value ?? []
+  const stored = (state.data.value ?? []).filter((s) => !/^ai[._]|model|openai|anthropic|gemini/i.test(s.key))
   const keys = [...new Set([...Object.keys(KNOWN), ...stored.map((s) => s.key)])].sort()
   return keys.map((key) => {
     const row = stored.find((s) => s.key === key)
