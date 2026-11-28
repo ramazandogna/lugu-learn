@@ -5,6 +5,7 @@ import { BaseButton, BaseDatePicker, BaseSelect, TimePicker, todayKey } from 're
 import { ResponsiveDialog } from 'rei-kit/web'
 import { scheduleSpeaking, type StudentSummary } from '@/lib/api/admin'
 import { useAction } from '../lib/use-load'
+import { speakingLessonOptions, type SpeakingLessonOption } from './lesson-options'
 
 const open = defineModel<boolean>({ default: false })
 const { students, fixedStudentId } = defineProps<{ students: readonly StudentSummary[]; fixedStudentId?: string }>()
@@ -15,6 +16,29 @@ const studentId = ref<string | undefined>()
 const date = ref<string | undefined>()
 const time = ref<string | undefined>('16:00')
 const { busy, run } = useAction()
+const lessonId = ref<string | undefined>()
+const lessonOptions = ref<SpeakingLessonOption[]>([])
+watch(
+  () => (open.value ? studentId.value : undefined),
+  async (id) => {
+    lessonOptions.value = []
+    lessonId.value = undefined
+    if (!id) return
+    try {
+      const r = await speakingLessonOptions(id)
+      if (studentId.value !== id) return
+      lessonOptions.value = r.options
+      lessonId.value = r.current ?? r.options[0]?.value
+    } catch {
+      /* no lesson list: the session can still be planned without a lesson */
+    }
+  },
+)
+function now() {
+  const d = new Date()
+  date.value = todayKey()
+  time.value = `${String(d.getHours()).padStart(2, '0')}:${String(Math.floor(d.getMinutes() / 15) * 15).padStart(2, '0')}`
+}
 
 watch(open, (v) => {
   if (!v) return
@@ -24,17 +48,15 @@ watch(open, (v) => {
 })
 
 const options = computed(() => students.filter((s) => s.status === 'active').map((s) => ({ value: s.id, label: `${s.name} (${s.code})` })))
-const student = computed(() => students.find((s) => s.id === studentId.value))
 
 async function submit() {
   if (!studentId.value || !date.value || !time.value) return
   const [y, m, d] = date.value.split('-').map(Number)
   const [hh, mm] = time.value.split(':').map(Number)
   const at = new Date(y ?? 0, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0).toISOString()
-  const lessonId = student.value?.program?.currentLesson?.id ?? null
   const sid = studentId.value
   await run(async () => {
-    const created = await scheduleSpeaking(sid, at, lessonId)
+    const created = await scheduleSpeaking(sid, at, lessonId.value ?? null)
     open.value = false
     emit('scheduled')
     await router.push({ name: 'admin-speaking-session', params: { sessionId: created.id } })
@@ -50,13 +72,16 @@ async function submit() {
         <BaseDatePicker v-model="date" label="Tarih" previous-label="Önceki ay" next-label="Sonraki ay" :week-starts-on="1" />
         <TimePicker v-model="time" label="Saat" hours-label="Saat" minutes-label="Dakika" :step="15" />
       </div>
-      <p class="text-ink-soft type-small">
-        {{
-          student?.program?.currentLesson
-            ? `Oturum, öğrencinin şu anki dersine bağlanır: ${student.program.currentLesson.sequence}. ${student.program.currentLesson.title}`
-            : 'Öğrencinin şu anki dersi yok; oturum derse bağlanmadan planlanır.'
-        }}
-      </p>
+      <BaseButton class="w-fit" size="sm" variant="secondary" @click="now">Şimdi başlıyoruz</BaseButton>
+      <BaseSelect
+        v-if="studentId"
+        v-model="lessonId"
+        label="Hangi dersi konuşacağız?"
+        :placeholder="lessonOptions.length ? 'Ders seçin' : 'Öğrencinin programı yok'"
+        :options="lessonOptions"
+        :disabled="!lessonOptions.length"
+        hint="Oturum sayfasında bu dersin 1 saatlik planı ve hedefleri açılır."
+      />
     </form>
     <template #actions>
       <BaseButton variant="secondary" @click="open = false">Vazgeç</BaseButton>

@@ -1,4 +1,4 @@
-import type { Tables, TablesUpdate } from '../../database.types'
+import type { Json, Tables, TablesUpdate } from '../../database.types'
 import { db } from '../../supabase'
 import { must, ok } from './errors'
 
@@ -29,11 +29,26 @@ export async function updateSpeakingSession(id: string, patch: TablesUpdate<'spe
   return must(await db.from('speaking_sessions').update(patch).eq('id', id).select().single())
 }
 
-export type NoteFields = Pick<SpeakingNote, 'observations' | 'strengths' | 'goals' | 'follow_up'>
+export type TargetResult = 'met' | 'partly' | 'not'
+/** One aim of a speaking session and how it went (null = not judged yet). */
+export interface SpeakingTarget {
+  text: string
+  result: TargetResult | null
+}
+export function noteTargets(n: Pick<SpeakingNote, 'targets'> | null | undefined): SpeakingTarget[] {
+  const raw = Array.isArray(n?.targets) ? (n.targets as unknown[]) : []
+  return raw.flatMap((t) => {
+    const o = t as Partial<SpeakingTarget> | null
+    return o && typeof o.text === 'string' ? [{ text: o.text, result: o.result === 'met' || o.result === 'partly' || o.result === 'not' ? o.result : null }] : []
+  })
+}
+
+export type NoteFields = Pick<SpeakingNote, 'observations' | 'strengths' | 'goals' | 'follow_up' | 'topics'> & { targets: SpeakingTarget[] }
 
 export async function saveSpeakingNote(sessionId: string, noteId: string | null, fields: NoteFields): Promise<SpeakingNote> {
-  if (noteId) return must(await db.from('speaking_session_notes').update(fields).eq('id', noteId).select().single())
-  return must(await db.from('speaking_session_notes').insert({ ...fields, speaking_session_id: sessionId }).select().single())
+  const row = { ...fields, targets: fields.targets as unknown as Json }
+  if (noteId) return must(await db.from('speaking_session_notes').update(row).eq('id', noteId).select().single())
+  return must(await db.from('speaking_session_notes').insert({ ...row, speaking_session_id: sessionId }).select().single())
 }
 
 export async function speakingNotesFor(sessionIds: readonly string[]): Promise<SpeakingNote[]> {
