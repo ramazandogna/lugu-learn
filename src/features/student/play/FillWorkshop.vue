@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, watch } from 'vue'
 import { BaseButton } from 'rei-kit'
-import { BedDouble, BookOpen, Clock, Moon, Sparkles, Star, Sun, type LucideIcon } from 'lucide-vue-next'
+import { BedDouble, Bell, BookOpen, CalendarDays, Clock, Flag, FlaskConical, Lamp, Library, Map, Microscope, Moon, NotebookPen, Pen, Presentation, Sparkles, Star, Sun, Trophy, type LucideIcon } from 'lucide-vue-next'
 
 import { CandyButton, HintBubble, LuguMascot, playSound } from '@/design'
 import type { CharacterKey, FillWorkshopSlots, Question } from '@/domain/content'
@@ -30,7 +30,12 @@ const { question, sceneObject, onComplete, hint = null, hintAvailable = false, c
 }>()
 const emit = defineEmits<{ answer: [response: number | string | string[], ms: number]; hint: [] }>()
 
-const ICONS: Record<string, LucideIcon> = { clock: Clock, sun: Sun, moon: Moon, book: BookOpen, star: Star, bed: BedDouble }
+const ICONS: Record<string, LucideIcon> = {
+  clock: Clock, sun: Sun, moon: Moon, book: BookOpen, star: Star, bed: BedDouble,
+  'school-bell': Bell, whiteboard: Presentation, trophy: Trophy, 'school-flag': Flag, notebook: NotebookPen, 'diary-page': NotebookPen,
+  'library-shelf': Library, microscope: Microscope, beaker: FlaskConical, 'lab-table': FlaskConical, pen: Pen, 'desk-lamp': Lamp,
+  'night-lamp': Lamp, 'wall-calendar': CalendarDays, 'study-planner': CalendarDays, 'school-map': Map,
+}
 const Icon = computed(() => ICONS[sceneObject ?? ''] ?? Sparkles)
 
 const fw = shallowRef(question.type === 'text' ? null : createFillWorkshop(question))
