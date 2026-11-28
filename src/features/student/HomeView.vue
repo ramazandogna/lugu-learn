@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { BaseButton } from 'rei-kit'
-import { Clock, Compass, Map, Snowflake, WandSparkles } from 'lucide-vue-next'
+import { Clock, Compass, Map, Snowflake, Trophy, WandSparkles } from 'lucide-vue-next'
 
 import { AmbientLayer, AvatarArt, CandyButton, EmptyScene, JarProgress, LessonJar, LoadingScene, LuguMark, LuguMascot, WorldBackground, playSound, unitThemeAttrs, useReducedMotion } from '@/design'
 import type { Expression } from '@/design'
@@ -160,6 +160,9 @@ const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : n
             <div class="min-w-0">
               <p class="type-eyebrow text-ink-soft">{{ greeting() }}</p>
               <h1 id="hero-title" class="type-hero text-ink">{{ name ? `${name}!` : 'Hoş geldin!' }}</h1>
+              <p v-if="home?.profile?.honor_title" class="bg-accent text-on-accent rounded-control type-small mt-1 inline-flex items-center gap-1 px-2 py-1 font-semibold">
+                <Trophy :size="16" aria-hidden="true" /> {{ home.profile.honor_title }}
+              </p>
             </div>
           </div>
 

@@ -27,6 +27,10 @@ export interface StudentSummary {
   mustChangePassword: boolean
   createdAt: string
   profileCompletedAt: string | null
+  /** Admin-given title shown to the student (e.g. a tournament win); null when none. */
+  honorTitle: string | null
+  /** When the title stops showing; null = until removed. */
+  honorTitleUntil: string | null
   /** The newest open program (active/paused first, then completed). */
   program: StudentProgram | null
   lastActivityAt: string | null
@@ -101,6 +105,8 @@ async function summaries(ids?: readonly string[]): Promise<StudentSummary[]> {
       mustChangePassword: a?.must_change_password ?? false,
       createdAt: a?.created_at ?? p.created_at,
       profileCompletedAt: p.profile_completed_at,
+      honorTitle: p.honor_title,
+      honorTitleUntil: p.honor_title_until,
       program:
         open && v
           ? {
@@ -124,7 +130,7 @@ export async function getStudent(id: string): Promise<StudentSummary | null> {
   return (await summaries([id]))[0] ?? null
 }
 
-export type StudentProfilePatch = Pick<TablesUpdate<'student_profiles'>, 'first_name' | 'last_name' | 'display_name' | 'grade' | 'school_id'>
+export type StudentProfilePatch = Pick<TablesUpdate<'student_profiles'>, 'first_name' | 'last_name' | 'display_name' | 'grade' | 'school_id' | 'honor_title' | 'honor_title_until'>
 
 export async function updateStudentProfile(id: string, patch: StudentProfilePatch): Promise<void> {
   ok(await db.from('student_profiles').update(patch).eq('user_id', id))

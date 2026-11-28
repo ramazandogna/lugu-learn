@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
-import { BaseButton, BaseCard, BaseCombobox, BaseInput, DescriptionList, NumberInput, type ComboboxOption } from 'rei-kit'
+import { computed, reactive, ref, watch } from 'vue'
+import { Trophy } from 'lucide-vue-next'
+import { BaseButton, BaseCard, BaseCombobox, BaseInput, BaseSelect, DescriptionList, NumberInput, type ComboboxOption } from 'rei-kit'
 import { createDeletionRequest, searchSchools, updateStudentProfile, type StudentSummary } from '@/lib/api/admin'
 import ConfirmDialog from '../../components/ConfirmDialog.vue'
 import { formatDate } from '../../lib/format'
@@ -14,6 +15,27 @@ const schoolOptions = ref<ComboboxOption<string>[]>([])
 const searching = ref(false)
 const { busy, run } = useAction()
 const deletion = ref(false)
+
+/* Honor title: shown on the student's home and profile; optional end so "1 hafta" needs no reminder. */
+const title = reactive({ text: '', days: 'none' as string })
+const DURATIONS = [
+  { value: 'none', label: 'Ben kaldırana kadar' },
+  { value: '7', label: '1 hafta' },
+  { value: '14', label: '2 hafta' },
+  { value: '30', label: '1 ay' },
+]
+const titleActive = computed(() => !!student.honorTitle && (!student.honorTitleUntil || new Date(student.honorTitleUntil) > new Date()))
+function resetTitle() {
+  title.text = titleActive.value ? (student.honorTitle ?? '') : ''
+  title.days = 'none'
+}
+watch(() => student, resetTitle, { immediate: true })
+async function saveTitle(clear = false) {
+  const text = clear ? null : t(title.text)
+  const until = text && title.days !== 'none' ? new Date(Date.now() + Number(title.days) * 86_400_000).toISOString() : null
+  const ok = await run(() => updateStudentProfile(student.id, { honor_title: text, honor_title_until: until }), text ? 'Ünvan verildi' : 'Ünvan kaldırıldı')
+  if (ok) emit('saved')
+}
 
 function resetForm() {
   Object.assign(form, {
@@ -87,6 +109,23 @@ async function requestDeletion(reason: string) {
         <div class="flex gap-2 sm:col-span-2">
           <BaseButton type="submit" :loading="busy">Kaydet</BaseButton>
           <BaseButton variant="secondary" @click="resetForm">Değişiklikleri geri al</BaseButton>
+        </div>
+      </form>
+    </BaseCard>
+    <BaseCard class="lg:col-span-2" as="section" aria-labelledby="profile-title">
+      <template #head>
+        <h2 id="profile-title" class="type-body flex items-center gap-2 font-semibold"><Trophy :size="18" class="text-accent-ink" aria-hidden="true" /> Ünvan</h2>
+        <p class="text-ink-soft type-small">
+          Öğrencinin ana sayfasında ve profilinde adının altında görünür.
+          <template v-if="titleActive">Şu an: <strong class="text-ink">{{ student.honorTitle }}</strong><template v-if="student.honorTitleUntil"> · {{ formatDate(student.honorTitleUntil) }} tarihine kadar</template></template>
+        </p>
+      </template>
+      <form class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]" @submit.prevent="saveTitle()">
+        <BaseInput v-model="title.text" label="Ünvan" placeholder="Ör. Küçük Kızlar Tenis İl Birincisi" :maxlength="160" autocomplete="off" />
+        <BaseSelect v-model="title.days" label="Ne kadar görünsün?" :options="DURATIONS" />
+        <div class="flex flex-wrap gap-2 sm:col-span-2">
+          <BaseButton type="submit" :loading="busy" :disabled="!title.text.trim()">{{ titleActive ? 'Ünvanı güncelle' : 'Ünvanı ver' }}</BaseButton>
+          <BaseButton v-if="titleActive" variant="secondary" :disabled="busy" @click="saveTitle(true)">Ünvanı kaldır</BaseButton>
         </div>
       </form>
     </BaseCard>

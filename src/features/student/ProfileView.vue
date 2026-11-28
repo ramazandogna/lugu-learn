@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { BaseButton, SegmentedControl, useTheme, useToast } from 'rei-kit'
 
+import { Trophy } from 'lucide-vue-next'
 import { AvatarArt, EmptyScene, LoadingScene, SoundToggle, WorldBackground } from '@/design'
 import { friendlyMessage, getMyProfile } from '@/lib/api/student'
 import { auth, signOut } from '@/lib/auth'
@@ -69,6 +70,9 @@ const THEMES = [
           <p class="type-eyebrow text-ink-soft">Profilim</p>
           <h1 class="type-title text-ink">Bilgilerin</h1>
           <p v-if="code" class="text-ink type-small">Öğrenci kodun: <span class="font-bold">{{ code }}</span> · Seviye {{ level.level }}</p>
+          <p v-if="home?.profile?.honor_title" class="bg-accent text-on-accent rounded-control type-small mt-1 inline-flex items-center gap-1 px-2 py-1 font-semibold">
+            <Trophy :size="16" aria-hidden="true" /> {{ home.profile.honor_title }}
+          </p>
         </div>
       </header>
     </WorldBackground>
