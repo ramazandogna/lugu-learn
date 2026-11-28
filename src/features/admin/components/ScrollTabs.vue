@@ -26,7 +26,9 @@ watch(active, () => void nextTick(reveal))
 <template>
   <div ref="root" class="admin-tabs min-w-0">
     <BaseTabs v-model="active" :items="items" :label="label">
-      <template #default="slot"><slot v-bind="slot" /></template>
+      <!-- The kit renders the slot once per panel (hidden ones too): only the selected panel gets content,
+           otherwise every tab page mounts N times and loads its data N times. -->
+      <template #default="slot"><slot v-if="slot.item.key === slot.active" v-bind="slot" /></template>
     </BaseTabs>
   </div>
 </template>

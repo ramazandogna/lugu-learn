@@ -42,6 +42,6 @@ async function changed() {
         </div>
       </BaseDisclosure>
     </div>
-    <AssignProgramDialog v-if="state.data.value" v-model="assigning" :students="[{ id: studentId, name: state.data.value.name }]" @assigned="changed" />
+    <AssignProgramDialog v-if="state.data.value && assigning" v-model="assigning" :students="[{ id: studentId, name: state.data.value.name }]" @assigned="changed" />
   </LoadState>
 </template>

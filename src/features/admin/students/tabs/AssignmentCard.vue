@@ -6,7 +6,7 @@
  */
 import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ChevronDown, FlaskConical, MessagesSquare } from 'lucide-vue-next'
+import { ChevronDown, FlaskConical, MessagesSquare, Trash2 } from 'lucide-vue-next'
 import { BaseBadge, BaseButton, BaseCard, BaseMenu, BaseSelect, BaseSwitch } from 'rei-kit'
 import { BaseDisclosure } from 'rei-kit/web'
 import { setOpenLessons, setProgress, type AssignmentDetail } from '@/lib/api/admin'
@@ -98,7 +98,9 @@ const linkClass = 'focus-ring rounded-control text-ink-soft hover:text-ink hover
             Şu anki ders: <strong class="text-ink">{{ lessonTitle(a.current_lesson_id) }}</strong> · sürüm {{ detail.version }} · atanma {{ formatDateTime(a.created_at) }}
           </p>
         </div>
-        <BaseMenu v-if="open" :label="`${detail.curriculumName} program işlemleri`" align="end">
+        <span v-if="open" class="flex shrink-0 flex-wrap gap-2">
+        <BaseButton size="sm" variant="secondary" class="text-negative" @click="ask('archive')"><Trash2 :size="16" aria-hidden="true" /> Programı kaldır</BaseButton>
+        <BaseMenu :label="`${detail.curriculumName} program işlemleri`" align="end">
           <template #trigger>
             <BaseButton size="sm" variant="secondary">Diğer işlemler <ChevronDown :size="16" aria-hidden="true" /></BaseButton>
           </template>
@@ -108,8 +110,8 @@ const linkClass = 'focus-ring rounded-control text-ink-soft hover:text-ink hover
           <BaseButton variant="row" role="menuitem" :disabled="currentIdx < 0" @click="ask('restart_lesson')">Dersi yeniden başlat</BaseButton>
           <BaseButton v-if="a.status === 'active'" variant="row" role="menuitem" @click="ask('pause')">Programı duraklat</BaseButton>
           <BaseButton v-else variant="row" role="menuitem" @click="ask('resume')">Programı sürdür</BaseButton>
-          <BaseButton variant="row" role="menuitem" class="text-negative" @click="ask('archive')">Programı kaldır</BaseButton>
         </BaseMenu>
+        </span>
       </div>
       <div class="bg-muted mt-2 h-2 overflow-hidden rounded-full" role="progressbar" :aria-valuenow="done" aria-valuemin="0" :aria-valuemax="lessons.length" :aria-label="`${lessons.length} dersten ${done} ders tamamlandı`">
         <div class="bg-primary h-full rounded-full" :style="{ width: `${lessons.length ? (100 * done) / lessons.length : 0}%` }" />
@@ -141,7 +143,7 @@ const linkClass = 'focus-ring rounded-control text-ink-soft hover:text-ink hover
           <BaseButton :loading="busy" :disabled="!allOpen && !picked.length" @click="save">Kaydet</BaseButton>
         </span>
       </div>
-      <p v-if="!allOpen && !picked.length" class="type-small text-warning-ink">En az bir ders seçin. Programı bitirmek için: Diğer işlemler → Programı kaldır.</p>
+      <p v-if="!allOpen && !picked.length" class="type-small text-warning-ink">En az bir ders seçin. Programı tamamen kaldırmak için yukarıdaki "Programı kaldır" düğmesini kullanın.</p>
     </section>
 
     <BaseDisclosure v-if="a.current_lesson_id" class="mt-3" :title="`Konuşma dersi planı · ${lessonTitle(a.current_lesson_id)}`" :heading-level="3">
