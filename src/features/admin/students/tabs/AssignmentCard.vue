@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+/*
+ * One program of a student. The lesson list is the control surface: tick the lessons the student may take
+ * (they are walked in order, each after the one before), save. Rare actions (move, restart, pause, remove)
+ * live in one menu.
+ */
+import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Check, Lock, LockOpen, Play } from 'lucide-vue-next'
-import { BaseBadge, BaseButton, BaseCard, BaseSelect } from 'rei-kit'
-import { BaseDisclosure, BaseToolbar } from 'rei-kit/web'
-import { setLessonGate, setProgress, type AssignmentDetail } from '@/lib/api/admin'
+import { ChevronDown, FlaskConical, MessagesSquare } from 'lucide-vue-next'
+import { BaseBadge, BaseButton, BaseCard, BaseMenu, BaseSelect, BaseSwitch } from 'rei-kit'
+import { BaseDisclosure } from 'rei-kit/web'
+import { setOpenLessons, setProgress, type AssignmentDetail } from '@/lib/api/admin'
 import type { ProgressAction } from '@/lib/database.types'
 import ConfirmDialog from '../../components/ConfirmDialog.vue'
+import LessonPicker from '../../components/LessonPicker.vue'
 import { ASSIGNMENT_STATUS, PROGRAM_EVENT_LABEL, formatDateTime } from '../../lib/format'
 import { useAction } from '../../lib/use-load'
 import LessonSpeakingPanel from '../../content/LessonSpeakingPanel.vue'
@@ -22,13 +28,40 @@ const lessonTitle = (id: string | null) => {
   const l = detail.lessons.find((x) => x.id === id)
   return l ? `${l.sequence}. ${l.title}` : '—'
 }
+const done = computed(() => lessons.value.filter((l) => detail.completedLessonIds.has(l.id)).length)
+
+/* ── open lessons ── */
+const saved = computed<string[] | null>(() => a.value.open_lesson_ids)
+const savedOrdered = computed(() => (saved.value ? lessons.value.filter((l) => saved.value!.includes(l.id)).map((l) => l.id) : []))
+const allOpen = ref(false)
+const picked = ref<string[]>([])
+function reset() {
+  allOpen.value = saved.value === null
+  picked.value = [...savedOrdered.value]
+}
+watch(saved, reset, { immediate: true })
+const dirty = computed(() => (allOpen.value ? saved.value !== null : saved.value === null || picked.value.join() !== savedOrdered.value.join()))
+const currentLocked = computed(() => saved.value !== null && !!a.value.current_lesson_id && !saved.value.includes(a.value.current_lesson_id))
+const summary = computed(() => {
+  if (saved.value === null) return { tone: 'neutral' as const, text: 'Tüm dersler sırayla açılır' }
+  if (currentLocked.value) return { tone: 'warning' as const, text: 'Öğrenci yeni ders bekliyor' }
+  return { tone: 'success' as const, text: `${saved.value.length} ders açık` }
+})
+
+const { busy, run } = useAction()
+async function save() {
+  const ids = allOpen.value ? null : picked.value
+  const ok = await run(() => setOpenLessons(a.value.id, ids), ids === null ? 'Tüm dersler açıldı' : `${ids.length} ders açık olarak kaydedildi`)
+  if (ok) emit('changed')
+}
+
+/* ── rare program actions ── */
 const target = ref<string | undefined>()
 const lessonOptions = computed(() => lessons.value.map((l) => ({ value: l.id, label: `${l.sequence}. ${l.title}` })))
-
 const COPY: Record<ProgressAction, { label: string; message: string; tone?: 'danger' }> = {
-  forward: { label: 'Sonraki derse geçir', message: 'Öğrenci bir sonraki derse geçirilir; şu anki dersin açık oturumu yarım bırakılmış sayılır.' },
-  backward: { label: 'Önceki derse al', message: 'Öğrenci önceki derse alınır ve o dersi normal bir oturum olarak yeniden yapar.' },
-  set_lesson: { label: 'Seçilen derse taşı', message: 'Öğrencinin şu anki dersi seçilen ders olur. Hiçbir kayıt silinmez.' },
+  forward: { label: 'Öğrenciyi sonraki derse geçir', message: 'Öğrenci bir sonraki derse geçirilir; şu anki dersin açık oturumu yarım bırakılmış sayılır.' },
+  backward: { label: 'Öğrenciyi önceki derse al', message: 'Öğrenci önceki derse alınır ve o dersi normal bir oturum olarak yeniden yapar.' },
+  set_lesson: { label: 'Belirli bir derse taşı', message: 'Öğrencinin şu anki dersi seçilen ders olur. Hiçbir kayıt silinmez.' },
   restart_lesson: { label: 'Dersi yeniden başlat', message: 'Şu anki dersin açık oturumu kapatılır; öğrenci dersi baştan başlar. Önceki yanıtlar korunur.' },
   pause: { label: 'Programı duraklat', message: 'Öğrenci bu programda ilerleyemez; kayıtlar korunur.' },
   resume: { label: 'Programı sürdür', message: 'Öğrenci kaldığı dersten devam eder.' },
@@ -36,41 +69,11 @@ const COPY: Record<ProgressAction, { label: string; message: string; tone?: 'dan
 }
 const pending = ref<ProgressAction | null>(null)
 const confirmOpen = ref(false)
-const { busy, run } = useAction()
-
 function ask(action: ProgressAction) {
   pending.value = action
+  target.value = undefined
   confirmOpen.value = true
 }
-
-/* Teacher gate: lessons up to `gate` (sequence) may be opened; null = they open one after another. */
-const gate = computed(() => a.value.open_through_sequence)
-const currentSeq = computed(() => lessons.value[currentIdx.value]?.sequence ?? null)
-const waiting = computed(() => gate.value !== null && currentSeq.value !== null && currentSeq.value > gate.value)
-const nextToOpen = computed(() => {
-  if (gate.value === null) return null
-  if (waiting.value) return lessons.value[currentIdx.value] ?? null
-  return lessons.value.find((l) => l.sequence > gate.value!) ?? null
-})
-const gateTarget = ref<number | undefined>()
-const gateOptions = computed(() => lessons.value.map((l) => ({ value: l.sequence, label: `${l.sequence}. ${l.title}` })))
-type LessonMark = 'done' | 'current' | 'open' | 'locked'
-const mark = (l: (typeof lessons.value)[number]): LessonMark => {
-  if (l.id === a.value.current_lesson_id) return waiting.value ? 'locked' : 'current'
-  if (detail.completedLessonIds.has(l.id)) return 'done'
-  if (gate.value !== null && l.sequence <= gate.value && l.sequence > (currentSeq.value ?? 0)) return 'open'
-  return 'locked'
-}
-const MARK_LABEL: Record<LessonMark, string> = { done: 'tamamlandı', current: 'şu an açık', open: 'açık, sırası gelince', locked: 'kilitli' }
-
-async function applyGate(value: number | null, message: string) {
-  const ok = await run(() => setLessonGate(a.value.id, value), message)
-  if (ok) {
-    gateTarget.value = undefined
-    emit('changed')
-  }
-}
-
 async function confirm(note: string) {
   const action = pending.value
   if (!action) return
@@ -78,77 +81,67 @@ async function confirm(note: string) {
   confirmOpen.value = false
   if (ok) emit('changed')
 }
+const linkClass = 'focus-ring rounded-control text-ink-soft hover:text-ink hover:bg-muted type-small inline-flex min-h-10 items-center gap-1 px-2'
 </script>
 
 <template>
   <BaseCard as="section" :aria-label="`${detail.curriculumName} programı`">
     <template #head>
-      <div class="flex flex-wrap items-center gap-2">
-        <h2 class="type-body font-semibold">{{ detail.curriculumName }} · sürüm {{ detail.version }}</h2>
-        <BaseBadge :tone="a.status === 'active' ? 'success' : a.status === 'paused' ? 'warning' : 'neutral'">{{ ASSIGNMENT_STATUS[a.status] }}</BaseBadge>
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="type-body font-semibold">{{ detail.curriculumName }}</h2>
+            <BaseBadge :tone="a.status === 'active' ? 'success' : a.status === 'paused' ? 'warning' : 'neutral'">{{ ASSIGNMENT_STATUS[a.status] }}</BaseBadge>
+            <BaseBadge v-if="open" :tone="summary.tone">{{ summary.text }}</BaseBadge>
+          </div>
+          <p class="text-ink-soft type-small">
+            Şu anki ders: <strong class="text-ink">{{ lessonTitle(a.current_lesson_id) }}</strong> · sürüm {{ detail.version }} · atanma {{ formatDateTime(a.created_at) }}
+          </p>
+        </div>
+        <BaseMenu v-if="open" :label="`${detail.curriculumName} program işlemleri`" align="end">
+          <template #trigger>
+            <BaseButton size="sm" variant="secondary">Diğer işlemler <ChevronDown :size="16" aria-hidden="true" /></BaseButton>
+          </template>
+          <BaseButton variant="row" role="menuitem" :disabled="currentIdx < 0 || currentIdx >= lessons.length - 1" @click="ask('forward')">Sonraki derse geçir</BaseButton>
+          <BaseButton variant="row" role="menuitem" :disabled="currentIdx <= 0" @click="ask('backward')">Önceki derse al</BaseButton>
+          <BaseButton variant="row" role="menuitem" @click="ask('set_lesson')">Belirli bir derse taşı…</BaseButton>
+          <BaseButton variant="row" role="menuitem" :disabled="currentIdx < 0" @click="ask('restart_lesson')">Dersi yeniden başlat</BaseButton>
+          <BaseButton v-if="a.status === 'active'" variant="row" role="menuitem" @click="ask('pause')">Programı duraklat</BaseButton>
+          <BaseButton v-else variant="row" role="menuitem" @click="ask('resume')">Programı sürdür</BaseButton>
+          <BaseButton variant="row" role="menuitem" class="text-negative" @click="ask('archive')">Programı kaldır</BaseButton>
+        </BaseMenu>
       </div>
-      <p class="text-ink-soft type-small">
-        Şu anki ders: <strong class="text-ink">{{ lessonTitle(a.current_lesson_id) }}</strong> · {{ detail.completedLessonIds.size }}/{{ lessons.length }} ders tamamlandı ·
-        atanma {{ formatDateTime(a.created_at) }}
-      </p>
+      <div class="bg-muted mt-2 h-2 overflow-hidden rounded-full" role="progressbar" :aria-valuenow="done" aria-valuemin="0" :aria-valuemax="lessons.length" :aria-label="`${lessons.length} dersten ${done} ders tamamlandı`">
+        <div class="bg-primary h-full rounded-full" :style="{ width: `${lessons.length ? (100 * done) / lessons.length : 0}%` }" />
+      </div>
+      <p class="text-ink-soft type-small mt-1">{{ lessons.length }} dersten {{ done }} ders tamamlandı</p>
     </template>
 
-    <div v-if="open" class="flex flex-col gap-3">
-      <BaseToolbar label="Program işlemleri" class="flex flex-wrap gap-2">
-        <BaseButton size="sm" variant="secondary" :disabled="currentIdx <= 0" @click="ask('backward')">Önceki ders</BaseButton>
-        <BaseButton size="sm" variant="secondary" :disabled="currentIdx < 0 || currentIdx >= lessons.length - 1" @click="ask('forward')">Sonraki ders</BaseButton>
-        <BaseButton size="sm" variant="secondary" :disabled="currentIdx < 0" @click="ask('restart_lesson')">Dersi yeniden başlat</BaseButton>
-        <BaseButton v-if="a.status === 'active'" size="sm" variant="secondary" @click="ask('pause')">Duraklat</BaseButton>
-        <BaseButton v-else size="sm" variant="secondary" @click="ask('resume')">Sürdür</BaseButton>
-        <BaseButton size="sm" variant="danger" @click="ask('archive')">Kaldır</BaseButton>
-      </BaseToolbar>
-      <form class="flex flex-wrap items-end gap-2" @submit.prevent="ask('set_lesson')">
-        <BaseSelect v-model="target" class="min-w-64" size="sm" label="Belirli bir derse taşı" placeholder="Ders seçin" :options="lessonOptions" />
-        <BaseButton size="sm" type="submit" :disabled="!target || target === a.current_lesson_id">Taşı</BaseButton>
-      </form>
-    </div>
-
-    <section v-if="open" class="border-hair rounded-card mt-4 flex flex-col gap-3 border p-3" aria-labelledby="gate-title">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h3 id="gate-title" class="type-body font-semibold">Öğretmen kilidi</h3>
-        <BaseBadge :tone="gate === null ? 'neutral' : waiting ? 'warning' : 'success'">
-          {{ gate === null ? 'Kapalı: dersler sırayla açılır' : waiting ? 'Öğrenci sıradaki dersi bekliyor' : `${gate}. derse kadar açık` }}
-        </BaseBadge>
+    <section v-if="open" class="flex flex-col gap-3" :aria-label="`${detail.curriculumName}: öğrencinin açabileceği dersler`">
+      <div>
+        <h3 class="type-body font-semibold">Öğrencinin açabileceği dersler</h3>
+        <p class="text-ink-soft type-small">
+          İşaretlediğiniz dersler sırayla açılır: öğrenci birini bitirince sıradaki işaretli derse geçer. İşaretsiz dersleri öğrenci
+          "öğretmenin açacak" diye kilitli görür.
+        </p>
       </div>
-      <p class="text-ink-soft type-small">
-        <template v-if="gate === null">Öğrenci bir dersi bitirince sonraki kendiliğinden açılır. Kilidi açarsanız sonraki dersleri siz açarsınız.</template>
-        <template v-else-if="waiting">Öğrenci {{ lessonTitle(a.current_lesson_id) }} dersine geldi; siz açana kadar kilitli görür.</template>
-        <template v-else>Öğrenci {{ gate }}. derse kadar ilerleyebilir; sonrası siz açana kadar kilitli.</template>
-      </p>
-      <div class="flex flex-wrap gap-2">
-        <BaseButton v-if="nextToOpen" size="sm" :loading="busy" @click="applyGate(nextToOpen.sequence, `${nextToOpen.sequence}. ders açıldı`)">
-          <LockOpen :size="16" aria-hidden="true" /> {{ nextToOpen.sequence }}. dersi aç
-        </BaseButton>
-        <BaseButton v-if="gate === null && currentSeq !== null" size="sm" variant="secondary" :loading="busy" @click="applyGate(currentSeq, 'Öğretmen kilidi açıldı')">
-          <Lock :size="16" aria-hidden="true" /> Dersleri ben açayım
-        </BaseButton>
-        <BaseButton v-if="gate !== null" size="sm" variant="secondary" :loading="busy" @click="applyGate(null, 'Öğretmen kilidi kaldırıldı')">Kilidi kaldır</BaseButton>
+      <BaseSwitch v-model="allOpen" label="Seçim yapma: tüm dersler sırayla açılsın" />
+      <LessonPicker v-if="!allOpen" v-model="picked" :lessons="lessons" :completed="detail.completedLessonIds" :current="a.current_lesson_id" :disabled="busy">
+        <template #row="{ lesson }">
+          <span class="flex shrink-0 gap-1 ps-9 sm:ps-0">
+            <RouterLink :class="linkClass" :to="{ name: 'admin-lesson-preview', params: { lessonId: lesson.id } }"><FlaskConical :size="16" aria-hidden="true" /> Test et</RouterLink>
+            <RouterLink :class="linkClass" :to="{ name: 'admin-lesson', params: { lessonId: lesson.id }, query: { sekme: 'speaking' } }"><MessagesSquare :size="16" aria-hidden="true" /> Konuşma planı</RouterLink>
+          </span>
+        </template>
+      </LessonPicker>
+      <div v-if="dirty" class="bg-surface border-hair rounded-tile sticky bottom-2 z-10 flex flex-wrap items-center justify-between gap-2 border p-2 shadow-lg">
+        <span class="type-small text-ink ps-1 font-semibold">{{ allOpen ? 'Tüm dersler açılacak' : `${picked.length} ders açık olacak` }}</span>
+        <span class="flex gap-2">
+          <BaseButton variant="secondary" :disabled="busy" @click="reset">Vazgeç</BaseButton>
+          <BaseButton :loading="busy" :disabled="!allOpen && !picked.length" @click="save">Kaydet</BaseButton>
+        </span>
       </div>
-      <form class="flex flex-wrap items-end gap-2" @submit.prevent="gateTarget !== undefined && applyGate(gateTarget, `${gateTarget}. derse kadar açıldı`)">
-        <BaseSelect v-model="gateTarget" class="min-w-64" size="sm" label="Şu derse kadar aç" placeholder="Ders seçin" :options="gateOptions" />
-        <BaseButton size="sm" type="submit" variant="secondary" :disabled="gateTarget === undefined || gateTarget === gate">Uygula</BaseButton>
-      </form>
-      <ol class="divide-hair divide-y type-small" aria-label="Dersler">
-        <li v-for="l in lessons" :key="l.id" class="flex flex-wrap items-center justify-between gap-2 py-2">
-          <span class="flex min-w-0 items-center gap-2">
-            <Check v-if="mark(l) === 'done'" :size="16" class="shrink-0" aria-hidden="true" />
-            <Play v-else-if="mark(l) === 'current'" :size="16" class="shrink-0" aria-hidden="true" />
-            <LockOpen v-else-if="mark(l) === 'open'" :size="16" class="shrink-0" aria-hidden="true" />
-            <Lock v-else :size="16" class="text-ink-soft shrink-0" aria-hidden="true" />
-            <span class="min-w-0" :class="mark(l) === 'locked' ? 'text-ink-soft' : ''">{{ l.sequence }}. {{ l.title }}</span>
-            <span class="text-ink-soft">· {{ MARK_LABEL[mark(l)] }}</span>
-          </span>
-          <span class="flex gap-3">
-            <RouterLink class="focus-ring rounded-cell hover:underline" :to="{ name: 'admin-lesson-preview', params: { lessonId: l.id } }">Test et</RouterLink>
-            <RouterLink class="focus-ring rounded-cell hover:underline" :to="{ name: 'admin-lesson', params: { lessonId: l.id }, query: { sekme: 'speaking' } }">Konuşma planı</RouterLink>
-          </span>
-        </li>
-      </ol>
+      <p v-if="!allOpen && !picked.length" class="type-small text-warning-ink">En az bir ders seçin. Programı bitirmek için: Diğer işlemler → Programı kaldır.</p>
     </section>
 
     <BaseDisclosure v-if="a.current_lesson_id" class="mt-3" :title="`Konuşma dersi planı · ${lessonTitle(a.current_lesson_id)}`" :heading-level="3">
@@ -171,13 +164,16 @@ async function confirm(note: string) {
       v-if="pending"
       v-model="confirmOpen"
       :title="COPY[pending].label"
-      :message="pending === 'set_lesson' ? `${COPY[pending].message} Hedef: ${lessonTitle(target ?? null)}` : COPY[pending].message"
+      :message="COPY[pending].message"
       :confirm-label="COPY[pending].label"
       :tone="COPY[pending].tone ?? 'primary'"
+      :confirm-disabled="pending === 'set_lesson' && (!target || target === a.current_lesson_id)"
       with-note
       note-label="Not (olay kaydına yazılır)"
       :busy="busy"
       @confirm="confirm"
-    />
+    >
+      <BaseSelect v-if="pending === 'set_lesson'" v-model="target" class="mt-3" label="Hedef ders" placeholder="Ders seçin" :options="lessonOptions" />
+    </ConfirmDialog>
   </BaseCard>
 </template>

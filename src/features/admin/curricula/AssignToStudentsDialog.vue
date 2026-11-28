@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { BaseButton, BaseCheckbox, BaseInput, BaseSelect, BaseSwitch, useToast } from 'rei-kit'
-import { ResponsiveDialog } from 'rei-kit/web'
+import { BaseButton, BaseCheckbox, BaseInput, BaseSwitch, useToast } from 'rei-kit'
+import { BaseDisclosure, ResponsiveDialog } from 'rei-kit/web'
 import { assignMany, errorMessage, listPublishedVersions, listStudents, openVersionsByStudent } from '@/lib/api/admin'
+import LessonPicker from '../components/LessonPicker.vue'
 import LoadState from '../components/LoadState.vue'
 import { useLoad } from '../lib/use-load'
 
@@ -20,9 +21,9 @@ const state = useLoad(async () => {
 })
 const q = ref('')
 const picked = ref(new Set<string>())
-const startLessonId = ref<string | undefined>()
-/** Teacher gate on by default: the next lesson waits until the admin opens it. */
-const gated = ref(true)
+/** Open lessons (walked in order). Default: only the first. */
+const picked2 = ref<string[]>([])
+const allOpen = ref(false)
 const busy = ref(false)
 
 watch(open, (v) => {
@@ -38,8 +39,8 @@ const list = computed(() => {
   return (state.data.value?.students ?? []).filter((s) => s.status !== 'disabled' && (!needle || `${s.name} ${s.code}`.toLocaleLowerCase('tr').includes(needle)))
 })
 const selectable = computed(() => list.value.filter((s) => !has(s.id)))
-const lessonOptions = computed(() => (state.data.value?.version?.lessons ?? []).map((l) => ({ value: l.id, label: `${l.sequence}. ${l.title}` })))
-watch(lessonOptions, (o) => (startLessonId.value = o[0]?.value))
+const lessons = computed(() => state.data.value?.version?.lessons ?? [])
+watch(lessons, (l) => (picked2.value = l[0] ? [l[0].id] : []))
 
 function toggle(id: string, on: boolean) {
   const next = new Set(picked.value)
@@ -62,9 +63,7 @@ async function submit() {
   if (!ids.length) return
   busy.value = true
   try {
-    const lessons = state.data.value?.version?.lessons ?? []
-    const startSeq = (lessons.find((l) => l.id === startLessonId.value) ?? lessons[0])?.sequence ?? 1
-    const res = await assignMany(ids, versionId, startLessonId.value ?? null, gated.value ? startSeq : null)
+    const res = await assignMany(ids, versionId, allOpen.value ? null : picked2.value)
     const name = (id: string) => state.data.value?.students.find((s) => s.id === id)?.name ?? id
     if (res.ok.length) {
       const only = res.ok.length === 1 ? res.ok[0] : undefined
@@ -90,8 +89,13 @@ async function submit() {
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <div v-if="state.data.value" class="flex flex-col gap-4">
         <BaseInput v-model="q" type="search" label="Öğrenci ara" placeholder="Ad veya kod" />
-        <BaseSelect v-model="startLessonId" label="Başlangıç dersi" :options="lessonOptions" />
-        <BaseSwitch v-model="gated" label="Dersleri ben açacağım (sonraki dersler kilitli başlar)" />
+        <BaseDisclosure :title="allOpen ? 'Açık dersler: tümü, sırayla' : `Açık dersler: ${picked2.length} ders`" :heading-level="3">
+          <div class="flex flex-col gap-2">
+            <p class="text-ink-soft type-small">İşaretli dersler sırayla açılır; diğerlerini öğrenci kilitli görür.</p>
+            <BaseSwitch v-model="allOpen" label="Seçim yapma: tüm dersler sırayla açılsın" />
+            <LessonPicker v-if="!allOpen" v-model="picked2" :lessons="lessons" />
+          </div>
+        </BaseDisclosure>
         <BaseCheckbox :model-value="allOn" :disabled="!selectable.length" :label="`Görünenlerin hepsini seç (${selectable.length})`" @update:model-value="(v: boolean) => toggleAll(v)" />
         <ul class="divide-hair flex max-h-72 flex-col divide-y overflow-y-auto" aria-label="Öğrenciler">
           <li v-for="s in list" :key="s.id" class="flex min-h-11 items-center justify-between gap-3 py-1">
@@ -104,7 +108,7 @@ async function submit() {
     </LoadState>
     <template #actions>
       <BaseButton variant="secondary" @click="open = false">Vazgeç</BaseButton>
-      <BaseButton :disabled="!picked.size" :loading="busy" @click="submit">{{ picked.size ? `${picked.size} öğrenciye ata` : 'Ata' }}</BaseButton>
+      <BaseButton :disabled="!picked.size || (!allOpen && !picked2.length)" :loading="busy" @click="submit">{{ picked.size ? `${picked.size} öğrenciye ata` : 'Ata' }}</BaseButton>
     </template>
   </ResponsiveDialog>
 </template>

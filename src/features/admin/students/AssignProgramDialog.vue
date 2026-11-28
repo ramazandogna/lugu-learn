@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { BaseAlert, BaseButton, BaseInput, BaseSelect, BaseSwitch, useToast } from 'rei-kit'
+import { BaseAlert, BaseButton, BaseInput, BaseSwitch, useToast } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 import { assignMany, errorMessage, listPublishedVersions, openVersionsByStudent, type PublishedVersion } from '@/lib/api/admin'
+import LessonPicker from '../components/LessonPicker.vue'
 import LoadState from '../components/LoadState.vue'
 import { useLoad } from '../lib/use-load'
 
@@ -20,9 +21,9 @@ const state = useLoad(async () => {
 })
 const q = ref('')
 const versionId = ref<string | undefined>()
-const startLessonId = ref<string | undefined>()
-/** Teacher gate on by default: the next lesson waits until the admin opens it. */
-const gated = ref(true)
+/** Open lessons (walked in order). Default: only the first; the admin opens more from the Program tab. */
+const picked = ref<string[]>([])
+const allOpen = ref(false)
 const busy = ref(false)
 
 watch(open, (v) => {
@@ -34,14 +35,22 @@ watch(open, (v) => {
 
 const list = computed(() => {
   const needle = q.value.trim().toLocaleLowerCase('tr')
-  return (state.data.value?.versions ?? []).filter((v) => !needle || v.curriculumName.toLocaleLowerCase('tr').includes(needle))
+  const all = state.data.value?.versions ?? []
+  /* One student: hide what they already have open (it could not be assigned again). */
+  const usable = students.length === 1 ? all.filter((v) => !hasIt(students[0]!.id, v.id)) : all
+  return usable.filter((v) => !needle || v.curriculumName.toLocaleLowerCase('tr').includes(needle))
+})
+watch(list, (l) => {
+  if (l.length === 1 && !versionId.value) versionId.value = l[0]!.id
 })
 const chosen = computed<PublishedVersion | undefined>(() => state.data.value?.versions.find((v) => v.id === versionId.value))
 const hasIt = (studentId: string, vid: string) => state.data.value?.open.get(studentId)?.has(vid) ?? false
 const already = computed(() => (chosen.value ? students.filter((s) => hasIt(s.id, chosen.value!.id)) : []))
 const targets = computed(() => (chosen.value ? students.filter((s) => !hasIt(s.id, chosen.value!.id)) : []))
-const lessonOptions = computed(() => (chosen.value?.lessons ?? []).map((l) => ({ value: l.id, label: `${l.sequence}. ${l.title}` })))
-watch(chosen, () => (startLessonId.value = lessonOptions.value[0]?.value))
+watch(chosen, (v) => {
+  picked.value = v?.lessons[0] ? [v.lessons[0].id] : []
+  allOpen.value = false
+})
 
 async function submit() {
   const v = chosen.value
@@ -51,8 +60,7 @@ async function submit() {
     const res = await assignMany(
       targets.value.map((s) => s.id),
       v.id,
-      startLessonId.value ?? null,
-      gated.value ? (v.lessons.find((l) => l.id === startLessonId.value) ?? v.lessons[0])?.sequence ?? 1 : null,
+      allOpen.value ? null : picked.value,
     )
     const name = (id: string) => students.find((s) => s.id === id)?.name ?? id
     if (res.ok.length) {
@@ -100,10 +108,14 @@ const title = computed(() => (students.length === 1 ? `Program ata · ${students
             </li>
             <li v-if="!list.length" class="text-ink-soft type-small">Eşleşen müfredat yok.</li>
           </ul>
-          <BaseSelect v-if="chosen" v-model="startLessonId" label="Başlangıç dersi" :options="lessonOptions" />
-          <div v-if="chosen" class="flex flex-col gap-1">
-            <BaseSwitch v-model="gated" label="Dersleri ben açacağım" />
-            <p class="text-ink-soft type-small">{{ gated ? 'Öğrenci yalnız başlangıç dersini açabilir; sonrakileri öğrenci profilindeki Program sekmesinden siz açarsınız.' : 'Dersler sırayla, önceki ders bitince kendiliğinden açılır.' }}</p>
+          <div v-if="chosen" class="flex flex-col gap-2">
+            <h3 class="type-body font-semibold">Hangi dersler açık olsun?</h3>
+            <p class="text-ink-soft type-small">
+              İşaretlediğiniz dersler sırayla açılır; öğrenci birini bitirince sıradakine geçer. Diğerlerini öğrenci kilitli görür; sonradan
+              öğrenci profilindeki Program sekmesinden açabilirsiniz.
+            </p>
+            <BaseSwitch v-model="allOpen" label="Seçim yapma: tüm dersler sırayla açılsın" />
+            <LessonPicker v-if="!allOpen" v-model="picked" :lessons="chosen.lessons" />
           </div>
           <BaseAlert v-if="chosen && already.length" tone="warning">
             <template v-if="students.length === 1">Bu öğrencide bu program zaten açık. Önce mevcut atamayı arşivleyin ya da başka bir müfredat seçin.</template>
@@ -114,7 +126,7 @@ const title = computed(() => (students.length === 1 ? `Program ata · ${students
     </LoadState>
     <template #actions>
       <BaseButton variant="secondary" @click="open = false">Vazgeç</BaseButton>
-      <BaseButton :disabled="!chosen || !targets.length" :loading="busy" @click="submit">
+      <BaseButton :disabled="!chosen || !targets.length || (!allOpen && !picked.length)" :loading="busy" @click="submit">
         {{ targets.length > 1 ? `${targets.length} öğrenciye ata` : 'Ata' }}
       </BaseButton>
     </template>

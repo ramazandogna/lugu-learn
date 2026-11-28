@@ -49,6 +49,8 @@ export type StudentHome = {
     status: AccountStatus
     must_change_password: boolean
     profile_completed_at: string | null
+    /** Admin-given title, null when none or expired. */
+    honor_title: string | null
   } | null
   assignments: {
     id: string
@@ -65,7 +67,7 @@ export type StudentHome = {
       estimated_minutes: number
       in_progress: boolean
       tagline: string | null
-      /** Beyond the teacher gate: waits until the admin opens it. */
+      /** Not opened by the admin: waits until they open it. */
       teacher_locked: boolean
     } | null
   }[]
@@ -75,13 +77,22 @@ export type StudentHome = {
 }
 
 export type StudentLearningMap = {
-  assignment: { id: string; status: AssignmentStatus; current_lesson_id: string | null; open_through_sequence: number | null }
+  assignment: {
+    id: string
+    status: AssignmentStatus
+    current_lesson_id: string | null
+    curriculum_name: string
+    /** True when the admin picks the open lessons (false = every lesson opens in turn). */
+    selection: boolean
+  }
   lessons: {
     id: string
     sequence: number
     title: string
     estimated_minutes: number
     state: LessonState
+    /** Not opened by the admin (and not completed). */
+    teacher_locked: boolean
     replay_available: boolean
     completed_at: string | null
     tagline: string | null
@@ -1072,6 +1083,7 @@ type LuguTables = {
       id: string
       /** Highest lesson sequence the student may open; null = no teacher gate. */
       open_through_sequence: number | null
+      open_lesson_ids: string[] | null
       start_lesson_id: string
       status: 'active' | 'paused' | 'archived' | 'completed'
       student_id: string
@@ -1084,6 +1096,7 @@ type LuguTables = {
       curriculum_version_id: string
       id?: string
       open_through_sequence?: number | null
+      open_lesson_ids?: string[] | null
       start_lesson_id: string
       status?: 'active' | 'paused' | 'archived' | 'completed'
       student_id: string
@@ -1096,6 +1109,7 @@ type LuguTables = {
       curriculum_version_id?: string
       id?: string
       open_through_sequence?: number | null
+      open_lesson_ids?: string[] | null
       start_lesson_id?: string
       status?: 'active' | 'paused' | 'archived' | 'completed'
       student_id?: string
@@ -1649,6 +1663,8 @@ type LuguTables = {
       observations: string | null
       speaking_session_id: string
       strengths: string | null
+      targets: Json
+      topics: string | null
       updated_at: string
     }
     Insert: {
@@ -1660,6 +1676,8 @@ type LuguTables = {
       observations?: string | null
       speaking_session_id: string
       strengths?: string | null
+      targets?: Json
+      topics?: string | null
       updated_at?: string
     }
     Update: {
@@ -1671,6 +1689,8 @@ type LuguTables = {
       observations?: string | null
       speaking_session_id?: string
       strengths?: string | null
+      targets?: Json
+      topics?: string | null
       updated_at?: string
     }
     Relationships: [
@@ -1841,6 +1861,8 @@ type LuguTables = {
       display_name: string | null
       first_name: string | null
       grade: number | null
+      honor_title: string | null
+      honor_title_until: string | null
       last_name: string | null
       profile_completed_at: string | null
       school_id: string | null
@@ -1854,6 +1876,8 @@ type LuguTables = {
       display_name?: string | null
       first_name?: string | null
       grade?: number | null
+      honor_title?: string | null
+      honor_title_until?: string | null
       last_name?: string | null
       profile_completed_at?: string | null
       school_id?: string | null
@@ -1867,6 +1891,8 @@ type LuguTables = {
       display_name?: string | null
       first_name?: string | null
       grade?: number | null
+      honor_title?: string | null
+      honor_title_until?: string | null
       last_name?: string | null
       profile_completed_at?: string | null
       school_id?: string | null
@@ -2134,6 +2160,10 @@ type LuguFunctions = {
   admin_set_package_status: {
     Args: { package_id: string; status: PackageStatus }
     Returns: Row<'lesson_content_packages'>
+  }
+  admin_set_open_lessons: {
+    Args: { assignment_id: string; lesson_ids: string[] | null; note?: string | null }
+    Returns: Row<'program_assignments'>
   }
   admin_set_lesson_gate: {
     Args: { assignment_id: string; open_through: number | null; note?: string | null }

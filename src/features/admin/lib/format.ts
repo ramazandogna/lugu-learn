@@ -89,6 +89,7 @@ export const PROGRAM_EVENT_LABEL: Record<string, string> = {
   lesson_completed: 'Ders tamamlandı',
   program_completed: 'Program tamamlandı',
   gate: 'Öğretmen kilidi değişti',
+  open_lessons: 'Açık dersler değişti',
 }
 
 export const SESSION_STATUS: Record<'active' | 'completed' | 'abandoned', string> = {

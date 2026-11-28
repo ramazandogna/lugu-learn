@@ -13,6 +13,7 @@ const {
   withNote = false,
   noteLabel = 'Not (isteğe bağlı)',
   busy = false,
+  confirmDisabled = false,
 } = defineProps<{
   title: string
   message: string
@@ -21,6 +22,7 @@ const {
   withNote?: boolean
   noteLabel?: string
   busy?: boolean
+  confirmDisabled?: boolean
 }>()
 const emit = defineEmits<{ confirm: [note: string] }>()
 
@@ -37,7 +39,7 @@ watch(open, (v) => {
     <BaseTextarea v-if="withNote" v-model="note" class="mt-4" :label="noteLabel" :rows="3" />
     <template #actions>
       <BaseButton variant="secondary" @click="open = false">Vazgeç</BaseButton>
-      <BaseButton :variant="tone === 'danger' ? 'danger' : 'primary'" :loading="busy" @click="emit('confirm', note)">
+      <BaseButton :variant="tone === 'danger' ? 'danger' : 'primary'" :loading="busy" :disabled="confirmDisabled" @click="emit('confirm', note)">
         {{ confirmLabel }}
       </BaseButton>
     </template>
