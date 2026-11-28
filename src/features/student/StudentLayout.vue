@@ -11,11 +11,11 @@ import { useStudentHome } from './useStudentHome'
 type Tab = 'home' | 'map' | 'achievements' | 'history' | 'profile'
 
 const route = useRoute()
-const { home, mainAssignment } = useStudentHome()
+const { home } = useStudentHome()
 
 const items = computed(() => [
   { key: 'home' as const, to: '/', label: 'Ana sayfa', icon: House },
-  { key: 'map' as const, to: mainAssignment.value ? `/harita/${mainAssignment.value.id}` : '/', label: 'Harita', icon: Map },
+  { key: 'map' as const, to: '/harita', label: 'Harita', icon: Map },
   { key: 'achievements' as const, to: '/basarilar', label: 'Başarılar', icon: Trophy },
   { key: 'history' as const, to: '/gecmis', label: 'Geçmiş', icon: History },
   { key: 'profile' as const, to: '/profil', label: 'Profil', icon: User },
@@ -24,6 +24,7 @@ const items = computed(() => [
 const ACTIVE: Record<string, Tab> = {
   'student-home': 'home',
   'student-map': 'map',
+  'student-maps': 'map',
   'student-lesson': 'map',
   'student-replay': 'map',
   'student-achievements': 'achievements',

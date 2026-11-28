@@ -41,7 +41,7 @@ const ambientKind = computed(() => (unit.ambient.value === 'piko' ? 'candy' : un
 const play = computed(() => (current.value ? resolvePlay(loaded.pkg, current.value) : undefined))
 /* Admin test run: no student home, no breaks, no leave warning, every section open and skippable. */
 const preview = session.preview
-const { refresh: refreshHome, mainAssignment } = preview ? { refresh: async () => {}, mainAssignment: computed(() => null) } : useStudentHome()
+const { refresh: refreshHome } = preview ? { refresh: async () => {} } : useStudentHome()
 
 const flow = computed<LessonFlow>(() => session.flow.value!)
 const current = computed(() => session.current.value)
@@ -219,7 +219,7 @@ onBeforeUnmount(() => {
   clearTimeout(stuckTimer)
 })
 
-const mapTo = computed(() => (preview ? `/admin/dersler/${loaded.session.lesson_id}` : mainAssignment.value ? `/harita/${mainAssignment.value.id}` : '/'))
+const mapTo = computed(() => (preview ? `/admin/dersler/${loaded.session.lesson_id}` : `/harita/${loaded.session.assignment_id}`))
 const sectionIndex = (k: SectionKey) => Math.max(0, sections.value.indexOf(k)) + 1
 const pikoLine = (k: SectionKey) => SECTION_PIKO[k][(lessonsSeen + sectionIndex(k)) % 3]!
 const viewKey = computed(() => (onBreak.value ? 'break' : interlude.value ? `done-${interlude.value.from}` : (current.value ?? 'none')))

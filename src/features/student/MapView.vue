@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { BaseButton } from 'rei-kit'
-import { Compass, WandSparkles } from 'lucide-vue-next'
+import { ChevronLeft, Compass, WandSparkles } from 'lucide-vue-next'
 
 import { AmbientLayer, CharacterBubble, EmptyScene, JarProgress, LearningMap, LoadingScene, WorldBackground, useReducedMotion } from '@/design'
 import { CHARACTER_KEYS, type CharacterKey } from '@/domain/content'
@@ -22,6 +22,7 @@ const route = useRoute()
 const map = shallowRef<StudentLearningMap | null>(null)
 const error = ref<string | null>(null)
 const notice = ref<string | null>(null)
+const noticeEl = ref<HTMLElement | null>(null)
 
 const id = computed(() => String(route.params.assignmentId ?? ''))
 
@@ -88,7 +89,11 @@ function select(lessonId: string) {
 
 function locked(lessonId: string) {
   const lesson = map.value?.lessons.find((l) => l.id === lessonId)
-  if (lesson && map.value) notice.value = `${lesson.title}: ${lockedReason(lesson, map.value)}`
+  if (lesson && map.value) {
+    notice.value = `${lesson.title}: ${lockedReason(lesson, map.value)}`
+    /* The bubble sits above the map; a tap far down the path would leave it off screen. */
+    void nextTick(() => noticeEl.value?.scrollIntoView({ behavior: reduced.value ? 'auto' : 'smooth', block: 'center' }))
+  }
 }
 </script>
 
@@ -105,8 +110,11 @@ function locked(lessonId: string) {
     <div class="relative mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
       <header class="surface rounded-card relative flex flex-col gap-3 overflow-hidden p-4 pt-7 sm:p-6 sm:pt-9">
         <div class="tent absolute inset-x-0 top-0" aria-hidden="true" />
+        <RouterLink v-if="programs.length" :to="{ name: 'student-maps' }" class="focus-ring rounded-control text-primary type-task -ms-1 inline-flex min-h-11 w-fit items-center gap-1 px-1">
+          <ChevronLeft :size="20" aria-hidden="true" /> Haritalarım ({{ programs.length }})
+        </RouterLink>
         <div>
-          <p class="type-eyebrow text-ink-soft">Öğrenme haritam</p>
+          <p class="type-eyebrow text-ink-soft">{{ map.assignment.curriculum_name || 'Öğrenme haritam' }}</p>
           <h1 class="type-hero text-ink">Macera yolun</h1>
         </div>
         <JarProgress :value="done" :max="Math.max(1, total)" :label="`${total} dersten ${done} ders tamamlandı`">
@@ -114,20 +122,8 @@ function locked(lessonId: string) {
           <p class="type-small text-ink-soft">Bitirdiklerini istediğin zaman tekrar oynayabilirsin.<template v-if="next"> Önünde {{ next }} kilitli durak var.</template></p>
         </JarProgress>
       </header>
-      <nav v-if="programs.length" aria-label="Programların" class="flex flex-wrap gap-2">
-        <RouterLink
-          v-for="a in programs"
-          :key="a.id"
-          :to="`/harita/${a.id}`"
-          class="surface surface-interactive rounded-control focus-ring min-h-11 px-4 py-2"
-          :class="a.id === id ? 'border-primary border-2' : ''"
-          :aria-current="a.id === id ? 'page' : undefined"
-        >
-          <span class="type-task text-ink">{{ a.curriculum.name }}</span>
-        </RouterLink>
-      </nav>
       <CharacterBubble :character="character" size="sm">{{ guide }}</CharacterBubble>
-      <div aria-live="polite">
+      <div ref="noticeEl" aria-live="polite">
         <CharacterBubble v-if="notice" :character="character" expression="thinking" size="sm">
           {{ notice }}
         </CharacterBubble>

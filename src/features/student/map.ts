@@ -21,14 +21,14 @@ export function lessonRoute(lesson: Pick<MapLesson, 'id' | 'state'>): string | n
 }
 
 /** Why a locked lesson is locked, in words a learner can act on. */
-export function lockedReason(lesson: Pick<MapLesson, 'sequence'>, map: StudentLearningMap): string {
+export function lockedReason(lesson: Pick<MapLesson, 'sequence' | 'teacher_locked'>, map: StudentLearningMap): string {
   if (map.assignment.status === 'paused') return 'Programın şu an duraklatıldı. Öğretmenin açınca bu ders de sırası gelince açılacak.'
-  const gate = map.assignment.open_through_sequence
-  if (gate !== null && lesson.sequence > gate) return 'Bu dersi öğretmenin açacak. Açılınca burada seni bekliyor olacak!'
+  if (lesson.teacher_locked) return 'Bu ders henüz açılmadı. Öğretmeninden bu dersi senin için açmasını isteyebilirsin!'
   const current = map.lessons.find((l) => l.id === map.assignment.current_lesson_id)
   if (current && lesson.sequence < current.sequence)
     return 'Öğretmenin bu dersi şimdilik atlamanı istedi. Güncel dersine devam edebilirsin.'
-  const before = current ? lesson.sequence - current.sequence : 0
+  /* Open lessons wait for the ones before them: count the open stops still ahead of this one. */
+  const before = current ? map.lessons.filter((l) => !l.teacher_locked && l.sequence >= current.sequence && l.sequence < lesson.sequence).length : 0
   return before > 1
     ? `Bu ders ${before} ders sonra açılacak. Sıradaki dersini bitirdikçe yol açılır!`
     : 'Bu ders, şu anki dersini bitirince açılacak. Az kaldı!'

@@ -15,6 +15,7 @@ declare module 'vue-router' {
 
 const student: RouteRecordRaw[] = [
   { path: '', name: 'student-home', component: () => import('./features/student/HomeView.vue'), meta: { title: 'Ana sayfa' } },
+  { path: 'harita', name: 'student-maps', component: () => import('./features/student/MapPickerView.vue'), meta: { title: 'Haritalarım' } },
   { path: 'harita/:assignmentId', name: 'student-map', component: () => import('./features/student/MapView.vue'), meta: { title: 'Öğrenme haritam' } },
   { path: 'ders/:lessonId', name: 'student-lesson', component: () => import('./features/student/lesson/LessonView.vue'), meta: { title: 'Ders' } },
   { path: 'ders/:lessonId/tekrar', name: 'student-replay', component: () => import('./features/student/lesson/LessonView.vue'), props: { replay: true }, meta: { title: 'Dersi tekrar et' } },
