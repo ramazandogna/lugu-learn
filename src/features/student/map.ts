@@ -23,6 +23,8 @@ export function lessonRoute(lesson: Pick<MapLesson, 'id' | 'state'>): string | n
 /** Why a locked lesson is locked, in words a learner can act on. */
 export function lockedReason(lesson: Pick<MapLesson, 'sequence'>, map: StudentLearningMap): string {
   if (map.assignment.status === 'paused') return 'Programın şu an duraklatıldı. Öğretmenin açınca bu ders de sırası gelince açılacak.'
+  const gate = map.assignment.open_through_sequence
+  if (gate !== null && lesson.sequence > gate) return 'Bu dersi öğretmenin açacak. Açılınca burada seni bekliyor olacak!'
   const current = map.lessons.find((l) => l.id === map.assignment.current_lesson_id)
   if (current && lesson.sequence < current.sequence)
     return 'Öğretmenin bu dersi şimdilik atlamanı istedi. Güncel dersine devam edebilirsin.'

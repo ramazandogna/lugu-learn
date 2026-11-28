@@ -59,7 +59,7 @@ const MESSAGES: Record<string, string> = {
   LUGU_ASSIGNMENT_NOT_ACTIVE: 'Programın şu an duraklatılmış. Öğretmenin açınca devam edebilirsin.',
   LUGU_ASSIGNMENT_ARCHIVED: 'Bu program artık kullanılmıyor.',
   LUGU_LESSON_NOT_ASSIGNED: 'Bu ders senin programında değil.',
-  LUGU_LESSON_LOCKED: 'Bu ders henüz kilitli. Önceki dersleri bitirince açılacak.',
+  LUGU_LESSON_LOCKED: 'Bu ders henüz kilitli. Sırası gelince ya da öğretmenin açınca açılacak.',
   LUGU_LESSON_NOT_CURRENT: 'Öğretmenin programını güncelledi. Haritaya dönüp güncel dersine geçebilirsin.',
   LUGU_USE_REPLAY: 'Bu dersi zaten tamamladın! İstersen tekrar oynayabilirsin.',
   LUGU_REPLAY_NOT_AVAILABLE: 'Bu dersi tekrar oynamak için önce tamamlaman gerekiyor.',

@@ -16,7 +16,7 @@ const lesson = (id: string, sequence: number, state: StudentLearningMap['lessons
   character: null,
 })
 const map: StudentLearningMap = {
-  assignment: { id: 'a', status: 'active', current_lesson_id: 'l2' },
+  assignment: { id: 'a', status: 'active', current_lesson_id: 'l2', open_through_sequence: null },
   lessons: [lesson('l1', 1, 'completed'), lesson('l2', 2, 'current'), lesson('l3', 3, 'locked'), lesson('l4', 4, 'locked'), lesson('l5', 5, 'locked')],
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { BaseAlert, BaseButton, BaseInput, BaseSelect, useToast } from 'rei-kit'
+import { BaseAlert, BaseButton, BaseInput, BaseSelect, BaseSwitch, useToast } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 import { assignMany, errorMessage, listPublishedVersions, openVersionsByStudent, type PublishedVersion } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
@@ -21,6 +21,8 @@ const state = useLoad(async () => {
 const q = ref('')
 const versionId = ref<string | undefined>()
 const startLessonId = ref<string | undefined>()
+/** Teacher gate on by default: the next lesson waits until the admin opens it. */
+const gated = ref(true)
 const busy = ref(false)
 
 watch(open, (v) => {
@@ -50,6 +52,7 @@ async function submit() {
       targets.value.map((s) => s.id),
       v.id,
       startLessonId.value ?? null,
+      gated.value ? (v.lessons.find((l) => l.id === startLessonId.value) ?? v.lessons[0])?.sequence ?? 1 : null,
     )
     const name = (id: string) => students.find((s) => s.id === id)?.name ?? id
     if (res.ok.length) {
@@ -98,6 +101,10 @@ const title = computed(() => (students.length === 1 ? `Program ata · ${students
             <li v-if="!list.length" class="text-ink-soft type-small">Eşleşen müfredat yok.</li>
           </ul>
           <BaseSelect v-if="chosen" v-model="startLessonId" label="Başlangıç dersi" :options="lessonOptions" />
+          <div v-if="chosen" class="flex flex-col gap-1">
+            <BaseSwitch v-model="gated" label="Dersleri ben açacağım" />
+            <p class="text-ink-soft type-small">{{ gated ? 'Öğrenci yalnız başlangıç dersini açabilir; sonrakileri öğrenci profilindeki Program sekmesinden siz açarsınız.' : 'Dersler sırayla, önceki ders bitince kendiliğinden açılır.' }}</p>
+          </div>
           <BaseAlert v-if="chosen && already.length" tone="warning">
             <template v-if="students.length === 1">Bu öğrencide bu program zaten açık. Önce mevcut atamayı arşivleyin ya da başka bir müfredat seçin.</template>
             <template v-else>{{ already.length }} öğrencide bu program zaten açık; atlanacak ({{ already.map((s) => s.name).slice(0, 3).join(', ') }}{{ already.length > 3 ? '…' : '' }}).</template>

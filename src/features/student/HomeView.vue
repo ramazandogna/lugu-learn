@@ -81,7 +81,7 @@ watch(
       void import('./MapView.vue').catch(() => {})
     })
     for (const a of list) {
-      if (a.current_lesson) prefetchLesson(a.current_lesson.id)
+      if (a.current_lesson && !a.current_lesson.teacher_locked) prefetchLesson(a.current_lesson.id)
       prefetchMap(a.id)
     }
   },
@@ -132,8 +132,9 @@ const pikoLine = computed(() => {
   if (progressReady.value && s.today) return 'Bugünkü adımını attın. Bir tur daha istersen buradayım!'
   return lineOfTheDay()
 })
-const guideTo = computed(() => (current.value && !paused.value ? `/ders/${current.value.id}` : mainAssignment.value ? `/harita/${mainAssignment.value.id}` : '/kesfet'))
-const guideLabel = computed(() => (current.value && !paused.value ? (current.value.in_progress ? 'Devam edelim' : 'Başlayalım') : 'Haritaya bakalım'))
+const ready = computed(() => !!current.value && !paused.value && !current.value.teacher_locked)
+const guideTo = computed(() => (ready.value && current.value ? `/ders/${current.value.id}` : mainAssignment.value ? `/harita/${mainAssignment.value.id}` : '/kesfet'))
+const guideLabel = computed(() => (ready.value && current.value ? (current.value.in_progress ? 'Devam edelim' : 'Başlayalım') : 'Haritaya bakalım'))
 const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : null))
 </script>
 
@@ -194,7 +195,8 @@ const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : n
               <p class="type-small text-ink-soft">Her ders kavanozuna bir şeker ekler.</p>
             </JarProgress>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <CandyButton v-if="current && !paused" variant="wrapper" class="self-center sm:min-w-60 sm:self-auto" @click="openLesson(`/ders/${current.id}`)">
+              <p v-if="current && !paused && current.teacher_locked" class="type-body text-ink-soft self-center" role="status">Bu dersi öğretmenin açacak. Açılınca hemen başlayabilirsin!</p>
+              <CandyButton v-else-if="current && !paused" variant="wrapper" class="self-center sm:min-w-60 sm:self-auto" @click="openLesson(`/ders/${current.id}`)">
                 {{ current.in_progress ? 'Devam et' : 'Derse başla' }}
               </CandyButton>
               <BaseButton as="router-link" :to="`/harita/${mainAssignment.id}`" :variant="current && !paused ? 'secondary' : 'primary'" :size="current && !paused ? 'md' : 'lg'">
@@ -232,7 +234,7 @@ const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : n
               </p>
             </div>
             <div class="flex flex-wrap gap-2">
-              <BaseButton v-if="a.current_lesson && a.status !== 'paused'" as="router-link" :to="`/ders/${a.current_lesson.id}`">
+              <BaseButton v-if="a.current_lesson && a.status !== 'paused' && !a.current_lesson.teacher_locked" as="router-link" :to="`/ders/${a.current_lesson.id}`">
                 {{ a.current_lesson.in_progress ? 'Devam et' : 'Derse başla' }}
               </BaseButton>
               <BaseButton as="router-link" :to="`/harita/${a.id}`" variant="secondary"><Map :size="20" aria-hidden="true" /> Harita</BaseButton>

@@ -65,6 +65,8 @@ export type StudentHome = {
       estimated_minutes: number
       in_progress: boolean
       tagline: string | null
+      /** Beyond the teacher gate: waits until the admin opens it. */
+      teacher_locked: boolean
     } | null
   }[]
   xp: number
@@ -73,7 +75,7 @@ export type StudentHome = {
 }
 
 export type StudentLearningMap = {
-  assignment: { id: string; status: AssignmentStatus; current_lesson_id: string | null }
+  assignment: { id: string; status: AssignmentStatus; current_lesson_id: string | null; open_through_sequence: number | null }
   lessons: {
     id: string
     sequence: number
@@ -1068,6 +1070,8 @@ type LuguTables = {
       current_lesson_id: string | null
       curriculum_version_id: string
       id: string
+      /** Highest lesson sequence the student may open; null = no teacher gate. */
+      open_through_sequence: number | null
       start_lesson_id: string
       status: 'active' | 'paused' | 'archived' | 'completed'
       student_id: string
@@ -1079,6 +1083,7 @@ type LuguTables = {
       current_lesson_id?: string | null
       curriculum_version_id: string
       id?: string
+      open_through_sequence?: number | null
       start_lesson_id: string
       status?: 'active' | 'paused' | 'archived' | 'completed'
       student_id: string
@@ -1090,6 +1095,7 @@ type LuguTables = {
       current_lesson_id?: string | null
       curriculum_version_id?: string
       id?: string
+      open_through_sequence?: number | null
       start_lesson_id?: string
       status?: 'active' | 'paused' | 'archived' | 'completed'
       student_id?: string
@@ -1133,7 +1139,7 @@ type LuguTables = {
       created_at: string
       from_lesson_id: string | null
       id: string
-      kind: 'assigned' | 'forward' | 'backward' | 'set_lesson' | 'restart_lesson' | 'pause' | 'resume' | 'archive' | 'lesson_completed' | 'program_completed'
+      kind: 'assigned' | 'forward' | 'backward' | 'set_lesson' | 'restart_lesson' | 'pause' | 'resume' | 'archive' | 'lesson_completed' | 'program_completed' | 'gate'
       note: string | null
       to_lesson_id: string | null
     }
@@ -1143,7 +1149,7 @@ type LuguTables = {
       created_at?: string
       from_lesson_id?: string | null
       id?: string
-      kind: 'assigned' | 'forward' | 'backward' | 'set_lesson' | 'restart_lesson' | 'pause' | 'resume' | 'archive' | 'lesson_completed' | 'program_completed'
+      kind: 'assigned' | 'forward' | 'backward' | 'set_lesson' | 'restart_lesson' | 'pause' | 'resume' | 'archive' | 'lesson_completed' | 'program_completed' | 'gate'
       note?: string | null
       to_lesson_id?: string | null
     }
@@ -1153,7 +1159,7 @@ type LuguTables = {
       created_at?: string
       from_lesson_id?: string | null
       id?: string
-      kind?: 'assigned' | 'forward' | 'backward' | 'set_lesson' | 'restart_lesson' | 'pause' | 'resume' | 'archive' | 'lesson_completed' | 'program_completed'
+      kind?: 'assigned' | 'forward' | 'backward' | 'set_lesson' | 'restart_lesson' | 'pause' | 'resume' | 'archive' | 'lesson_completed' | 'program_completed' | 'gate'
       note?: string | null
       to_lesson_id?: string | null
     }
@@ -2128,6 +2134,10 @@ type LuguFunctions = {
   admin_set_package_status: {
     Args: { package_id: string; status: PackageStatus }
     Returns: Row<'lesson_content_packages'>
+  }
+  admin_set_lesson_gate: {
+    Args: { assignment_id: string; open_through: number | null; note?: string | null }
+    Returns: Row<'program_assignments'>
   }
   admin_set_progress: {
     Args: { assignment_id: string; action: ProgressAction; lesson_id?: string | null; note?: string | null }

@@ -84,6 +84,11 @@ export async function assignProgram(studentId: string, versionId: string, startL
   return must(await db.rpc('admin_assign_program', { student_id: studentId, version_id: versionId, start_lesson_id: startLessonId }))
 }
 
+/** Teacher gate: the student may open lessons up to `openThrough` (sequence); null removes the gate. */
+export async function setLessonGate(assignmentId: string, openThrough: number | null, note = '') {
+  return must(await db.rpc('admin_set_lesson_gate', { assignment_id: assignmentId, open_through: openThrough, note: note.trim() || null }))
+}
+
 export async function setProgress(assignmentId: string, action: ProgressAction, note: string, lessonId?: string | null) {
   return must(
     await db.rpc('admin_set_progress', { assignment_id: assignmentId, action, lesson_id: lessonId ?? null, note: note.trim() || null }),
@@ -108,15 +113,19 @@ export interface BulkAssignResult {
   failed: { studentId: string; error: unknown }[]
 }
 
-/** Assigns one version to many students, a few requests at a time; one failure never stops the rest. */
-export async function assignMany(studentIds: readonly string[], versionId: string, startLessonId: string | null, concurrency = 4): Promise<BulkAssignResult> {
+/**
+ * Assigns one version to many students, a few requests at a time; one failure never stops the rest.
+ * `openThrough` (a lesson sequence) also sets the teacher gate on each new assignment.
+ */
+export async function assignMany(studentIds: readonly string[], versionId: string, startLessonId: string | null, openThrough: number | null = null, concurrency = 4): Promise<BulkAssignResult> {
   const result: BulkAssignResult = { ok: [], failed: [] }
   let next = 0
   async function worker() {
     while (next < studentIds.length) {
       const studentId = studentIds[next++] as string
       try {
-        await assignProgram(studentId, versionId, startLessonId)
+        const a = await assignProgram(studentId, versionId, startLessonId)
+        if (openThrough !== null) await setLessonGate(a.id, openThrough, 'Atama: dersleri öğretmen açar')
         result.ok.push(studentId)
       } catch (error) {
         result.failed.push({ studentId, error })

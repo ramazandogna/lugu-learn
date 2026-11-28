@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { BaseButton, BaseCheckbox, BaseInput, BaseSelect, useToast } from 'rei-kit'
+import { BaseButton, BaseCheckbox, BaseInput, BaseSelect, BaseSwitch, useToast } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
 import { assignMany, errorMessage, listPublishedVersions, listStudents, openVersionsByStudent } from '@/lib/api/admin'
 import LoadState from '../components/LoadState.vue'
@@ -21,6 +21,8 @@ const state = useLoad(async () => {
 const q = ref('')
 const picked = ref(new Set<string>())
 const startLessonId = ref<string | undefined>()
+/** Teacher gate on by default: the next lesson waits until the admin opens it. */
+const gated = ref(true)
 const busy = ref(false)
 
 watch(open, (v) => {
@@ -60,7 +62,9 @@ async function submit() {
   if (!ids.length) return
   busy.value = true
   try {
-    const res = await assignMany(ids, versionId, startLessonId.value ?? null)
+    const lessons = state.data.value?.version?.lessons ?? []
+    const startSeq = (lessons.find((l) => l.id === startLessonId.value) ?? lessons[0])?.sequence ?? 1
+    const res = await assignMany(ids, versionId, startLessonId.value ?? null, gated.value ? startSeq : null)
     const name = (id: string) => state.data.value?.students.find((s) => s.id === id)?.name ?? id
     if (res.ok.length) {
       const only = res.ok.length === 1 ? res.ok[0] : undefined
@@ -87,6 +91,7 @@ async function submit() {
       <div v-if="state.data.value" class="flex flex-col gap-4">
         <BaseInput v-model="q" type="search" label="Öğrenci ara" placeholder="Ad veya kod" />
         <BaseSelect v-model="startLessonId" label="Başlangıç dersi" :options="lessonOptions" />
+        <BaseSwitch v-model="gated" label="Dersleri ben açacağım (sonraki dersler kilitli başlar)" />
         <BaseCheckbox :model-value="allOn" :disabled="!selectable.length" :label="`Görünenlerin hepsini seç (${selectable.length})`" @update:model-value="(v: boolean) => toggleAll(v)" />
         <ul class="divide-hair flex max-h-72 flex-col divide-y overflow-y-auto" aria-label="Öğrenciler">
           <li v-for="s in list" :key="s.id" class="flex min-h-11 items-center justify-between gap-3 py-1">
