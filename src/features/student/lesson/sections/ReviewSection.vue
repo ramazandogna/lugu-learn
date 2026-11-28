@@ -15,6 +15,7 @@ import { composeResults, loadHistory, type LocalRow } from '../../play/results'
 import type { TimedQ } from '../../play/types'
 import { toJson, useLesson } from '../context'
 import { allAttempted, attempt, restorePractice } from '../practice'
+import { PREVIEW_SESSION_PREFIX } from '../preview'
 
 /*
  * A short warm-up on earlier lessons, on the stamp-quiz template (or, when the
@@ -39,7 +40,8 @@ function wordQuestion(item: ReviewItem, all: readonly string[]): Question {
 
 const st = ref(restorePractice(snapshot, ids.value, questions.value.length))
 onMounted(async () => {
-  if (completed) return
+  // Admin test run: no student, so no weak words from earlier lessons.
+  if (completed || ctx.sessionId.startsWith(PREVIEW_SESSION_PREFIX)) return
   try {
     const items = await api.reviewItems(ctx.lessonId)
     const pool = [...items.map((i) => i.tr), ...ctx.pkg.vocabulary.map((v) => v.tr)]

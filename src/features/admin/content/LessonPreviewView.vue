@@ -6,7 +6,7 @@
  */
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { BaseButton } from 'rei-kit'
+import { BaseBadge, BaseButton } from 'rei-kit'
 import { BaseDisclosure } from 'rei-kit/web'
 import { LessonPackage } from '@/domain/content'
 import { lessonContext, listPackages } from '@/lib/api/admin'
@@ -38,7 +38,10 @@ const state = useLoad(async () => {
           <RouterLink :to="{ name: 'admin-lesson', params: { lessonId } }" class="focus-ring rounded-cell text-ink-soft w-fit type-small hover:underline">
             ‹ {{ state.data.value.lesson.sequence }}. {{ state.data.value.lesson.title }} · revizyon {{ state.data.value.row.revision }}
           </RouterLink>
-          <BaseButton size="sm" variant="secondary" @click="run++">Baştan başlat</BaseButton>
+          <span class="flex flex-wrap items-center gap-2">
+            <BaseBadge :tone="state.data.value.row.status === 'published' ? 'success' : 'warning'">{{ state.data.value.row.status === 'published' ? 'Yayındaki sürüm' : 'Taslak' }}</BaseBadge>
+            <BaseButton size="sm" variant="secondary" @click="run++">Baştan başlat</BaseButton>
+          </span>
         </div>
         <BaseDisclosure title="Bu dersin 1 saatlik konuşma planı" :heading-level="2">
           <LessonSpeakingPanel :lesson-id="lessonId" :package-id="state.data.value.row.id" />
