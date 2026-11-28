@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { AvatarArt } from '@/design'
+import { isAvatarKey } from '@/features/student/profile'
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ListFilter, Plus } from 'lucide-vue-next'
@@ -126,7 +128,7 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
       </div>
     </section>
 
-    <div v-if="pickedList.length" class="surface rounded-card sticky top-2 z-10 flex flex-wrap items-center justify-between gap-2 p-3" role="region" aria-label="Toplu işlem">
+    <div v-if="pickedList.length" class="surface rounded-card sticky top-[calc(var(--header-h)+0.5rem)] z-10 flex flex-wrap items-center justify-between gap-2 p-3" role="region" aria-label="Toplu işlem">
       <span class="type-small font-semibold">{{ pickedList.length }} öğrenci seçili</span>
       <div class="flex gap-2">
         <BaseButton variant="quiet" @click="picked = new Set()">Seçimi temizle</BaseButton>
@@ -147,7 +149,8 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
       <ul v-if="rows.length" class="flex flex-col gap-3 md:hidden" aria-label="Öğrenci listesi">
         <li v-for="r in rows" :key="r.id" class="surface rounded-card flex flex-col gap-2 p-4">
           <div class="flex items-start justify-between gap-3">
-            <BaseCheckbox class="shrink-0" :model-value="picked.has(r.id)" :label="`${r.name} seç`" label-hidden @update:model-value="(v: boolean) => toggle(r.id, v)" />
+            <BaseCheckbox class="-m-3 shrink-0 p-3" :model-value="picked.has(r.id)" :label="`${r.name} seç`" label-hidden @update:model-value="(v: boolean) => toggle(r.id, v)" />
+            <AvatarArt v-if="isAvatarKey(r.summary.avatarKey)" class="shrink-0" :avatar="r.summary.avatarKey" :size="40" />
             <div class="min-w-0 flex-1">
               <RouterLink :to="{ name: 'admin-student', params: { studentId: r.id } }" class="focus-ring rounded-cell inline-flex min-h-10 items-center font-semibold hover:underline">
                 {{ r.name }}

@@ -306,15 +306,16 @@
    control edge, body font for headings, no character colour.
    --------------------------------------------------------------------------- */
 [data-area='admin'] {
-  --color-canvas: #f6f6f9;
-  --color-muted: #ecebf3;
-  --color-ink: #1d1b2e;
-  --color-ink-soft: #555b6e;
-  --color-hair: #e2e1ea;
-  --color-wash: #eeecf8;
+  /* Warm neutral ground and the student's "gece mavisi" primary: one brand, a denser surface. */
+  --color-canvas: #f7f4ef;
+  --color-muted: #efeae2;
+  --color-ink: #1f1a33;
+  --color-ink-soft: #57516a;
+  --color-hair: #e4ddd2;
+  --color-wash: #eeebfa;
 
-  --color-primary: #2b66dc;
-  --color-primary-fill: #2b66dc;
+  --color-primary: #43399e;
+  --color-primary-fill: #43399e;
   --color-on-primary: #ffffff;
 
   --radius-control: 8px;
@@ -323,24 +324,33 @@
   --radius-shell: 20px;
 
   --font-display: var(--font-sans);
-  --shadow-color: #1d1b2e;
+  --shadow-color: #2a2140;
   --shadow-press: 0 1px 2px color-mix(in oklab, var(--shadow-color) 8%, transparent);
   --shadow-press-down: none;
+  /* Cards lift off the canvas a little, so sections read as sections. */
+  --shadow-card: 0 1px 2px color-mix(in oklab, var(--shadow-color) 6%, transparent), 0 4px 14px -6px color-mix(in oklab, var(--shadow-color) 12%, transparent);
   --type-body-size: 0.875rem;
+}
+
+/* Phones and small tablets: 16px body, so Turkish diacritics stay legible and inputs do not zoom. */
+@media (max-width: 1023px) {
+  [data-area='admin'] {
+    --type-body-size: 1rem;
+  }
 }
 
 .dark [data-area='admin'],
 .dark[data-area='admin'] {
-  --color-canvas: #121220;
-  --color-surface: #1b1b2c;
-  --color-muted: #25253a;
-  --color-ink: #ececf4;
-  --color-ink-soft: #a9abbd;
-  --color-hair: #2e2e45;
-  --color-wash: #1f1d36;
-  --color-primary: #8fb3ff;
-  --color-primary-fill: #8fb3ff;
-  --color-on-primary: #121220;
+  --color-canvas: #15112a;
+  --color-surface: #1f1a38;
+  --color-muted: #2a2447;
+  --color-ink: #efedf7;
+  --color-ink-soft: #b0abc4;
+  --color-hair: #352e55;
+  --color-wash: #262046;
+  --color-primary: #a9a1ff;
+  --color-primary-fill: #a9a1ff;
+  --color-on-primary: #15112a;
   --shadow-color: #000000;
 }
 

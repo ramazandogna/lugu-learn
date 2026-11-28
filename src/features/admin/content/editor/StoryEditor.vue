@@ -42,7 +42,7 @@ const optional = (x: string) => x.trim() || undefined
             <Trash2 class="size-4" aria-hidden="true" />
           </BaseButton>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <BaseButton variant="secondary" @click="addLine(s)"><Plus class="size-4" aria-hidden="true" /> Replik</BaseButton>
           <BaseButton variant="quiet" @click="toggleChoice(s)">{{ s.choice ? 'Seçimi kaldır' : 'Hikâye içi seçim ekle' }}</BaseButton>
         </div>

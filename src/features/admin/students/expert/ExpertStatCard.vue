@@ -67,7 +67,7 @@ const DIRECTION_TEXT = { higher_better: 'Yüksek iyi', lower_better: 'Düşük i
 
     <ul v-if="hasValue && rows.length" class="text-ink-soft type-small flex flex-col gap-0.5">
       <li v-for="r in rows" :key="r.key" class="flex justify-between gap-2">
-        <span class="truncate">{{ r.label ?? labelOf(r.key) }}</span>
+        <span class="truncate" :title="r.label ?? labelOf(r.key)">{{ r.label ?? labelOf(r.key) }}</span>
         <span class="tabular-nums">{{ formatStat(r.value, meta.unit, metric) }}</span>
       </li>
     </ul>

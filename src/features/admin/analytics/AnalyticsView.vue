@@ -53,7 +53,7 @@ const data = useLoad(
           />
           <BaseSelect
             v-model="target"
-            class="min-w-80 flex-1"
+            class="w-full min-w-0 flex-1 sm:min-w-80"
             :label="scope === 'student' ? 'Öğrenci' : 'Ders'"
             placeholder="Seçin"
             :options="options.data.value[scope]"

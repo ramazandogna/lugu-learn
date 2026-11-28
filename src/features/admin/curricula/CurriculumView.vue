@@ -104,7 +104,7 @@ async function remove() {
           <BaseBadge v-if="version" :tone="version.status === 'published' ? 'success' : 'neutral'">
             {{ version.status === 'published' ? `Yayında · ${formatDate(version.published_at)}` : version.status === 'draft' ? 'Taslak — düzenlenebilir' : 'Arşiv' }}
           </BaseBadge>
-          <div class="ms-auto flex gap-2">
+          <div class="ms-auto flex flex-wrap gap-2">
             <BaseButton v-if="version?.status === 'draft'" @click="publishing = true">Sürümü yayınla</BaseButton>
             <BaseButton v-if="version?.status === 'published'" @click="assigning = true">Öğrencilere ata</BaseButton>
             <BaseButton variant="secondary" :loading="busy" @click="createVersion">Yeni sürüm</BaseButton>

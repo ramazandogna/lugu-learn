@@ -67,7 +67,7 @@ async function remove(id: string) {
         <li v-if="!state.data.value?.length" class="text-ink-soft py-2 type-small">Henüz ders yok.</li>
       </ul>
       <form class="mt-3 flex items-end gap-2" @submit.prevent="add">
-        <BaseInput v-model="newName" class="flex-1" size="sm" label="Yeni ders" placeholder="ör. Matematik" />
+        <BaseInput v-model="newName" class="min-w-0 flex-1" size="sm" label="Yeni ders" placeholder="ör. Matematik" />
         <BaseButton size="sm" type="submit" :disabled="!newName.trim()" :loading="busy">Ekle</BaseButton>
       </form>
     </LoadState>
