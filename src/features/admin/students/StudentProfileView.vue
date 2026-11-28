@@ -23,16 +23,16 @@ import BaseTabs from '../components/ScrollTabs.vue'
 
 type TabKey = 'profil' | 'ilerleme' | 'gecmis' | 'akademik' | 'konusma' | 'ai' | 'program' | 'zaman' | 'uzman' | 'gorevler'
 const tabs: TabPanel<TabKey>[] = [
-  { key: 'profil', label: 'Profil' },
   { key: 'ilerleme', label: 'İlerleme' },
-  { key: 'gecmis', label: 'Geçmiş' },
-  { key: 'akademik', label: 'Akademik' },
-  { key: 'konusma', label: 'Konuşma' },
-  { key: 'ai', label: 'AI profili' },
   { key: 'program', label: 'Program' },
+  { key: 'konusma', label: 'Konuşma' },
+  { key: 'profil', label: 'Profil' },
+  { key: 'gorevler', label: 'Görevler' },
+  { key: 'akademik', label: 'Akademik' },
+  { key: 'gecmis', label: 'Geçmiş' },
   { key: 'zaman', label: 'Zaman çizelgesi' },
   { key: 'uzman', label: 'Uzman analiz' },
-  { key: 'gorevler', label: 'Görevler' },
+  { key: 'ai', label: 'AI profili' },
 ]
 
 const route = useRoute()
@@ -41,7 +41,7 @@ const studentId = computed(() => String(route.params.studentId))
 const tab = computed<TabKey>({
   get: () => {
     const q = String(route.query.sekme ?? '')
-    return tabs.some((t) => t.key === q) ? (q as TabKey) : 'profil'
+    return tabs.some((t) => t.key === q) ? (q as TabKey) : 'ilerleme'
   },
   set: (v) => void router.replace({ query: { ...route.query, sekme: v } }),
 })

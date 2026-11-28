@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BaseBadge, BaseCard, BaseTable, ProgressBar, StatCard } from 'rei-kit'
+import { BaseCard, BaseTable, ProgressBar, StatCard } from 'rei-kit'
 import type { LearningData, StudentSummary } from '@/lib/api/admin'
-import { ASSIGNMENT_STATUS, formatDateTime, formatPercent, sectionLabel } from '../../lib/format'
+import { formatDateTime, formatPercent, sectionLabel } from '../../lib/format'
 import { labelFor, mergedLabels } from '../../lib/package-labels'
 import EmptyState from '../../components/AdminEmpty.vue'
+import LessonJourney from './LessonJourney.vue'
 
 const { student, data } = defineProps<{ student: StudentSummary; data: LearningData }>()
 
@@ -60,17 +61,8 @@ const attemptRows = computed(() =>
       <StatCard label="Son doğruluk (25 yanıt)" :value="formatPercent(attemptRows.length ? attemptRows.filter((r) => r.result === 'Doğru').length / attemptRows.length : null)" />
     </div>
 
-    <BaseCard as="section" aria-labelledby="pr-current">
-      <template #head><h2 id="pr-current" class="type-body font-semibold">Şu anki ders</h2></template>
-      <EmptyState v-if="!student.program" title="Program atanmadı" description="Program yönetimi sekmesinden bir müfredat sürümü atayın." />
-      <div v-else class="flex flex-wrap items-center gap-3">
-        <p class="font-semibold">
-          {{ student.program.currentLesson ? `${student.program.currentLesson.sequence}. ${student.program.currentLesson.title}` : 'Program tamamlandı' }}
-        </p>
-        <BaseBadge>{{ student.program.curriculumName }} · s{{ student.program.version }}</BaseBadge>
-        <BaseBadge :tone="student.program.status === 'active' ? 'success' : 'warning'">{{ ASSIGNMENT_STATUS[student.program.status] }}</BaseBadge>
-      </div>
-    </BaseCard>
+    <LessonJourney :student-id="student.id" :data="data" />
+
 
     <BaseCard as="section" aria-labelledby="pr-vocab">
       <template #head>
