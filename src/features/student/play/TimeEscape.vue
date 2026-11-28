@@ -6,14 +6,14 @@ import { Hourglass, Pause, Play } from 'lucide-vue-next'
 import { CandyButton, LuguMascot, StampOption, playSound } from '@/design'
 import type { CharacterKey } from '@/domain/content'
 import { shuffleWith } from '@/engine/mastery'
-import { TIME_BANK, createDailyRounds, createTimeBank, lastSecond, riverLevel, softPulse, vignetteAlpha, vignetteRadius } from '@/play/time-bank'
+import { TIME_BANK, bonusFor, createDailyRounds, createRecord, createTimeBank, lastSecond, riverLevel, softPulse, vignetteAlpha, vignetteRadius } from '@/play/time-bank'
 
 import type { TimedQ } from './types'
 import { usePlayUi } from './uiContext'
 
 /*
- * "Lavdan kaç" — a timed round for things the learner already knows. Fixed by
- * pedagogy: 10 s bank, +3 s per right answer (cap 10), a round is 60-90 s, three
+ * "Lavdan kaç" — a record run on things the learner already knows: the clock drains faster with every
+ * right answer (see `play/time-bank.ts`), the best score is kept on the device. Up to ten
  * rounds a day, no penalty when time runs out (Piko escapes, candies stay).
  * Red is edge vignette in ten steps plus one gentle tint in the last second;
  * the clock is always also a number, an hourglass and the river's height.
@@ -35,6 +35,10 @@ const easy = ref(easyDefault || daily.suggestEasy())
 const suggested = daily.suggestEasy()
 const breakCard = ref(!daily.canStart())
 const rounds = ref(0)
+/* Record run: the best score on this device, and whether this round beat it. */
+const record = createRecord()
+const best = ref(record.best())
+const newRecord = ref(false)
 const totalCorrect = ref(0)
 
 const deck = ref<TimedQ[]>([])
@@ -83,6 +87,9 @@ watch(
     if ((s === 'end-win' || s === 'end-time') && prev === 'run') {
       daily.recordRound(s)
       rounds.value++
+      newRecord.value = !st.easy && record.submit(st.corrects)
+      if (newRecord.value) playSound('pop')
+      best.value = record.best()
       totalCorrect.value += st.corrects
       clearTimeout(advance)
     }
@@ -180,7 +187,7 @@ const done = () => emit('finish', { corrects: totalCorrect.value, rounds: rounds
         />
         <div class="flex items-center gap-3">
           <LuguMascot :character="chase.escapee" :expression="st.tier <= 3 && !st.easy ? 'encouraging' : 'happy'" :size="64" />
-          <p :key="bonus" class="type-small text-ink font-bold" :class="bonus ? 'animate-stamp' : ''">Doğru: {{ st.corrects }} <span v-if="bonus">· +3 sn</span></p>
+          <p :key="bonus" class="type-small text-ink font-bold" :class="bonus ? 'animate-stamp' : ''">Doğru: {{ st.corrects }} <span v-if="bonus">· +{{ bonusFor(st.corrects).toFixed(1).replace('.0', '').replace('.', ',') }} sn</span><span v-if="!st.easy && best" class="text-ink-soft"> · Rekor {{ best }}</span></p>
         </div>
 
         <div class="card surface rounded-card flex flex-col gap-4 p-4 shadow-(--shadow-raised) sm:p-6" :class="st.status === 'paused' ? 'blur-sm' : ''" :aria-hidden="st.status === 'paused'">
@@ -213,13 +220,14 @@ const done = () => emit('finish', { corrects: totalCorrect.value, rounds: rounds
       <template v-else-if="ended">
         <div class="surface rounded-card m-auto flex max-w-lg flex-col items-center gap-4 p-6 text-center">
           <LuguMascot :character="chase.escapee" :expression="st.status === 'end-win' ? 'celebrating' : 'encouraging'" :size="88" animated />
-          <p class="type-section text-ink">{{ st.status === 'end-win' ? 'Turu bitirdin, Piko kurtuldu!' : 'Piko kaçtı, sen de çok iyiydin!' }}</p>
-          <p class="type-display text-ink">{{ st.corrects }}</p>
+          <p class="type-section text-ink">{{ newRecord ? 'YENİ REKOR!' : st.status === 'end-win' ? 'Turu bitirdin, Piko kurtuldu!' : 'Süre bitti! Her soruda saat hızlandı.' }}</p>
+          <p class="type-display text-ink" :class="newRecord ? 'animate-stamp text-primary' : ''">{{ st.corrects }}</p>
+          <p v-if="!st.easy" class="type-task text-ink-soft">{{ newRecord ? 'Kendi rekorunu kırdın, harika!' : `Rekorun: ${best}. Bir tur daha deneyip kırabilir misin?` }}</p>
           <p class="type-body text-ink">tane şekeri hızlıca hatırladın. Şekerlerin hepsi duruyor.</p>
           <div class="flex flex-wrap justify-center gap-2">
             <CandyButton @click="done">Bitir</CandyButton>
             <BaseButton v-if="daily.canStart()" variant="secondary" @click="start">Bir tur daha</BaseButton>
-            <p v-else class="type-small text-ink-soft">Bugünlük 3 tur tamam. Yarın yine bekleriz.</p>
+            <p v-else class="type-small text-ink-soft">Bugünlük turlar tamam. Yarın yine bekleriz.</p>
           </div>
         </div>
       </template>

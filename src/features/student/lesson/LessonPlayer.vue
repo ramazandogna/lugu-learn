@@ -219,7 +219,7 @@ onBeforeUnmount(() => {
   clearTimeout(stuckTimer)
 })
 
-const mapTo = computed(() => (preview ? `/admin/dersler/${loaded.session.lesson_id}` : `/harita/${loaded.session.assignment_id}`))
+const mapTo = computed(() => (preview ? `/admin/dersler/${loaded.session.lesson_id}` : '/harita'))
 const sectionIndex = (k: SectionKey) => Math.max(0, sections.value.indexOf(k)) + 1
 const pikoLine = (k: SectionKey) => SECTION_PIKO[k][(lessonsSeen + sectionIndex(k)) % 3]!
 const viewKey = computed(() => (onBreak.value ? 'break' : interlude.value ? `done-${interlude.value.from}` : (current.value ?? 'none')))

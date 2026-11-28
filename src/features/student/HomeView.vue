@@ -133,7 +133,7 @@ const pikoLine = computed(() => {
   return lineOfTheDay()
 })
 const ready = computed(() => !!current.value && !paused.value && !current.value.teacher_locked)
-const guideTo = computed(() => (ready.value && current.value ? `/ders/${current.value.id}` : mainAssignment.value ? `/harita/${mainAssignment.value.id}` : '/kesfet'))
+const guideTo = computed(() => (ready.value && current.value ? `/ders/${current.value.id}` : mainAssignment.value ? '/harita' : '/kesfet'))
 const guideLabel = computed(() => (ready.value && current.value ? (current.value.in_progress ? 'Devam edelim' : 'Başlayalım') : 'Haritaya bakalım'))
 const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : null))
 </script>
@@ -202,7 +202,7 @@ const hayalTo = computed(() => (current.value ? `/hayal/${current.value.id}` : n
               <CandyButton v-else-if="current && !paused" variant="wrapper" class="self-center sm:min-w-60 sm:self-auto" @click="openLesson(`/ders/${current.id}`)">
                 {{ current.in_progress ? 'Devam et' : 'Derse başla' }}
               </CandyButton>
-              <BaseButton as="router-link" :to="`/harita/${mainAssignment.id}`" :variant="current && !paused ? 'secondary' : 'primary'" :size="current && !paused ? 'md' : 'lg'">
+              <BaseButton as="router-link"  to="/harita" :variant="current && !paused ? 'secondary' : 'primary'" :size="current && !paused ? 'md' : 'lg'">
                 <Map :size="20" aria-hidden="true" /> Haritamı aç
               </BaseButton>
             </div>

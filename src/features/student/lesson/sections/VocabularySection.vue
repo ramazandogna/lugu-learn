@@ -33,6 +33,8 @@ const flipped = ref(false)
 
 const item = computed(() => items[index.value]!)
 const allSeen = computed(() => completed || seen.value.size >= items.length)
+/** Two steps per word: see it, then flip it. The next word opens only after the flip. */
+const thisSeen = computed(() => completed || seen.value.has(item.value.id))
 
 function save() {
   emit('state', { v: 1, index: index.value, seen: [...seen.value] })
@@ -79,6 +81,11 @@ function goTo(i: number) {
         </span>
       </button>
     </div>
+    <ol class="flex items-center justify-center gap-2" aria-label="Bu kelimedeki adımlar">
+      <li class="rounded-control type-small flex items-center gap-1 px-3 py-1 font-bold" :class="thisSeen ? 'bg-muted text-ink-soft' : 'bg-primary text-on-primary'">1/2 Kelimeyi gör</li>
+      <li aria-hidden="true" class="text-ink-soft">→</li>
+      <li class="rounded-control type-small flex items-center gap-1 px-3 py-1 font-bold" :class="thisSeen ? 'bg-positive text-on-positive' : 'bg-muted text-ink-soft'">2/2 Kartı çevir{{ thisSeen ? ' ✓' : '' }}</li>
+    </ol>
     <div class="flex flex-wrap items-center justify-center gap-3">
       <SpeakButton :text="item.en" label="Kelimeyi dinle" />
       <SpeakButton :text="item.example.en" label="Cümleyi dinle" />
@@ -86,10 +93,11 @@ function goTo(i: number) {
 
     <div class="flex flex-wrap items-center justify-between gap-2">
       <BaseButton variant="secondary" :disabled="index === 0" @click="goTo(index - 1)">Önceki</BaseButton>
-      <CandyButton v-if="index < items.length - 1" @click="goTo(index + 1)">Sonraki kelime</CandyButton>
+      <CandyButton v-if="index < items.length - 1" :disabled="!thisSeen" disabled-reason="Önce kartı çevir" @click="goTo(index + 1)">Sonraki kelime</CandyButton>
       <CandyButton v-else :disabled="!allSeen" disabled-reason="Önce her kartı çevir" @click="emit('complete')">Kelimeleri bitirdim</CandyButton>
     </div>
-    <p v-if="index === items.length - 1 && !allSeen" class="text-ink-soft type-small">Bitirmeden önce her kartı bir kez çevirmelisin.</p>
+    <p v-if="!thisSeen" class="text-ink-soft type-small text-center" role="status">Sonraki kelimeye geçmek için kartı çevir.</p>
+    <p v-else-if="index === items.length - 1 && !allSeen" class="text-ink-soft type-small">Bitirmeden önce her kartı bir kez çevirmelisin.</p>
   </div>
 </template>
 

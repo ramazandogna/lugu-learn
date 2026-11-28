@@ -55,7 +55,10 @@ function line(a: (typeof programs.value)[number]): string {
               <Lock v-if="a.current_lesson?.teacher_locked" :size="14" aria-hidden="true" />
               {{ line(a) }}
             </p>
-            <p class="type-small text-ink-soft">{{ a.lessons_total }} dersten {{ a.lessons_completed }} tamam</p>
+            <p class="type-small text-ink-soft">
+              {{ a.lessons_total }} dersten {{ a.lessons_completed }} tamam · %{{ a.lessons_total ? Math.round((100 * a.lessons_completed) / a.lessons_total) : 0 }}
+            </p>
+            <p v-if="a.current_lesson?.teacher_locked" class="type-small text-warning-ink font-bold">Sıradaki dersi öğretmenin açacak</p>
           </JarProgress>
           <ChevronRight :size="28" class="text-primary shrink-0" aria-hidden="true" />
         </RouterLink>

@@ -1,12 +1,13 @@
 /**
- * Time bank for `time-escape` ("Lavdan kaç"). Fixed by pedagogy: 10 s bank, +3 s per correct, cap 10 s,
- * round 60-90 s, <= 3 timed rounds a day, no penalty when time runs out. DOM-free: UI drives `tick(dtMs)`.
+ * Time bank for `time-escape` ("Lavdan kaç"): a record run. 10 s bank, a shrinking bonus per right answer
+ * (3 s down to 1.5 s, cap 10 s) and a clock that drains faster with every answer; up to 10 runs a day, no
+ * penalty when time runs out. Easy mode keeps the old calm round (no drain, ends at 60-90 s). DOM-free.
  */
 import { reactive, readonly } from 'vue'
 
 import { dayKey, safeStorage, type KV } from './storage'
 
-export const TIME_BANK = { bank: 10, perCorrect: 3, cap: 10, roundSeconds: 75, comfortShare: 0.6, comfortRate: 0.5, dailyRounds: 3 } as const
+export const TIME_BANK = { bank: 10, perCorrect: 3, cap: 10, roundSeconds: 75, dailyRounds: 10 } as const
 
 /** Tier 10 (calm green) .. 1 (last second, red). 0 s still reads as tier 1. */
 export const tierOf = (seconds: number): number => Math.min(10, Math.max(1, Math.ceil(seconds)))
@@ -24,6 +25,29 @@ export const softPulse = (tier: number): boolean => tier <= 3
 export const lastSecond = (seconds: number): boolean => tierOf(seconds) === 1
 /** Water level of the caramel river, 0..1. */
 export const riverLevel = (seconds: number): number => Math.min(1, Math.max(0, seconds / TIME_BANK.cap))
+
+/*
+ * Tuned (simulated) so a player answering every ~3 s lasts ~22 answers / ~70 s, a quick one (~2 s)
+ * ~39 answers / ~80 s, a slow one (~4 s) ~13 answers / ~55 s: every answer makes the next one harder.
+ */
+/** Seconds of clock lost per real second: 0.6x at the start, +0.02x per right answer, +0.2x per minute played. */
+export const drainRate = (corrects: number, elapsedMs: number): number => 0.6 + corrects * 0.02 + elapsedMs / 300_000
+/** Seconds won for the n-th right answer: 3 s, shrinking by 0.02 s per answer, never below 1.5 s. */
+export const bonusFor = (n: number): number => Math.max(1.5, TIME_BANK.perCorrect - (n - 1) * 0.02)
+
+/** Best record-run score (right answers), kept on this device. */
+export function createRecord(kv: KV = safeStorage(), key = 'lugu.timeEscape.best') {
+  const read = () => Number(kv.getItem(key) ?? 0) || 0
+  return {
+    best: read,
+    /** Stores `score` when it beats the record; returns true on a new record. */
+    submit(score: number): boolean {
+      if (score <= read()) return false
+      kv.setItem(key, String(score))
+      return true
+    },
+  }
+}
 
 export type BankStatus = 'ready' | 'run' | 'paused' | 'end-win' | 'end-time'
 export interface TimeBankState {
@@ -61,24 +85,23 @@ export function createTimeBank(opts: { easy?: boolean; roundSeconds?: number } =
       state.corrects = 0
       refresh()
     },
-    /** Advance time. Easy mode: the bank never drains, the round still ends at `roundMs`. */
+    /**
+     * Advance time. Normal mode is a record run: no round end, the clock drains faster with every right
+     * answer and with time played (`drainRate`), so an average player is pushed out in about 1-2 minutes. Easy mode: the bank never drains, the round ends at `roundMs`.
+     */
     tick(dtMs: number) {
       if (state.status !== 'run' || dtMs <= 0) return
       state.elapsedMs += dtMs
-      if (!state.easy) {
-        // first 60% of the round drains at a relaxed rate
-        const rate = state.elapsedMs < roundMs * TIME_BANK.comfortShare ? TIME_BANK.comfortRate : 1
-        state.seconds = Math.max(0, state.seconds - (dtMs / 1000) * rate)
-      }
+      if (!state.easy) state.seconds = Math.max(0, state.seconds - (dtMs / 1000) * drainRate(state.corrects, state.elapsedMs))
       refresh()
-      if (state.elapsedMs >= roundMs) state.status = 'end-win'
+      if (state.easy && state.elapsedMs >= roundMs) state.status = 'end-win'
       else if (state.seconds <= 0) state.status = 'end-time'
     },
-    /** Correct answer: +3 s, capped at 10 s. */
+    /** Correct answer: a shrinking bonus (`bonusFor`), capped at 10 s. */
     correct() {
       if (state.status !== 'run') return
       state.corrects++
-      state.seconds = Math.min(TIME_BANK.cap, state.seconds + TIME_BANK.perCorrect)
+      state.seconds = Math.min(TIME_BANK.cap, state.seconds + bonusFor(state.corrects))
       refresh()
     },
     pause() {
