@@ -10,6 +10,8 @@
 @import '@fontsource-variable/nunito';
 @import '@fontsource/fredoka/500.css';
 @import '@fontsource/fredoka/600.css';
+/* rei-kit components use these utilities from inside node_modules, which Tailwind does not scan. */
+@source inline('surface surface-raised surface-overlay');
 
 /* ---------------------------------------------------------------------------
    Brand roles, day. Every on-* is stated and measured (styling.test.ts runs

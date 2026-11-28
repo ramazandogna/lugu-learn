@@ -3,9 +3,8 @@ import { AvatarArt } from '@/design'
 import { isAvatarKey } from '@/features/student/profile'
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ListFilter, Plus } from 'lucide-vue-next'
-import { BaseBadge, BaseButton, BaseCheckbox, BaseInput, BaseSelect } from 'rei-kit'
-import { DataTable, type DataColumn, type TableSort } from 'rei-kit/web'
+import { ListFilter, Plus, Search } from 'lucide-vue-next'
+import { BaseBadge, BaseButton, BaseCheckbox, BaseSelect } from 'rei-kit'
 import { listStudents, type StudentSummary } from '@/lib/api/admin'
 import type { AccountStatus } from '@/lib/database.types'
 import LoadState from '../components/LoadState.vue'
@@ -14,7 +13,6 @@ import { EMPTY_FILTERS, filterOptions, filterStudents, type StudentFilters } fro
 import { useLoad } from '../lib/use-load'
 import AssignProgramDialog from './AssignProgramDialog.vue'
 import NewStudentDialog from './NewStudentDialog.vue'
-import StudentAccountActions from './StudentAccountActions.vue'
 import PageHeader from '../components/AdminPageHeader.vue'
 
 const { data, loading, error, reload } = useLoad(listStudents)
@@ -70,17 +68,16 @@ const rows = computed<Row[]>(() =>
   })),
 )
 
-const columns: DataColumn<Row>[] = [
-  { key: 'sel', label: 'Seç' },
-  { key: 'name', label: 'Öğrenci', sortable: true },
-  { key: 'grade', label: 'Sınıf', sortable: true, align: 'end' },
-  { key: 'school', label: 'Okul', sortable: true },
-  { key: 'lesson', label: 'Program / şu anki ders' },
-  { key: 'status', label: 'Durum', sortable: true },
-  { key: 'lastActivity', label: 'Son etkinlik', sortable: true, nowrap: true },
-  { key: 'id', label: 'İşlemler', align: 'end' },
+const sortOptions = [
+  { value: 'lastActivity', label: 'Son etkinlik' },
+  { value: 'name', label: 'Ada göre' },
+  { value: 'grade', label: 'Sınıfa göre' },
 ]
-const sort = ref<TableSort<Row> | undefined>({ key: 'lastActivity', direction: 'desc' })
+const sortKey = ref<'lastActivity' | 'name' | 'grade'>('lastActivity')
+const sorted = computed(() => {
+  const k = sortKey.value
+  return [...rows.value].sort((x, y) => (k === 'name' ? x.name.localeCompare(y.name, 'tr') : k === 'grade' ? x.grade - y.grade : y.lastActivity - x.lastActivity))
+})
 const hasFilters = computed(() => JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS))
 const pickedList = computed(() => rows.value.filter((r) => picked.value.has(r.id)).map((r) => ({ id: r.id, name: r.name })))
 const allOn = computed(() => rows.value.length > 0 && rows.value.every((r) => picked.value.has(r.id)))
@@ -103,20 +100,24 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
       </template>
     </PageHeader>
 
-    <section aria-label="Filtreler" class="surface rounded-card flex flex-col gap-3 p-4">
-      <div class="flex items-end gap-2">
-        <BaseInput v-model="filters.q" class="min-w-0 flex-1" type="search" label="Ara" placeholder="Ad, kod veya okul" />
+    <section aria-label="Arama ve filtre" class="flex flex-col gap-3">
+      <div class="flex items-center gap-2">
+        <label class="bg-muted rounded-full focus-within:ring-primary flex min-h-11 min-w-0 flex-1 items-center gap-2 px-4 focus-within:ring-2">
+          <Search class="text-ink-soft size-4 shrink-0" aria-hidden="true" />
+          <span class="sr-only">Öğrenci ara</span>
+          <input v-model="filters.q" type="search" class="type-body min-w-0 flex-1 bg-transparent outline-none" placeholder="Ad, kod veya okul ara…" />
+        </label>
         <BaseButton
-          class="shrink-0 whitespace-nowrap md:hidden"
+          class="shrink-0 whitespace-nowrap"
           variant="secondary"
           :aria-expanded="showFilters"
           aria-controls="student-filters"
           @click="showFilters = !showFilters"
         >
-          <ListFilter class="size-4" aria-hidden="true" /> Filtrele<template v-if="activeCount"> ({{ activeCount }})</template>
+          <ListFilter class="size-4" aria-hidden="true" /> Filtre<template v-if="activeCount"> ({{ activeCount }})</template>
         </BaseButton>
       </div>
-      <div id="student-filters" class="grid-cols-1 gap-3 sm:grid-cols-2 md:grid md:grid-cols-3 xl:grid-cols-5" :class="showFilters ? 'grid' : 'hidden'">
+      <div id="student-filters" class="grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5" :class="showFilters ? 'grid' : 'hidden'">
         <BaseSelect v-model="filters.grade" label="Sınıf" placeholder="Tümü" :options="options.grades" />
         <BaseSelect v-model="filters.schoolId" label="Okul" placeholder="Tümü" :options="options.schools" />
         <BaseSelect v-model="filters.curriculumId" label="Program" placeholder="Tümü" :options="options.programs" />
@@ -145,14 +146,17 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
       @retry="reload"
     >
       <template #emptyAction><BaseButton @click="creating = true">Yeni öğrenci</BaseButton></template>
-      <BaseCheckbox v-if="rows.length" class="mb-3" :model-value="allOn" label="Listedekilerin hepsini seç" @update:model-value="(v: boolean) => toggleAll(v)" />
-      <ul v-if="rows.length" class="flex flex-col gap-3 md:hidden" aria-label="Öğrenci listesi">
-        <li v-for="r in rows" :key="r.id" class="surface rounded-card flex flex-col gap-2 p-4">
-          <div class="flex items-start justify-between gap-3">
-            <BaseCheckbox class="-m-3 shrink-0 p-3" :model-value="picked.has(r.id)" :label="`${r.name} seç`" label-hidden @update:model-value="(v: boolean) => toggle(r.id, v)" />
+      <div v-if="rows.length" class="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <BaseCheckbox :model-value="allOn" label="Hepsini seç" @update:model-value="(v: boolean) => toggleAll(v)" />
+        <BaseSelect v-model="sortKey" class="w-48" label="Sırala" label-hidden :options="sortOptions" />
+      </div>
+      <ul v-if="rows.length" class="grid gap-3 lg:grid-cols-2" aria-label="Öğrenci listesi">
+        <li v-for="r in sorted" :key="r.id" class="surface rounded-card hover:border-primary relative flex flex-col gap-2 border border-transparent p-4 transition-colors duration-150">
+          <div class="flex items-start gap-3">
+            <BaseCheckbox class="relative z-[1] -m-3 shrink-0 p-3" :model-value="picked.has(r.id)" :label="`${r.name} seç`" label-hidden @update:model-value="(v: boolean) => toggle(r.id, v)" />
             <AvatarArt v-if="isAvatarKey(r.summary.avatarKey)" class="shrink-0" :avatar="r.summary.avatarKey" :size="40" />
             <div class="min-w-0 flex-1">
-              <RouterLink :to="{ name: 'admin-student', params: { studentId: r.id } }" class="focus-ring rounded-cell inline-flex min-h-10 items-center font-semibold hover:underline">
+              <RouterLink :to="{ name: 'admin-student', params: { studentId: r.id } }" class="focus-ring rounded-cell font-semibold after:absolute after:inset-0 after:content-['']">
                 {{ r.name }}
               </RouterLink>
               <p class="text-ink-soft type-small">{{ r.code }}<template v-if="r.grade"> · {{ r.grade }}. sınıf</template><template v-if="r.school"> · {{ r.school }}</template></p>
@@ -165,45 +169,11 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
           </p>
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-ink-soft type-small">Son etkinlik: {{ r.lastActivity ? formatDateTime(r.summary.lastActivityAt) : 'Hiç' }}</span>
-            <div class="flex items-center gap-2">
-              <BaseButton size="sm" variant="secondary" @click="assign([{ id: r.id, name: r.name }])">Programlar</BaseButton>
-              <StudentAccountActions :student-id="r.id" :code="r.code" :name="r.name" :status="r.status" @changed="reload" />
-            </div>
+            <BaseButton size="sm" variant="secondary" class="relative z-[1]" @click="assign([{ id: r.id, name: r.name }])">Program ata</BaseButton>
           </div>
         </li>
       </ul>
-      <p v-else class="text-ink-soft type-small md:hidden">Filtrelere uyan öğrenci yok.</p>
-      <div class="hidden md:block">
-      <DataTable v-model:sort="sort" :columns="columns" :rows="rows" caption="Öğrenci listesi" caption-hidden row-key="id">
-        <template #sel="{ row }">
-          <BaseCheckbox :model-value="picked.has(row.id)" :label="`${row.name} seç`" label-hidden @update:model-value="(v: boolean) => toggle(row.id, v)" />
-        </template>
-        <template #name="{ row }">
-          <RouterLink :to="{ name: 'admin-student', params: { studentId: row.id } }" class="focus-ring rounded-cell font-semibold hover:underline">
-            {{ row.name }}
-          </RouterLink>
-          <div class="text-ink-soft type-small">{{ row.code }}</div>
-        </template>
-        <template #grade="{ row }">{{ row.grade || '—' }}</template>
-        <template #school="{ row }">{{ row.school || '—' }}</template>
-        <template #lesson="{ row }">
-          <template v-if="row.summary.program">
-            <div class="type-small">{{ row.summary.program.curriculumName }}</div>
-            <div class="text-ink-soft type-small">{{ row.lesson || 'Program tamamlandı' }}</div>
-          </template>
-          <span v-else class="text-ink-soft type-small">Program atanmadı</span>
-        </template>
-        <template #status="{ row }"><BaseBadge :tone="ACCOUNT_TONE[row.status]">{{ ACCOUNT_STATUS[row.status] }}</BaseBadge></template>
-        <template #lastActivity="{ row }">{{ row.lastActivity ? formatDateTime(row.summary.lastActivityAt) : 'Hiç' }}</template>
-        <template #id="{ row }">
-          <div class="flex flex-nowrap items-center justify-end gap-2">
-            <BaseButton size="sm" variant="secondary" class="whitespace-nowrap" @click="assign([{ id: row.id, name: row.name }])">Programlar</BaseButton>
-            <StudentAccountActions :student-id="row.id" :code="row.code" :name="row.name" :status="row.status" size="sm" @changed="reload" />
-          </div>
-        </template>
-        <template #empty>Filtrelere uyan öğrenci yok.</template>
-      </DataTable>
-      </div>
+      <p v-else class="text-ink-soft type-small">Filtrelere uyan öğrenci yok.</p>
     </LoadState>
 
     <NewStudentDialog v-model="creating" @created="reload" />

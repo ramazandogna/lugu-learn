@@ -11,7 +11,7 @@ import VocabQuizSection from './sections/VocabQuizSection.vue'
 import VocabularySection from './sections/VocabularySection.vue'
 
 export const SECTION_LABEL: Record<SectionKey, string> = {
-  review: 'Isınma',
+  review: 'Isınma oyunu',
   vocabulary: 'Kelimeler',
   vocab_quiz: 'Kelime oyunu',
   story: 'Hikâye',

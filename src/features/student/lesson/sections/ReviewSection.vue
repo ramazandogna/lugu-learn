@@ -136,7 +136,7 @@ const finished = computed(() => completed || allAttempted(st.value, ids.value))
 
 <template>
   <div class="flex flex-col gap-4">
-    <CharacterBubble character="momo" size="sm">Önceki derslerden birkaç soruyla ısınalım. İstersen bu bölümü atlayabilirsin.</CharacterBubble>
+    <CharacterBubble character="momo" size="sm">Isınma oyunu! Önceki derslerden birkaç soruyla İngilizceni biraz daha geliştireceğiz: unuttuğun kelimeleri hatırlarsın, bildiklerin pekişir. Puanını etkilemez, istersen atlayabilirsin.</CharacterBubble>
 
     <TimeEscape
       v-if="useTimed && timedSlots?.chase && phase !== 'results'"
@@ -156,7 +156,7 @@ const finished = computed(() => completed || allAttempted(st.value, ids.value))
       :picked="picked"
       :graded="graded"
       :progress="{ done: st.index + (picked !== null || graded ? 1 : 0), total: questions.length }"
-      eyebrow="Isınma"
+      eyebrow="Isınma oyunu"
       character="momo"
       :hint-budget="play?.hintBudget ?? 2"
       :show-streak="true"

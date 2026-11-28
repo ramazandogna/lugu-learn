@@ -161,7 +161,7 @@ export const CompletionRules = z.object({
 })
 
 /** Ordered sections of a lesson session. `review` never blocks completion. */
-export const SECTION_KEYS = ['review', 'vocabulary', 'vocab_quiz', 'story', 'explanation', 'homework', 'assessment'] as const
+export const SECTION_KEYS = ['vocabulary', 'vocab_quiz', 'review', 'story', 'explanation', 'homework', 'assessment'] as const
 export const SectionKey = z.enum(SECTION_KEYS)
 export type SectionKey = z.infer<typeof SectionKey>
 

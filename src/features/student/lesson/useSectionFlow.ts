@@ -70,7 +70,7 @@ export function recordLesson(n: LessonNumbers) {
 
 /** Piko's one-line goal for a section (C2). */
 export const SECTION_GOAL: Record<SectionKey, string> = {
-  review: 'Eski bilgilerini ısındır.',
+  review: 'Isınma oyunu: eski kelimelerle İngilizceni geliştir.',
   vocabulary: 'Yeni kelimelerle tanış.',
   vocab_quiz: 'Kelimeleri oyunla pekiştir.',
   story: 'Hikâyeyi oku, kararı sen ver.',
