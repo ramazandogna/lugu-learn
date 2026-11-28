@@ -144,7 +144,7 @@ async function remove() {
         </BaseTabs>
       </template>
     </LoadState>
-    <AssignToStudentsDialog v-if="version?.status === 'published'" v-model="assigning" :version-id="version.id" />
+    <AssignToStudentsDialog v-if="version?.status === 'published' && assigning" v-model="assigning" :version-id="version.id" />
     <CurriculumDialog v-if="state.data.value" v-model="editing" :curriculum="state.data.value.curriculum" @saved="state.reload" />
     <ConfirmDialog
       v-model="publishing"

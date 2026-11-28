@@ -207,6 +207,6 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
     </LoadState>
 
     <NewStudentDialog v-model="creating" @created="reload" />
-    <AssignProgramDialog v-model="assigning" :students="assignFor" @assigned="onAssigned" />
+    <AssignProgramDialog v-if="assigning" v-model="assigning" :students="assignFor" @assigned="onAssigned" />
   </div>
 </template>

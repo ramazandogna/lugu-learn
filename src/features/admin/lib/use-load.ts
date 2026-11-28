@@ -6,11 +6,14 @@ import { errorMessage, getJob, type AiJob } from '@/lib/api/admin'
 export function useLoad<T>(fn: () => Promise<T>, source?: WatchSource) {
   const data = shallowRef<T | null>(null) as Ref<T | null>
   const loading = ref(true)
+  /** A reload while data is on screen: the old data stays visible (no skeleton flash). */
+  const refreshing = ref(false)
   const error = ref<string | null>(null)
   let token = 0
   async function reload() {
     const mine = ++token
-    loading.value = true
+    if (data.value === null) loading.value = true
+    else refreshing.value = true
     error.value = null
     try {
       const value = await fn()
@@ -18,12 +21,20 @@ export function useLoad<T>(fn: () => Promise<T>, source?: WatchSource) {
     } catch (e) {
       if (mine === token) error.value = errorMessage(e)
     } finally {
-      if (mine === token) loading.value = false
+      if (mine === token) {
+        loading.value = false
+        refreshing.value = false
+      }
     }
   }
-  if (source) watch(source, () => void reload(), { immediate: true })
+  // A new source (another student, another lesson) must not show the previous one's data meanwhile.
+  if (source)
+    watch(source, () => {
+      data.value = null
+      void reload()
+    }, { immediate: true })
   else void reload()
-  return { data, loading, error, reload }
+  return { data, loading, refreshing, error, reload }
 }
 
 /** Runs a write: busy flag, Turkish error toast, success toast. Returns whether it worked. */
