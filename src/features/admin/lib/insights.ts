@@ -212,9 +212,10 @@ export function weekSummary(data: WeekInput, now: number = Date.now()): WeekSumm
 
 /* ── who needs attention ────────────────────────────────────────────── */
 
-export type AttentionKind = 'inactive' | 'low_score' | 'dropping' | 'low_first_try' | 'abandoned'
+export type AttentionKind = 'not_started' | 'inactive' | 'low_score' | 'dropping' | 'low_first_try' | 'abandoned'
 
 export const ATTENTION_LABEL: Record<AttentionKind, string> = {
+  not_started: 'Henüz hiç çalışmadı',
   inactive: '7+ gün çalışmadı',
   low_score: 'Puan düşük',
   dropping: 'Art arda iki düşüş',
@@ -240,7 +241,8 @@ export interface AttentionReason {
 export function attentionReasons(i: AttentionInput, now: number = Date.now()): AttentionReason[] {
   if (!i.hasProgram) return []
   const out: AttentionKind[] = []
-  if (!i.lastActivityAt || now - Date.parse(i.lastActivityAt) >= 7 * DAY) out.push('inactive')
+  if (!i.lastActivityAt) out.push('not_started')
+  else if (now - Date.parse(i.lastActivityAt) >= 7 * DAY) out.push('inactive')
   const scores = [...i.assessments].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt)).map((a) => a.percent)
   const last2 = scores.slice(-2)
   if (last2.length === 2 && (last2[0]! + last2[1]!) / 2 < 60) out.push('low_score')
