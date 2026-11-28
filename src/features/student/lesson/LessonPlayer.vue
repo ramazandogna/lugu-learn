@@ -39,7 +39,9 @@ const timed = ref(false)
 provide(PLAY_UI, { timed })
 const ambientKind = computed(() => (unit.ambient.value === 'piko' ? 'candy' : unit.ambient.value))
 const play = computed(() => (current.value ? resolvePlay(loaded.pkg, current.value) : undefined))
-const { refresh: refreshHome, mainAssignment } = useStudentHome()
+/* Admin test run: no student home, no breaks, no leave warning, every section open and skippable. */
+const preview = session.preview
+const { refresh: refreshHome, mainAssignment } = preview ? { refresh: async () => {}, mainAssignment: computed(() => null) } : useStudentHome()
 
 const flow = computed<LessonFlow>(() => session.flow.value!)
 const current = computed(() => session.current.value)
@@ -59,7 +61,7 @@ const pause = useBreak({
 const done = computed(() => session.completion.value !== null)
 const finishing = ref(false)
 const guard = useLeaveGuard({
-  active: () => !done.value && !session.sessionClosed.value,
+  active: () => !preview && !done.value && !session.sessionClosed.value,
   onWarn: () => session.event('leave_warning'),
   beforeLeave: async () => {
     session.flushActive()
@@ -131,7 +133,7 @@ function proceed(k: SectionKey, wasDone: boolean) {
     })
     return
   }
-  if (!wasDone && offersBreakAfter(flow.value, k)) {
+  if (!preview && !wasDone && offersBreakAfter(flow.value, k)) {
     pause.offer(k)
     void focusSection()
   } else open(next)
@@ -201,7 +203,7 @@ function touched() {
 watch(onBreak, (b) => mood.resting(b))
 watch(done, (d) => {
   if (!d || !session.completion.value) return
-  recordLesson({ words: wordList.value.length, best: mood.best() })
+  if (!preview) recordLesson({ words: wordList.value.length, best: mood.best() })
   void nextTick(() => document.getElementById('fin-title')?.focus())
 })
 const WATCH = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
@@ -217,7 +219,7 @@ onBeforeUnmount(() => {
   clearTimeout(stuckTimer)
 })
 
-const mapTo = computed(() => (mainAssignment.value ? `/harita/${mainAssignment.value.id}` : '/'))
+const mapTo = computed(() => (preview ? `/admin/dersler/${loaded.session.lesson_id}` : mainAssignment.value ? `/harita/${mainAssignment.value.id}` : '/'))
 const sectionIndex = (k: SectionKey) => Math.max(0, sections.value.indexOf(k)) + 1
 const pikoLine = (k: SectionKey) => SECTION_PIKO[k][(lessonsSeen + sectionIndex(k)) % 3]!
 const viewKey = computed(() => (onBreak.value ? 'break' : interlude.value ? `done-${interlude.value.from}` : (current.value ?? 'none')))
@@ -230,6 +232,9 @@ const headingText = computed(() => (onBreak.value ? 'Mola' : interlude.value ? '
     <AmbientLayer :kind="ambientKind" :count="ambientKind === 'candy' ? 3 : 4" :active="!timed && !done && stage === 'play'" />
     <div class="relative mx-auto flex max-w-3xl flex-col gap-4 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:max-w-4xl" style="z-index: var(--z-raised)">
       <LessonHeader :pkg="loaded.pkg" :replay="replay" :saving="session.saving.value" />
+      <p v-if="preview" class="surface rounded-card text-ink p-3 type-small" role="note">
+        <strong>Test modu.</strong> Cevaplar kaydedilmez, öğrenciye bir şey yansımaz. Üstteki bölüm adımlarından istediğin bölüme geç ya da “Bu bölümü atla” de.
+      </p>
 
       <template v-if="done && session.completion.value">
         <LessonFinale
@@ -242,7 +247,7 @@ const headingText = computed(() => (onBreak.value ? 'Mola' : interlude.value ? '
           :stars="session.completion.value.stars"
           :xp="session.completion.value.xp_awarded"
           :map-to="mapTo"
-          :repeat-to="`/ders/${loaded.session.lesson_id}/tekrar`"
+          :repeat-to="preview ? `/admin/dersler/${loaded.session.lesson_id}/test` : `/ders/${loaded.session.lesson_id}/tekrar`"
         />
       </template>
 

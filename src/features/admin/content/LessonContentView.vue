@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { Play } from 'lucide-vue-next'
 import { BaseBadge, BaseButton, BaseSelect } from 'rei-kit'
 import type { TabPanel } from 'rei-kit/web'
 import { adminMaterial, latestJob, lessonContext, listPackages, type PackageRow } from '@/lib/api/admin'
@@ -49,7 +50,9 @@ const tabs: TabPanel<Tab>[] = [
   { key: 'guide', label: 'Öğretmen rehberi' },
   { key: 'speaking', label: 'Konuşma planı' },
 ]
-const tab = ref<Tab>('editor')
+const TAB_KEYS: readonly Tab[] = ['editor', 'qa', 'guide', 'speaking']
+/* `?sekme=speaking` opens a tab directly (links from the student's program card). */
+const tab = ref<Tab>(TAB_KEYS.find((k) => k === route.query.sekme) ?? 'editor')
 
 async function onSaved(row: PackageRow) {
   startBlank.value = false
@@ -72,7 +75,13 @@ async function onGenerated(packageId: string | null) {
         >
           ‹ {{ state.data.value.curriculum.name }} · sürüm {{ state.data.value.version.version }}
         </RouterLink>
-        <PageHeader :title="`${state.data.value.lesson.sequence}. ${state.data.value.lesson.title}`" as="h1" />
+        <PageHeader :title="`${state.data.value.lesson.sequence}. ${state.data.value.lesson.title}`" as="h1">
+          <template #right>
+            <BaseButton v-if="state.data.value.packages.length" as="router-link" :to="{ name: 'admin-lesson-preview', params: { lessonId }, query: selectedId ? { paket: selectedId } : {} }">
+              <Play :size="18" aria-hidden="true" /> Dersi test et
+            </BaseButton>
+          </template>
+        </PageHeader>
 
         <GeneratePanel :lesson-id="lessonId" :job="state.data.value.job" @finished="onGenerated" />
 

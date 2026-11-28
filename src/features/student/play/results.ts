@@ -1,6 +1,8 @@
 /** Glue between the answers of this run and the attempt history (`src/play/attempts.ts`). */
 import { buildRun, buildRuns, bestStreakEver, compareRuns, mostMissed, recentRuns, type AttemptRow, type Run, type RunComparison } from '@/play/attempts'
 import * as api from '@/lib/api/student'
+
+import { PREVIEW_SESSION_PREFIX } from '../lesson/preview'
 import type { SectionKey } from '@/domain/content'
 
 export interface ResultsData {
@@ -45,6 +47,8 @@ export function toRows(rows: readonly LocalRow[]): AttemptRow[] {
 
 /** Earlier runs of the same package and section (this session left out). Empty when the read fails. */
 export async function loadHistory(packageId: string, section: Exclude<SectionKey, 'vocabulary'>, sessionId: string): Promise<Run[]> {
+  // An admin test run has no history of its own (and must not compare against students' runs).
+  if (sessionId.startsWith(PREVIEW_SESSION_PREFIX)) return []
   try {
     const rows = await api.getQuestionAttempts(packageId, section)
     return buildRuns(rows, { section, packageId }).filter((r) => r.sessionId !== sessionId)

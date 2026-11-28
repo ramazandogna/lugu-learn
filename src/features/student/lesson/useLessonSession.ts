@@ -22,7 +22,29 @@ export interface LoadedLesson {
   resumed: boolean
 }
 
-export function useLessonSession(lessonId: () => string, kind: () => SessionKind) {
+/** The server calls a session makes; the admin preview swaps in local ones (`preview.ts`). */
+export type LessonBackend = Pick<
+  typeof api,
+  | 'getLessonContent'
+  | 'getMasteredItems'
+  | 'startOrResumeSession'
+  | 'getOpenBreaks'
+  | 'endBreak'
+  | 'recordSessionEvent'
+  | 'saveSectionState'
+  | 'completeSection'
+  | 'completeLesson'
+  | 'recordAnswer'
+  | 'recordVocabAnswer'
+  | 'submitAssessment'
+>
+
+/**
+ * `preview`: an admin test run on local grading. Every section can be entered and skipped,
+ * nothing reaches the server.
+ */
+export function useLessonSession(lessonId: () => string, kind: () => SessionKind, preview?: LessonBackend) {
+  const backend: LessonBackend = preview ?? api
   const toast = useToast()
   const saving = ref<api.QueueStatus>('idle')
   const queue = api.createWriteQueue({ onChange: (s) => (saving.value = s) })
@@ -53,21 +75,22 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
     loadError.value = null
     loaded.value = null
     try {
-      const contentP = api.getLessonContent(lessonId())
+      const contentP = backend.getLessonContent(lessonId())
       const masteredP =
-        kind() === 'primary' ? contentP.then((c) => api.getMasteredItems(c.package_id)).catch((): string[] => []) : Promise.resolve<string[]>([])
-      const [content, payload, preMastered] = await Promise.all([contentP, api.startOrResumeSession(lessonId(), kind()), masteredP])
+        kind() === 'primary' ? contentP.then((c) => backend.getMasteredItems(c.package_id)).catch((): string[] => []) : Promise.resolve<string[]>([])
+      const [content, payload, preMastered] = await Promise.all([contentP, backend.startOrResumeSession(lessonId(), kind()), masteredP])
       const pkg = parseStudentPackage(content.content)
       const point = resumePoint(payload.sections)
       const f = createLessonFlow(pkg, { started: point.started, completed: point.completed })
+      if (preview) f.mandatory.clear()
       const first = initialSection(f, payload.session.current_section)
       if (first) enter(f, first)
       snapshots.value = point.snapshots
       flow.value = f
       loaded.value = { pkg, session: payload.session, preMastered, resumed: point.resumed }
       // A break left open by a closed page ends now: the learner is back.
-      void api.getOpenBreaks(payload.session.id).then((ids) => ids.forEach((id) => void queue.enqueue(() => api.endBreak(id)).catch(() => {})), () => {})
-      if (point.resumed) void queue.enqueue(() => api.recordSessionEvent(payload.session.id, 'resumed', { section: first })).catch(() => {})
+      void backend.getOpenBreaks(payload.session.id).then((ids) => ids.forEach((id) => void queue.enqueue(() => backend.endBreak(id)).catch(() => {})), () => {})
+      if (point.resumed) void queue.enqueue(() => backend.recordSessionEvent(payload.session.id, 'resumed', { section: first })).catch(() => {})
     } catch (e) {
       loadError.value = e
     }
@@ -85,7 +108,7 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
       .enqueue(
         () => {
           delta ??= takeActive()
-          return api.saveSectionState(sessionId(), section, state, delta)
+          return backend.saveSectionState(sessionId(), section, state, delta)
         },
         { key: `state:${section}` },
       )
@@ -112,7 +135,7 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
     const f = flow.value
     if (!f || !complete(f, section)) return
     triggerRef(flow)
-    queue.enqueue(() => api.completeSection(sessionId(), section)).catch((e) => {
+    queue.enqueue(() => backend.completeSection(sessionId(), section)).catch((e) => {
       // The server disagrees (criteria): reopen the section so the learner can finish it.
       f.completed.delete(section)
       f.started.add(section)
@@ -131,7 +154,7 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
   async function finishLesson() {
     await queue.drain()
     try {
-      completion.value = await queue.enqueue(() => api.completeLesson(sessionId()))
+      completion.value = await queue.enqueue(() => backend.completeLesson(sessionId()))
       sessionClosed.value = true
     } catch (e) {
       report(e)
@@ -140,7 +163,7 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
 
   function event(kindName: Parameters<typeof api.recordSessionEvent>[1], data: Json = {}) {
     if (!loaded.value || sessionClosed.value) return
-    queue.enqueue(() => api.recordSessionEvent(sessionId(), kindName, data)).catch(() => {})
+    queue.enqueue(() => backend.recordSessionEvent(sessionId(), kindName, data)).catch(() => {})
   }
 
   function context(l: LoadedLesson): LessonContext {
@@ -158,22 +181,23 @@ export function useLessonSession(lessonId: () => string, kind: () => SessionKind
       // One client id per answer, created outside the retried task so every retry reuses it.
       recordAnswer: (a) => {
         const clientId = crypto.randomUUID()
-        return queue.enqueue(() => api.recordAnswer({ sessionId: l.session.id, ...a, clientId })).catch((e) => (report(e), undefined))
+        return queue.enqueue(() => backend.recordAnswer({ sessionId: l.session.id, ...a, clientId })).catch((e) => (report(e), undefined))
       },
       recordVocab: (a) => {
         const clientId = crypto.randomUUID()
-        return queue.enqueue(() => api.recordVocabAnswer({ sessionId: l.session.id, ...a, clientId })).catch((e) => (report(e), undefined))
+        return queue.enqueue(() => backend.recordVocabAnswer({ sessionId: l.session.id, ...a, clientId })).catch((e) => (report(e), undefined))
       },
       submitAssessment: async (answers) => {
         await queue.drain()
         const clientId = crypto.randomUUID()
-        return queue.enqueue(() => api.submitAssessment(l.session.id, answers, clientId))
+        return queue.enqueue(() => backend.submitAssessment(l.session.id, answers, clientId))
       },
       report,
     }
   }
 
   return {
+    preview: !!preview,
     load,
     loaded,
     loadError,

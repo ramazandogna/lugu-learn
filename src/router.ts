@@ -31,6 +31,7 @@ const admin: RouteRecordRaw[] = [
   { path: 'ogrenciler/:studentId', name: 'admin-student', component: () => import('./features/admin/students/StudentProfileView.vue'), meta: { title: 'Öğrenci profili' } },
   { path: 'mufredatlar', name: 'admin-curricula', component: () => import('./features/admin/curricula/CurriculaView.vue'), meta: { title: 'Müfredatlar' } },
   { path: 'mufredatlar/:curriculumId', name: 'admin-curriculum', component: () => import('./features/admin/curricula/CurriculumView.vue'), meta: { title: 'Müfredat' } },
+  { path: 'dersler/:lessonId/test', name: 'admin-lesson-preview', component: () => import('./features/admin/content/LessonPreviewView.vue'), meta: { title: 'Dersi test et' } },
   { path: 'dersler/:lessonId', name: 'admin-lesson', component: () => import('./features/admin/content/LessonContentView.vue'), meta: { title: 'Ders içeriği' } },
   { path: 'analitik', name: 'admin-analytics', component: () => import('./features/admin/analytics/AnalyticsView.vue'), meta: { title: 'Öğrenme analitiği' } },
   { path: 'akademik', name: 'admin-academic', component: () => import('./features/admin/academic/AcademicView.vue'), meta: { title: 'Akademik takip' } },
