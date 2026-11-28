@@ -3,12 +3,15 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { BaseAlert, BaseButton, BaseInput, BaseSwitch, useToast } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
-import { assignMany, errorMessage, listPublishedVersions, openVersionsByStudent, type PublishedVersion } from '@/lib/api/admin'
+import { assignMany, errorMessage, listAssignments, listPublishedVersions, openVersionsByStudent, setOpenLessons, type PublishedVersion } from '@/lib/api/admin'
 import LessonPicker from '../components/LessonPicker.vue'
 import LoadState from '../components/LoadState.vue'
 import { useLoad } from '../lib/use-load'
 
-/* Pick a published curriculum for one or many students: search, choose, "Ata". Students who already have it open are skipped. */
+/*
+ * Pick a published curriculum for one or many students: search, choose, "Ata". Every curriculum stays listed.
+ * One student who already has it: the dialog edits that program's open lessons instead. Many: those students are skipped.
+ */
 const open = defineModel<boolean>({ default: false })
 const { students } = defineProps<{ students: { id: string; name: string }[] }>()
 const emit = defineEmits<{ assigned: [studentIds: string[]] }>()
@@ -16,8 +19,12 @@ const emit = defineEmits<{ assigned: [studentIds: string[]] }>()
 const router = useRouter()
 const toast = useToast()
 const state = useLoad(async () => {
-  const [versions, open] = await Promise.all([listPublishedVersions(), openVersionsByStudent(students.map((s) => s.id))])
-  return { versions, open }
+  const [versions, open, existing] = await Promise.all([
+    listPublishedVersions(),
+    openVersionsByStudent(students.map((s) => s.id)),
+    students.length === 1 ? listAssignments(students[0]!.id) : Promise.resolve([]),
+  ])
+  return { versions, open, existing: existing.filter((a) => a.assignment.status === 'active' || a.assignment.status === 'paused') }
 })
 const q = ref('')
 const versionId = ref<string | undefined>()
@@ -35,10 +42,7 @@ watch(open, (v) => {
 
 const list = computed(() => {
   const needle = q.value.trim().toLocaleLowerCase('tr')
-  const all = state.data.value?.versions ?? []
-  /* One student: hide what they already have open (it could not be assigned again). */
-  const usable = students.length === 1 ? all.filter((v) => !hasIt(students[0]!.id, v.id)) : all
-  return usable.filter((v) => !needle || v.curriculumName.toLocaleLowerCase('tr').includes(needle))
+  return (state.data.value?.versions ?? []).filter((v) => !needle || v.curriculumName.toLocaleLowerCase('tr').includes(needle))
 })
 watch(list, (l) => {
   if (l.length === 1 && !versionId.value) versionId.value = l[0]!.id
@@ -47,10 +51,28 @@ const chosen = computed<PublishedVersion | undefined>(() => state.data.value?.ve
 const hasIt = (studentId: string, vid: string) => state.data.value?.open.get(studentId)?.has(vid) ?? false
 const already = computed(() => (chosen.value ? students.filter((s) => hasIt(s.id, chosen.value!.id)) : []))
 const targets = computed(() => (chosen.value ? students.filter((s) => !hasIt(s.id, chosen.value!.id)) : []))
+/** The single student's open program on the chosen version: edited instead of assigned again. */
+const existing = computed(() => (students.length === 1 && chosen.value ? state.data.value?.existing.find((a) => a.assignment.curriculum_version_id === chosen.value!.id) : undefined))
 watch(chosen, (v) => {
-  picked.value = v?.lessons[0] ? [v.lessons[0].id] : []
-  allOpen.value = false
+  const ids = existing.value?.assignment.open_lesson_ids
+  allOpen.value = !!existing.value && ids === null
+  picked.value = existing.value ? (v?.lessons.filter((l) => ids?.includes(l.id)).map((l) => l.id) ?? []) : v?.lessons[0] ? [v.lessons[0].id] : []
 })
+async function update() {
+  const e = existing.value
+  if (!e) return
+  busy.value = true
+  try {
+    await setOpenLessons(e.assignment.id, allOpen.value ? null : picked.value)
+    toast.success(`${students[0]?.name}: "${e.curriculumName}" dersleri güncellendi`)
+    emit('assigned', [students[0]!.id])
+    open.value = false
+  } catch (err) {
+    toast.danger(errorMessage(err), { duration: 0 })
+  } finally {
+    busy.value = false
+  }
+}
 
 async function submit() {
   const v = chosen.value
@@ -103,30 +125,33 @@ const title = computed(() => (students.length === 1 ? `Program ata · ${students
                 @click="versionId = v.id"
               >
                 <span class="min-w-0">{{ v.curriculumName }}</span>
-                <span class="text-ink-soft type-small shrink-0">sürüm {{ v.version }} · {{ v.lessons.length }} ders</span>
+                <span class="text-ink-soft type-small shrink-0">
+                  <span v-if="students.length === 1 && hasIt(students[0]!.id, v.id)" class="bg-wash text-primary rounded-control me-2 px-2 py-0.5 font-semibold">Atanmış</span>
+                  sürüm {{ v.version }} · {{ v.lessons.length }} ders
+                </span>
               </button>
             </li>
             <li v-if="!list.length" class="text-ink-soft type-small">Eşleşen müfredat yok.</li>
           </ul>
           <div v-if="chosen" class="flex flex-col gap-2">
-            <h3 class="type-body font-semibold">Hangi dersler açık olsun?</h3>
+            <h3 class="type-body font-semibold">{{ existing ? 'Bu program zaten atanmış: açık dersleri düzenleyin' : 'Hangi dersler açık olsun?' }}</h3>
             <p class="text-ink-soft type-small">
               İşaretlediğiniz dersler sırayla açılır; öğrenci birini bitirince sıradakine geçer. Diğerlerini öğrenci kilitli görür; sonradan
               öğrenci profilindeki Program sekmesinden açabilirsiniz.
             </p>
             <BaseSwitch v-model="allOpen" label="Seçim yapma: tüm dersler sırayla açılsın" />
-            <LessonPicker v-if="!allOpen" v-model="picked" :lessons="chosen.lessons" />
+            <LessonPicker v-if="!allOpen" v-model="picked" :lessons="chosen.lessons" :completed="existing?.completedLessonIds" :current="existing?.assignment.current_lesson_id ?? null" />
           </div>
-          <BaseAlert v-if="chosen && already.length" tone="warning">
-            <template v-if="students.length === 1">Bu öğrencide bu program zaten açık. Önce mevcut atamayı arşivleyin ya da başka bir müfredat seçin.</template>
-            <template v-else>{{ already.length }} öğrencide bu program zaten açık; atlanacak ({{ already.map((s) => s.name).slice(0, 3).join(', ') }}{{ already.length > 3 ? '…' : '' }}).</template>
+          <BaseAlert v-if="chosen && already.length && students.length > 1" tone="warning">
+            <template v-if="true">{{ already.length }} öğrencide bu program zaten açık; atlanacak ({{ already.map((s) => s.name).slice(0, 3).join(', ') }}{{ already.length > 3 ? '…' : '' }}).</template>
           </BaseAlert>
         </template>
       </div>
     </LoadState>
     <template #actions>
       <BaseButton variant="secondary" @click="open = false">Vazgeç</BaseButton>
-      <BaseButton :disabled="!chosen || !targets.length || (!allOpen && !picked.length)" :loading="busy" @click="submit">
+      <BaseButton v-if="existing" :disabled="!allOpen && !picked.length" :loading="busy" @click="update">Dersleri güncelle</BaseButton>
+      <BaseButton v-else :disabled="!chosen || !targets.length || (!allOpen && !picked.length)" :loading="busy" @click="submit">
         {{ targets.length > 1 ? `${targets.length} öğrenciye ata` : 'Ata' }}
       </BaseButton>
     </template>

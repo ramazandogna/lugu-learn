@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { BaseButton, BaseCheckbox, BaseInput, BaseSwitch, useToast } from 'rei-kit'
 import { BaseDisclosure, ResponsiveDialog } from 'rei-kit/web'
 import { assignMany, errorMessage, listPublishedVersions, listStudents, openVersionsByStudent } from '@/lib/api/admin'
@@ -100,7 +100,12 @@ async function submit() {
         <ul class="divide-hair flex max-h-72 flex-col divide-y overflow-y-auto" aria-label="Öğrenciler">
           <li v-for="s in list" :key="s.id" class="flex min-h-11 items-center justify-between gap-3 py-1">
             <BaseCheckbox :model-value="picked.has(s.id)" :disabled="has(s.id)" :label="`${s.name} · ${s.code}`" @update:model-value="(v: boolean) => toggle(s.id, v)" />
-            <span v-if="has(s.id)" class="text-ink-soft type-small shrink-0">Zaten atanmış</span>
+            <RouterLink
+              v-if="has(s.id)"
+              class="focus-ring rounded-control text-primary type-small inline-flex min-h-10 shrink-0 items-center px-2 font-semibold hover:underline"
+              :to="{ name: 'admin-student', params: { studentId: s.id }, query: { sekme: 'program' } }"
+              @click="open = false"
+            >Atanmış · dersleri düzenle</RouterLink>
           </li>
           <li v-if="!list.length" class="text-ink-soft type-small py-2">Eşleşen öğrenci yok.</li>
         </ul>
