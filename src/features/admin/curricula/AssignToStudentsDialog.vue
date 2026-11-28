@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { BaseButton, BaseCheckbox, BaseInput, BaseSwitch, useToast } from 'rei-kit'
+import { BaseButton, BaseCheckbox, BaseInput, useToast } from 'rei-kit'
 import { BaseDisclosure, ResponsiveDialog } from 'rei-kit/web'
 import { assignMany, errorMessage, listPublishedVersions, listStudents, openVersionsByStudent } from '@/lib/api/admin'
 import LessonPicker from '../components/LessonPicker.vue'
@@ -23,7 +23,6 @@ const q = ref('')
 const picked = ref(new Set<string>())
 /** Open lessons (walked in order). Default: only the first. */
 const picked2 = ref<string[]>([])
-const allOpen = ref(false)
 const busy = ref(false)
 
 watch(open, (v) => {
@@ -63,7 +62,7 @@ async function submit() {
   if (!ids.length) return
   busy.value = true
   try {
-    const res = await assignMany(ids, versionId, allOpen.value ? null : picked2.value)
+    const res = await assignMany(ids, versionId, picked2.value)
     const name = (id: string) => state.data.value?.students.find((s) => s.id === id)?.name ?? id
     if (res.ok.length) {
       const only = res.ok.length === 1 ? res.ok[0] : undefined
@@ -89,11 +88,10 @@ async function submit() {
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <div v-if="state.data.value" class="flex flex-col gap-4">
         <BaseInput v-model="q" type="search" label="Öğrenci ara" placeholder="Ad veya kod" />
-        <BaseDisclosure :title="allOpen ? 'Açık dersler: tümü, sırayla' : `Açık dersler: ${picked2.length} ders`" :heading-level="3">
+        <BaseDisclosure :title="`Açık dersler: ${picked2.length} ders`" :heading-level="3">
           <div class="flex flex-col gap-2">
             <p class="text-ink-soft type-small">İşaretli dersler sırayla açılır; diğerlerini öğrenci kilitli görür.</p>
-            <BaseSwitch v-model="allOpen" label="Seçim yapma: tüm dersler sırayla açılsın" />
-            <LessonPicker v-if="!allOpen" v-model="picked2" :lessons="lessons" />
+            <LessonPicker v-model="picked2" :lessons="lessons" />
           </div>
         </BaseDisclosure>
         <BaseCheckbox :model-value="allOn" :disabled="!selectable.length" :label="`Görünenlerin hepsini seç (${selectable.length})`" @update:model-value="(v: boolean) => toggleAll(v)" />
@@ -113,7 +111,7 @@ async function submit() {
     </LoadState>
     <template #actions>
       <BaseButton variant="secondary" @click="open = false">Vazgeç</BaseButton>
-      <BaseButton :disabled="!picked.size || (!allOpen && !picked2.length)" :loading="busy" @click="submit">{{ picked.size ? `${picked.size} öğrenciye ata` : 'Ata' }}</BaseButton>
+      <BaseButton :disabled="!picked.size || !picked2.length" :loading="busy" @click="submit">{{ picked.size ? `${picked.size} öğrenciye ata` : 'Ata' }}</BaseButton>
     </template>
   </ResponsiveDialog>
 </template>

@@ -7,7 +7,7 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ChevronDown, FlaskConical, MessagesSquare, Trash2 } from 'lucide-vue-next'
-import { BaseBadge, BaseButton, BaseCard, BaseMenu, BaseSelect, BaseSwitch } from 'rei-kit'
+import { BaseBadge, BaseButton, BaseCard, BaseMenu, BaseSelect } from 'rei-kit'
 import { BaseDisclosure } from 'rei-kit/web'
 import { setOpenLessons, setProgress, type AssignmentDetail } from '@/lib/api/admin'
 import type { ProgressAction } from '@/lib/database.types'
@@ -33,25 +33,25 @@ const done = computed(() => lessons.value.filter((l) => detail.completedLessonId
 /* ── open lessons ── */
 const saved = computed<string[] | null>(() => a.value.open_lesson_ids)
 const savedOrdered = computed(() => (saved.value ? lessons.value.filter((l) => saved.value!.includes(l.id)).map((l) => l.id) : []))
-const allOpen = ref(false)
+const allIds = computed(() => lessons.value.map((l) => l.id))
+/* No selection saved = every lesson open: shown as all ticked, so the list is always visible and editable. */
 const picked = ref<string[]>([])
 function reset() {
-  allOpen.value = saved.value === null
-  picked.value = [...savedOrdered.value]
+  picked.value = saved.value === null ? [...allIds.value] : [...savedOrdered.value]
 }
 watch(saved, reset, { immediate: true })
-const dirty = computed(() => (allOpen.value ? saved.value !== null : saved.value === null || picked.value.join() !== savedOrdered.value.join()))
+const dirty = computed(() => picked.value.join() !== (saved.value === null ? allIds.value : savedOrdered.value).join())
 const currentLocked = computed(() => saved.value !== null && !!a.value.current_lesson_id && !saved.value.includes(a.value.current_lesson_id))
 const summary = computed(() => {
-  if (saved.value === null) return { tone: 'neutral' as const, text: 'Tüm dersler sırayla açılır' }
+  if (saved.value === null) return { tone: 'neutral' as const, text: 'Tüm dersler açık' }
   if (currentLocked.value) return { tone: 'warning' as const, text: 'Öğrenci yeni ders bekliyor' }
   return { tone: 'success' as const, text: `${saved.value.length} ders açık` }
 })
 
 const { busy, run } = useAction()
 async function save() {
-  const ids = allOpen.value ? null : picked.value
-  const ok = await run(() => setOpenLessons(a.value.id, ids), ids === null ? 'Tüm dersler açıldı' : `${ids.length} ders açık olarak kaydedildi`)
+  const ids = picked.value
+  const ok = await run(() => setOpenLessons(a.value.id, ids), `${ids.length} ders açık olarak kaydedildi`)
   if (ok) emit('changed')
 }
 
@@ -127,8 +127,8 @@ const linkClass = 'focus-ring rounded-control text-ink-soft hover:text-ink hover
           "öğretmenin açacak" diye kilitli görür.
         </p>
       </div>
-      <BaseSwitch v-model="allOpen" label="Seçim yapma: tüm dersler sırayla açılsın" />
-      <LessonPicker v-if="!allOpen" v-model="picked" :lessons="lessons" :completed="detail.completedLessonIds" :current="a.current_lesson_id" :disabled="busy">
+      <p v-if="saved === null" class="bg-wash rounded-tile type-small text-ink p-2">Şu an tüm dersler sırayla açık. Kilitlemek istediğiniz derslerin işaretini kaldırıp Kaydet'e basın.</p>
+      <LessonPicker v-model="picked" :lessons="lessons" :completed="detail.completedLessonIds" :current="a.current_lesson_id" :disabled="busy">
         <template #row="{ lesson }">
           <span class="flex shrink-0 gap-1 ps-9 sm:ps-0">
             <RouterLink :class="linkClass" :to="{ name: 'admin-lesson-preview', params: { lessonId: lesson.id } }"><FlaskConical :size="16" aria-hidden="true" /> Test et</RouterLink>
@@ -137,13 +137,13 @@ const linkClass = 'focus-ring rounded-control text-ink-soft hover:text-ink hover
         </template>
       </LessonPicker>
       <div v-if="dirty" class="bg-surface border-hair rounded-tile sticky bottom-2 z-10 flex flex-wrap items-center justify-between gap-2 border p-2 shadow-lg">
-        <span class="type-small text-ink ps-1 font-semibold">{{ allOpen ? 'Tüm dersler açılacak' : `${picked.length} ders açık olacak` }}</span>
+        <span class="type-small text-ink ps-1 font-semibold">{{ `${picked.length} ders açık, ${lessons.length - picked.length} ders kilitli olacak` }}</span>
         <span class="flex gap-2">
           <BaseButton variant="secondary" :disabled="busy" @click="reset">Vazgeç</BaseButton>
-          <BaseButton :loading="busy" :disabled="!allOpen && !picked.length" @click="save">Kaydet</BaseButton>
+          <BaseButton :loading="busy" :disabled="!picked.length" @click="save">Kaydet</BaseButton>
         </span>
       </div>
-      <p v-if="!allOpen && !picked.length" class="type-small text-warning-ink">En az bir ders seçin. Programı tamamen kaldırmak için yukarıdaki "Programı kaldır" düğmesini kullanın.</p>
+      <p v-if="!picked.length" class="type-small text-warning-ink">En az bir ders seçin. Programı tamamen kaldırmak için yukarıdaki "Programı kaldır" düğmesini kullanın.</p>
     </section>
 
     <BaseDisclosure v-if="a.current_lesson_id" class="mt-3" :title="`Konuşma dersi planı · ${lessonTitle(a.current_lesson_id)}`" :heading-level="3">

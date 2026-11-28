@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { BaseAlert, BaseButton, BaseInput, BaseSwitch, useToast } from 'rei-kit'
+import { BaseAlert, BaseButton, BaseInput, useToast } from 'rei-kit'
 import { ResponsiveDialog } from 'rei-kit/web'
-import { assignMany, errorMessage, listAssignments, listPublishedVersions, openVersionsByStudent, setOpenLessons, type PublishedVersion } from '@/lib/api/admin'
+import { assignMany, errorMessage, listAssignments, listPublishedVersions, openVersionsByStudent, setOpenLessons, setProgress, type PublishedVersion } from '@/lib/api/admin'
 import LessonPicker from '../components/LessonPicker.vue'
 import LoadState from '../components/LoadState.vue'
 import { useLoad } from '../lib/use-load'
@@ -30,7 +30,6 @@ const q = ref('')
 const versionId = ref<string | undefined>()
 /** Open lessons (walked in order). Default: only the first; the admin opens more from the Program tab. */
 const picked = ref<string[]>([])
-const allOpen = ref(false)
 const busy = ref(false)
 
 watch(open, (v) => {
@@ -55,15 +54,32 @@ const targets = computed(() => (chosen.value ? students.filter((s) => !hasIt(s.i
 const existing = computed(() => (students.length === 1 && chosen.value ? state.data.value?.existing.find((a) => a.assignment.curriculum_version_id === chosen.value!.id) : undefined))
 watch(chosen, (v) => {
   const ids = existing.value?.assignment.open_lesson_ids
-  allOpen.value = !!existing.value && ids === null
-  picked.value = existing.value ? (v?.lessons.filter((l) => ids?.includes(l.id)).map((l) => l.id) ?? []) : v?.lessons[0] ? [v.lessons[0].id] : []
+  picked.value = existing.value
+    ? (v?.lessons.filter((l) => ids === null || ids?.includes(l.id)).map((l) => l.id) ?? [])
+    : v?.lessons[0] ? [v.lessons[0].id] : []
 })
+async function removeExisting() {
+  const e = existing.value
+  if (!e || !window.confirm(`"${e.curriculumName}" programı ${students[0]?.name} için kaldırılsın mı? Kayıtlar silinmez, program kapanır.`)) return
+  busy.value = true
+  try {
+    await setProgress(e.assignment.id, 'archive', 'Program ata penceresinden kaldırıldı')
+    toast.success(`"${e.curriculumName}" kaldırıldı`)
+    emit('assigned', [students[0]!.id])
+    versionId.value = undefined
+    await state.reload()
+  } catch (err) {
+    toast.danger(errorMessage(err), { duration: 0 })
+  } finally {
+    busy.value = false
+  }
+}
 async function update() {
   const e = existing.value
   if (!e) return
   busy.value = true
   try {
-    await setOpenLessons(e.assignment.id, allOpen.value ? null : picked.value)
+    await setOpenLessons(e.assignment.id, picked.value)
     toast.success(`${students[0]?.name}: "${e.curriculumName}" dersleri güncellendi`)
     emit('assigned', [students[0]!.id])
     open.value = false
@@ -82,7 +98,7 @@ async function submit() {
     const res = await assignMany(
       targets.value.map((s) => s.id),
       v.id,
-      allOpen.value ? null : picked.value,
+      picked.value,
     )
     const name = (id: string) => students.find((s) => s.id === id)?.name ?? id
     if (res.ok.length) {
@@ -108,6 +124,7 @@ const title = computed(() => (students.length === 1 ? `Program ata · ${students
 
 <template>
   <ResponsiveDialog v-model="open" :title="title" close-label="Kapat">
+    <p v-if="students.length === 1" class="text-ink-soft type-small -mt-2 mb-3">Yeni program eklemek için seçip "Ata"ya basın. "Atanmış" bir programı seçerseniz derslerini düzenleyebilir ya da programı kaldırabilirsiniz.</p>
     <LoadState :loading="state.loading.value" :error="state.error.value" @retry="state.reload">
       <div v-if="state.data.value" class="flex flex-col gap-4">
         <p v-if="!state.data.value.versions.length" class="text-ink-soft type-small">
@@ -139,8 +156,7 @@ const title = computed(() => (students.length === 1 ? `Program ata · ${students
               İşaretlediğiniz dersler sırayla açılır; öğrenci birini bitirince sıradakine geçer. Diğerlerini öğrenci kilitli görür; sonradan
               öğrenci profilindeki Program sekmesinden açabilirsiniz.
             </p>
-            <BaseSwitch v-model="allOpen" label="Seçim yapma: tüm dersler sırayla açılsın" />
-            <LessonPicker v-if="!allOpen" v-model="picked" :lessons="chosen.lessons" :completed="existing?.completedLessonIds" :current="existing?.assignment.current_lesson_id ?? null" />
+            <LessonPicker v-model="picked" :lessons="chosen.lessons" :completed="existing?.completedLessonIds" :current="existing?.assignment.current_lesson_id ?? null" />
           </div>
           <BaseAlert v-if="chosen && already.length && students.length > 1" tone="warning">
             <template v-if="true">{{ already.length }} öğrencide bu program zaten açık; atlanacak ({{ already.map((s) => s.name).slice(0, 3).join(', ') }}{{ already.length > 3 ? '…' : '' }}).</template>
@@ -150,8 +166,9 @@ const title = computed(() => (students.length === 1 ? `Program ata · ${students
     </LoadState>
     <template #actions>
       <BaseButton variant="secondary" @click="open = false">Vazgeç</BaseButton>
-      <BaseButton v-if="existing" :disabled="!allOpen && !picked.length" :loading="busy" @click="update">Dersleri güncelle</BaseButton>
-      <BaseButton v-else :disabled="!chosen || !targets.length || (!allOpen && !picked.length)" :loading="busy" @click="submit">
+      <BaseButton v-if="existing" variant="danger" :loading="busy" @click="removeExisting">Programı kaldır</BaseButton>
+      <BaseButton v-if="existing" :disabled="!picked.length" :loading="busy" @click="update">Dersleri güncelle</BaseButton>
+      <BaseButton v-else :disabled="!chosen || !targets.length || !picked.length" :loading="busy" @click="submit">
         {{ targets.length > 1 ? `${targets.length} öğrenciye ata` : 'Ata' }}
       </BaseButton>
     </template>

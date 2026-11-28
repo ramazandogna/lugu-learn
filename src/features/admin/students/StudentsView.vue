@@ -166,7 +166,7 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-ink-soft type-small">Son etkinlik: {{ r.lastActivity ? formatDateTime(r.summary.lastActivityAt) : 'Hiç' }}</span>
             <div class="flex items-center gap-2">
-              <BaseButton size="sm" variant="secondary" @click="assign([{ id: r.id, name: r.name }])">Program ata</BaseButton>
+              <BaseButton size="sm" variant="secondary" @click="assign([{ id: r.id, name: r.name }])">Programlar</BaseButton>
               <StudentAccountActions :student-id="r.id" :code="r.code" :name="r.name" :status="r.status" @changed="reload" />
             </div>
           </div>
@@ -196,8 +196,10 @@ const activeCount = computed(() => (Object.keys(EMPTY_FILTERS) as (keyof Student
         <template #status="{ row }"><BaseBadge :tone="ACCOUNT_TONE[row.status]">{{ ACCOUNT_STATUS[row.status] }}</BaseBadge></template>
         <template #lastActivity="{ row }">{{ row.lastActivity ? formatDateTime(row.summary.lastActivityAt) : 'Hiç' }}</template>
         <template #id="{ row }">
-          <BaseButton size="sm" variant="secondary" class="me-2" @click="assign([{ id: row.id, name: row.name }])">Program ata</BaseButton>
-          <StudentAccountActions :student-id="row.id" :code="row.code" :name="row.name" :status="row.status" size="sm" @changed="reload" />
+          <div class="flex flex-nowrap items-center justify-end gap-2">
+            <BaseButton size="sm" variant="secondary" class="whitespace-nowrap" @click="assign([{ id: row.id, name: row.name }])">Programlar</BaseButton>
+            <StudentAccountActions :student-id="row.id" :code="row.code" :name="row.name" :status="row.status" size="sm" @changed="reload" />
+          </div>
         </template>
         <template #empty>Filtrelere uyan öğrenci yok.</template>
       </DataTable>
